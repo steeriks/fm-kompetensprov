@@ -24,8 +24,10 @@ instruktören skjuter en åt gången:
    tar *Nästa som saknar poäng* dig dit.
 4. **Knappa in träffarna** — en tryckning per träff på respektive zon. Poängen står under
    varje knapp och kvoten räknas medan du knappar. Håll in en knapp för att nolla den.
-5. **Registrera resultat** låser försöket och går vidare till nästa skytt. Kvoten och
-   godkänt/underkänt syns på skyttens rad i listan.
+5. **Registrera & nästa skytt** låser försöket och går vidare; vem det blir står under
+   knappen. På sista skytten heter den *Registrera sista resultatet*, och när den tryckts
+   summeras omgången: *"Omgången klar — 2 av 3 godkända."* Kvoten och godkänt/underkänt
+   syns på varje skytts rad i listan.
 6. **Dela** ger hela omgången som text, PDF, Excel eller CSV, redo att mejla.
 
 **Anvisningen** finns alltid till hands — på startsidan och som knapp mitt i en omgång, där

@@ -164,7 +164,7 @@ test('poängsvepet börjar om från första skytten och räknar kvoten', () => {
   assert.ok(doc.querySelector('#pkvarde').classList.contains('g'), 'godkänt ska visas grönt');
   assert.equal(doc.querySelector('#brister').textContent, '');
 
-  klicka('Registrera resultat');
+  klicka('Registrera');
   assert.match(doc.body.textContent, /GODKÄND/);
   assert.notEqual(doc.querySelector('#rubrik').textContent, forstaIPoang,
     'nästa skytt som väntar på poäng ska öppnas direkt');
@@ -214,7 +214,7 @@ test('andra försöket lägger sig bredvid det första, inte ovanpå', () => {
   klicka('Poäng för');
   knappaZon('C', 4);
   knappaZon('H', 2);
-  klicka('Registrera resultat');       // 14 p / 20 s = 0,70 → underkänd
+  klicka('Registrera');       // 14 p / 20 s = 0,70 → underkänd
 
   assert.match(doc.querySelector('#app').textContent, /underkänd/i);
   klicka('+ Nytt försök');
@@ -223,7 +223,7 @@ test('andra försöket lägger sig bredvid det första, inte ovanpå', () => {
   klicka('Poäng för');
   knappaZon('B', 4);
   knappaZon('A', 2);
-  klicka('Registrera resultat');
+  klicka('Registrera');
 
   const alla = lagret().resultat.filter((r) => r.registrerad);
   assert.equal(alla.length, 2, 'båda försöken ska finnas kvar');
@@ -728,4 +728,38 @@ test('hemknappen är en ikon utan ram', () => {
   assert.ok(knapp.querySelector('svg'), 'huset är ritat, inte ett tecken');
   assert.equal(knapp.getAttribute('aria-label'), 'Till startsidan',
     'skärmläsare och långtryck ska ändå få veta vad den gör');
+});
+
+test('poängvyn säger vem som står på tur, och summerar när laget är klart', () => {
+  klicka('+ Ny omgång');
+  bockaIAlla();                        // Berg (1), Craf (2), Ek (3)
+  klicka('Starta omgången');
+  // Tidssvepet lämnar själv över till poängen efter sista skytten
+  klicka('Nästa som saknar tid');
+  for (const tid of ['1100', '1200', '1300']) {
+    knappaTid(tid);
+    klicka('Spara &');
+  }
+  assert.match(doc.querySelector('#underrubrik').textContent, /Poäng · försök 1/);
+  const nasta = () => doc.querySelector('.nastaskytt').textContent.replace(/\s+/g, ' ').trim();
+
+  assert.match(doc.querySelector('.knapp.primar').textContent, /Registrera & nästa skytt/);
+  assert.match(nasta(), /^Nästa: 2\./, 'näste man ska stå under knappen');
+  knappaZon('B', 4); knappaZon('A', 2);
+  klicka('Registrera');
+
+  assert.match(nasta(), /^Nästa: 3\./);
+  knappaZon('B', 4); knappaZon('A', 2);
+  klicka('Registrera');
+
+  // Sista skytten
+  assert.match(doc.querySelector('.knapp.primar').textContent, /Registrera sista resultatet/);
+  assert.match(nasta(), /Sedan är omgången klar/);
+  knappaZon('C', 4); knappaZon('H', 2);       // 14 p på 13 s → underkänd
+  klicka('Registrera sista resultatet');
+
+  assert.match(doc.querySelector('#underrubrik').textContent, /krav PK/,
+    'sista registreringen lämnar tillbaka till vallistan');
+  assert.match(doc.querySelector('.flash').textContent, /Omgången klar — 2 av 3 godkända/);
+  assert.equal(lagret().resultat.filter((r) => r.registrerad).length, 3);
 });

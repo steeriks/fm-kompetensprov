@@ -279,11 +279,20 @@ function ritaHistorik(o, forsok) {
  * fram till tavlorna och börjar om från tavla 1. Den skytt som just nu står
  * öppen räknas med, eftersom hen får sin tid i samma knapptryck.
  */
+/**
+ * Nästa skytt som behöver det här läget — någon ANNAN än den man står på.
+ * nastaSkytt varvar om från listans början och hittar annars skytten man
+ * redan är inne hos, eftersom hen ännu inte fått det som saknas. Hen är inte
+ * "nästa" — hen är den här.
+ */
+function nastaAnnan(omgang, lage, personId) {
+  const id = nastaSkytt(omgang, lage, personId);
+  return id && id !== personId ? id : null;
+}
+
 function nastaEfterTid(omgang, personId) {
-  const utanTid = nastaSkytt(omgang, 'tid', personId);
-  // nastaSkytt varvar om från början och hittar då skytten man står på, som
-  // ju ännu inte fått sin tid. Hen är inte "nästa" — hen är den här.
-  if (utanTid && utanTid !== personId) return { typ: 'tid', id: utanTid };
+  const utanTid = nastaAnnan(omgang, 'tid', personId);
+  if (utanTid) return { typ: 'tid', id: utanTid };
   for (const id of omgang.deltagare) {
     const r = lager.pagaende(omgang.id, id, false);
     if (r && (r.tid !== null || id === personId)) return { typ: 'poang', id };
@@ -387,8 +396,14 @@ function ritaPoang() {
              ${r.vapenhanteringUnderkand ? 'checked' : ''}>
       <span>Underkänd — osäker eller felaktig vapenhantering</span>
     </label>`;
+  // Som i tidvyn: knappen säger vad som händer, raden under vem det gäller.
+  const nastaPoang = nastaAnnan(o, 'poang', p.id);
   bottenrad.innerHTML = `
-    <button class="knapp primar" data-registrera="1">Registrera resultat</button>
+    <button class="knapp primar" data-registrera="1">
+      ${nastaPoang ? 'Registrera &amp; nästa skytt' : 'Registrera sista resultatet'}</button>
+    <p class="nastaskytt">${nastaPoang
+      ? `Nästa: <b>${esc(skyttEtikett(o, nastaPoang))}</b>`
+      : 'Sedan är omgången klar'}</p>
     <div class="knapprad">
       <button class="knapp liten" data-till-tid="1">Ändra tiden</button>
       <button class="knapp liten" data-vy="omgang-ater">Tillbaka till listan</button>
@@ -826,10 +841,17 @@ document.addEventListener('click', async (ev) => {
     lager.registrera(r.id);
     vibrera(30);
     const b = bedom(o.gren, r.traffar, r.tid, r.vapenhanteringUnderkand);
-    flash(`${lager.person(vy.personId).namn}: ${b.godkand ? 'GODKÄND' : 'UNDERKÄND'}` +
-      (b.pk === null ? '' : ` · PK ${komma(b.pk)}`));
-    const id = nastaSkytt(o, 'poang', vy.personId);
-    if (id) return gaTill('poang', { omgangId: o.id, personId: id, lage: 'poang' }, true);
+    const utfall = `${lager.person(vy.personId).namn}: ${b.godkand ? 'GODKÄND' : 'UNDERKÄND'}`
+      + (b.pk === null ? '' : ` · PK ${komma(b.pk)}`);
+    const id = nastaAnnan(o, 'poang', vy.personId);
+    if (id) {
+      flash(utfall);
+      return gaTill('poang', { omgangId: o.id, personId: id, lage: 'poang' }, true);
+    }
+    // Sista skytten: säg hur det gick för hela laget, det är ändå frågan man
+    // ställer sig i det ögonblicket.
+    const u = underlag(o, lager.las().personer, lager.resultat(o.id));
+    flash(`${utfall}. Omgången klar — ${u.godkanda} av ${u.antalSkyttar} godkända.`, 5);
     return gaTill('omgang', { omgangId: o.id, lage: 'poang' }, true);
   }
 
