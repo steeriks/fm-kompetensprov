@@ -43,6 +43,10 @@ försök i stället.
 
 ## Fällor som redan kostat tid
 
+- **`rita()` fick inte städa bort flash-meddelanden.** Nästan varje bekräftelse följs av en
+  omritning, så meddelandet rensades av just den omritning det skulle överleva och syntes
+  aldrig. Flashen tar bort sig själv efter sina sekunder i stället.
+
 - **`structuredClone` finns inte i äldre iOS-Safari.** Den användes först för att skapa
   ett tomt lager och gjorde att `las()` kastade — vilket testerna maskerade genom att
   cachen då aldrig fylldes. Bygg tomma objekt med en funktion i stället.

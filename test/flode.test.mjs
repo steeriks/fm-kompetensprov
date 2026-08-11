@@ -269,14 +269,14 @@ test('att radera en skytt tar med sig resultaten', () => {
   assert.equal(lagret().resultat.length, 1);
 
   win.confirm = () => true;
-  klicka('Hem');
+  klicka('⌂');
   klicka('Skyttar');
   klicka('Radera');
   assert.equal(lagret().personer.length, 2);
   assert.equal(lagret().resultat.length, 0, 'resultaten ska följa med personen');
 });
 
-test('hemknappen går hem från vilken vy som helst, och sparar tiden på vägen', () => {
+test('hemikonen går hem från vilken vy som helst, och sparar tiden på vägen', () => {
   klicka('+ Ny omgång');
   rader()[0].click();
   klicka('Starta omgången');
@@ -284,7 +284,7 @@ test('hemknappen går hem från vilken vy som helst, och sparar tiden på vägen
   assert.match(doc.querySelector('#underrubrik').textContent, /Tid · försök 1/);
   knappaTid('7,50');
 
-  klicka('Hem');
+  klicka('⌂');
   assert.match(doc.querySelector('#app').textContent, /Omgångar/,
     'hemknappen ska gå hela vägen hem, inte ett steg bakåt');
   assert.equal(lagret().resultat[0].tid, 7.5,
@@ -476,7 +476,7 @@ test('radera alla skyttar frågar först och tar med sig resultaten', () => {
   klicka('Nästa som saknar tid');
   knappaTid('10,00');
   klicka('Spara och tillbaka');
-  klicka('Hem');
+  klicka('⌂');
   klicka('Skyttar');
 
   let fragad = '';
@@ -496,7 +496,7 @@ test('svep vänster raderar en omgång — efter fråga', () => {
   klicka('+ Ny omgång');
   rader()[0].click();
   klicka('Starta omgången');
-  klicka('Hem');
+  klicka('⌂');
   assert.equal(rader().length, 1, 'omgången ligger på startsidan');
 
   const svep = (rad, fran, till, dy = 0) => {
@@ -528,4 +528,79 @@ test('svep vänster raderar en omgång — efter fråga', () => {
   svep(rader()[0], 200, 100);
   assert.equal(lagret().omgangar.length, 0);
   assert.match(doc.querySelector('#app').textContent, /Inga omgångar ännu/);
+});
+
+test('skyttar går att lägga till i en pågående omgång', () => {
+  klicka('+ Ny omgång');
+  rader().find((r) => r.textContent.includes('Berg')).click();
+  klicka('Starta omgången');
+  assert.equal(rader().length, 1);
+
+  klicka('+ Lägg till skytt');
+  assert.match(doc.querySelector('#underrubrik').textContent, /blir tavla 2/);
+  assert.equal(rader().length, 2, 'de två som inte redan är med ska erbjudas');
+  rader().find((r) => r.textContent.includes('Craf')).click();
+
+  const rad = rader().map((r) => r.textContent.replace(/\s+/g, ' ').trim());
+  assert.match(rad[0], /^1\. Berg/);
+  assert.match(rad[1], /^2\. Craf/, 'den tillagda hamnar sist, på nästa tavla');
+  assert.equal(lagret().omgangar[0].deltagare.length, 2);
+});
+
+test('flytta en skytt: numret sitter på tavlan, inte på personen', async () => {
+  klicka('+ Ny omgång');
+  bockaIAlla();
+  klicka('Starta omgången');
+  const fore = rader().map((r) => r.textContent.replace(/\s+/g, ' ').trim());
+  assert.match(fore[0], /^1\. Berg/);
+  assert.match(fore[2], /^3\. Ek/);
+
+  // jsdom mäter inga element — ge raderna höjd så att drop-läget går att räkna
+  const höjd = 70;
+  win.Element.prototype.getBoundingClientRect = function () {
+    const syskon = [...(this.parentNode ? this.parentNode.children : [])];
+    const i = Math.max(0, syskon.indexOf(this));
+    return { top: i * höjd, bottom: (i + 1) * höjd, height: höjd, left: 0, right: 300, width: 300 };
+  };
+
+  const rad = rader()[2];                       // Ek, tavla 3
+  const hand = (typ, y) => rad.dispatchEvent(
+    new win.MouseEvent(typ, { bubbles: true, cancelable: true, clientX: 50, clientY: y }));
+
+  hand('pointerdown', 3 * höjd + 10);
+  await new Promise((r) => setTimeout(r, 600));  // håll in
+  assert.ok(rad.classList.contains('lyft'), 'raden ska lyftas efter ett långt tryck');
+  hand('pointermove', 10);                       // dra högst upp
+  hand('pointerup', 10);
+
+  const efter = rader().map((r) => r.textContent.replace(/\s+/g, ' ').trim());
+  assert.match(efter[0], /^1\. Ek/, 'den flyttade skytten får numret för sin nya tavla');
+  assert.match(efter[1], /^2\. Berg/);
+  assert.match(efter[2], /^3\. Craf/);
+  assert.deepEqual(lagret().omgangar[0].deltagare.length, 3);
+  assert.match(doc.body.textContent, /Ek, Anna är tavla 1/);
+});
+
+test('ett kort tryck öppnar skytten, det långa flyttar', async () => {
+  klicka('+ Ny omgång');
+  bockaIAlla();
+  klicka('Starta omgången');
+  const rad = rader()[0];
+  rad.dispatchEvent(new win.MouseEvent('pointerdown', { bubbles: true, clientX: 50, clientY: 10 }));
+  rad.dispatchEvent(new win.MouseEvent('pointerup', { bubbles: true, clientX: 50, clientY: 10 }));
+  rad.click();
+  assert.match(doc.querySelector('#underrubrik').textContent, /Tid · försök 1/,
+    'ett vanligt tryck ska fortfarande öppna skytten');
+});
+
+test('bekräftelsen syns kvar efter omritningen', () => {
+  klicka('+ Ny omgång');
+  rader()[0].click();
+  klicka('Starta omgången');
+  klicka('+ Lägg till skytt');
+  rader()[0].click();
+  // Tillägget ritar om vallistan direkt — meddelandet måste överleva det
+  assert.match(doc.querySelector('.flash').textContent, /är tavla 2/);
+  assert.match(doc.querySelector('#underrubrik').textContent, /krav PK/,
+    'och vi ska stå på vallistan igen');
 });

@@ -29,9 +29,15 @@ den öppnas på det prov som skjuts. Den innehåller avstånd, mål, ställning,
 genomförandet steg för steg med instruktörens repliker, reglerna för tid och bättring,
 bedömningskraven och zontabellen.
 
-**Hem**-knappen längst upp till vänster går alltid tillbaka till startsidan; en påbörjad
-tid sparas på vägen. Vägen tillbaka till vallistan finns i nederkant på de vyer som ligger
+**⌂** längst upp till vänster går alltid tillbaka till startsidan; en påbörjad tid sparas
+på vägen. Vägen tillbaka till vallistan finns i nederkant på de vyer som ligger
 inuti en omgång.
+
+**Efterhandsändringar i en omgång:** *+ Lägg till skytt* under listan tar in någon ur
+registret eller registrerar en ny på plats, utan att du lämnar omgången — hen hamnar på
+nästa lediga tavla. **Håll in en rad** för att lyfta skytten och dra hen till en annan
+plats. Numret sitter på *tavlan*, inte på personen: den som hamnar på tredje raden får
+nummer 3.
 
 **Radera:** en enskild skytt raderas på sin rad under *Skyttar*, alla på en gång med
 *Radera alla*. En omgång raderas genom att **svepa vänster** på den i listan. Allt frågar

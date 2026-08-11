@@ -38,16 +38,15 @@ header {
 }
 header h1 { font-size: 1.05rem; margin: 0; font-weight: 600; letter-spacing: 0.01em; }
 header .under { display: block; font-size: 0.8rem; color: var(--dampad); font-weight: 400; }
-/* Hemknappen: ikon OCH ordet "Hem", så att det inte går att missförstå vart
-   den leder. Sitter längst upp till vänster, där tummen når den. */
+/* Hemknappen: bara husikonen, för att spara bredd åt rubriken. Den är
+   inramad så att den läses som en knapp och inte som dekoration. */
 .hem {
-  flex: 0 0 auto; min-height: 44px; display: flex; align-items: center; gap: 0.3rem;
-  padding: 0.3rem 0.7rem 0.3rem 0.5rem;
+  flex: 0 0 auto; width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
   background: var(--kort-ljus); border: 1px solid var(--linje); border-radius: 999px;
   color: var(--accent); cursor: pointer; touch-action: manipulation;
 }
-.hem .hemikon { font-size: 1.35rem; line-height: 1; }
-.hem .hemtext { font-size: 0.9rem; font-weight: 600; }
+.hem .hemikon { font-size: 1.5rem; line-height: 1; }
 .hem:active { transform: scale(0.96); }
 
 main { padding: 0.9rem 0.9rem 7.5rem; max-width: 46rem; margin: 0 auto; }
@@ -255,4 +254,12 @@ label.falt input, label.falt select {
 .skyttrad .nr {
   display: inline-block; min-width: 1.6rem;
   color: var(--accent); font-variant-numeric: tabular-nums;
+}
+
+/* Lyft rad under drag: den ska synas ovanpå de andra och kännas lös. */
+.skyttrad[data-skytt] { touch-action: pan-y; }
+.skyttrad.lyft {
+  border-color: var(--accent); background: var(--kort-ljus);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.55); transform: scale(1.02);
+  position: relative; z-index: 5; touch-action: none;
 }

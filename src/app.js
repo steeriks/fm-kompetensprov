@@ -207,7 +207,11 @@ function ritaOmgang() {
     return r && r.tid !== null;
   }).length;
 
-  app.innerHTML = rader || '<p class="tom">Inga deltagare i omgången.</p>';
+  app.innerHTML = (rader || '<p class="tom">Inga deltagare i omgången.</p>')
+    + '<p class="dampad liten">Numret är skyttens tavla. Håll in en rad för att '
+    + 'flytta skytten till en annan tavla.</p>'
+    + '<div class="knapprad"><button class="knapp liten" data-lagg-till="1">'
+    + '+ Lägg till skytt</button></div>';
   bottenrad.innerHTML = `
     <div class="lagesvaljare">
       <button data-lage="tid" aria-pressed="${lage === 'tid'}">TID${utanTid ? ` (${utanTid})` : ''}</button>
@@ -371,6 +375,31 @@ function sattZon(knapp, antal) {
   uppdateraPoang();
 }
 
+// --------------------------------------------- lägga till skytt i efterhand
+
+function ritaLaggTill() {
+  const o = lager.omgang(vy.omgangId);
+  if (!o) return gaTill('start');
+  rubrik.firstChild.textContent = 'Lägg till skytt';
+  underrubrik.textContent = `${PROV[o.gren].namn} ${o.datum} · blir tavla ${o.deltagare.length + 1}`;
+  hemKnapp.hidden = false;
+
+  // Den som redan står på linjen ska inte gå att lägga till en gång till.
+  const kvar = lager.personer().filter((p) => !o.deltagare.includes(p.id));
+  app.innerHTML = kvar.length ? kvar.map((p) => `
+    <button class="skyttrad" data-lagg-in="${p.id}">
+      <span class="namn">${esc(p.namn)}</span>
+      <span class="forband">${esc(p.forband || '')}</span>
+      <span class="chip">lägg till</span>
+    </button>`).join('')
+    : '<p class="tom">Alla skyttar i registret är redan med.<br>Lägg upp en ny nedan.</p>';
+  bottenrad.innerHTML = `
+    <button class="knapp primar" data-ny-skytt="1">+ Ny skytt</button>
+    <div class="knapprad">
+      <button class="knapp liten" data-vy="omgang-ater">Tillbaka till listan</button>
+    </div>`;
+}
+
 // ------------------------------------------------------------- anvisningar
 
 function ritaAnvisning() {
@@ -519,7 +548,10 @@ function ritaExportval() {
 // -------------------------------------------------------------- rita om allt
 
 function rita() {
-  document.querySelectorAll('.flash').forEach((e) => e.remove());
+  // Meddelandet städas INTE bort här. Nästan varje bekräftelse — "tavla 3",
+  // "omgången raderad" — följs omedelbart av en omritning, och en flash som
+  // rensades av sin egen omritning hann aldrig synas. Den tar bort sig själv
+  // efter sina sekunder, och en ny ersätter alltid den gamla.
   if (vy.namn === 'start') ritaStart();
   else if (vy.namn === 'ny') ritaNy();
   else if (vy.namn === 'omgang') ritaOmgang();
@@ -529,6 +561,7 @@ function rita() {
   else if (vy.namn === 'installningar') ritaInstallningar();
   else if (vy.namn === 'export') ritaExportval();
   else if (vy.namn === 'anvisning') ritaAnvisning();
+  else if (vy.namn === 'lagg-till') ritaLaggTill();
   window.scrollTo(0, 0);
 }
 
@@ -557,7 +590,7 @@ document.addEventListener('click', async (ev) => {
     '[data-spara-tid], [data-till-poang], [data-till-tid], [data-registrera], [data-export], ' +
     '[data-format], [data-historik], [data-nytt-forsok], [data-radera-person], [data-kopia], ' +
     '[data-radera-allt], [data-radera-alla-skyttar], [data-skriv-ut], [data-anvisning], ' +
-    '.zonknapp');
+    '[data-lagg-till], [data-lagg-in], .zonknapp');
   if (!t) return;
   const d = t.dataset;
 
@@ -595,6 +628,13 @@ document.addEventListener('click', async (ev) => {
       spegla();
       vy.valda = [...(vy.valda || []), p.id];
     }
+    if (vy.namn === 'lagg-till') {
+      // Registrerad mitt i en omgång ska hen självklart också hamna på linjen.
+      const o = lager.omgang(vy.omgangId);
+      lager.andraOmgang(o.id, { deltagare: [...o.deltagare, p.id] });
+      flash(`${p.namn} är tavla ${o.deltagare.length}.`);
+      return gaTill('omgang', { omgangId: o.id, lage: vy.lage }, true);
+    }
     return rita();
   }
   if (d.starta) {
@@ -612,12 +652,20 @@ document.addEventListener('click', async (ev) => {
     return rita();
   }
   if (d.skytt) {
+    if (t.dataset.spärrKlick) { delete t.dataset.spärrKlick; return; }
     return gaTill(vy.lage === 'poang' ? 'poang' : 'tid',
       { omgangId: vy.omgangId, personId: d.skytt, lage: vy.lage });
   }
   if (d.historik) {
     vy.oppen = vy.oppen === d.historik ? null : d.historik;
     return rita();
+  }
+  if (d.laggTill) return gaTill('lagg-till', { omgangId: vy.omgangId, lage: vy.lage });
+  if (d.laggIn) {
+    const o = lager.omgang(vy.omgangId);
+    lager.andraOmgang(o.id, { deltagare: [...o.deltagare, d.laggIn] });
+    flash(`${lager.person(d.laggIn).namn} är tavla ${o.deltagare.length}.`);
+    return gaTill('omgang', { omgangId: o.id, lage: vy.lage }, true);
   }
   if (d.nyttForsok) {
     lager.pagaende(vy.omgangId, d.nyttForsok);      // skapar nästa försök
@@ -791,6 +839,79 @@ document.addEventListener('pointerup', (ev) => {
     lager.raderaOmgang(o.id);
     flash('Omgången raderad.');
   }
+  rita();
+});
+
+// ---------------------------------------------- flytta en skytt i ordningen
+//
+// Håll in en rad i vallistan för att lyfta skytten och dra hen till en annan
+// plats. Numret sitter på PLATSEN, inte på personen: den som hamnar på tredje
+// raden får nummer 3, för det är tavlan hen ska skjuta mot. Därför numreras
+// raderna om medan draget pågår.
+
+let drag = null;
+
+function renumrera() {
+  app.querySelectorAll('.skyttrad[data-skytt] .nr').forEach((el, i) => {
+    el.textContent = `${i + 1}.`;
+  });
+}
+
+function malIndex(y) {
+  const rader = [...app.querySelectorAll('.skyttrad[data-skytt]')];
+  for (let i = 0; i < rader.length; i++) {
+    const r = rader[i].getBoundingClientRect();
+    if (y < r.top + r.height / 2) return i;
+  }
+  return rader.length - 1;
+}
+
+document.addEventListener('pointerdown', (ev) => {
+  const rad = ev.target.closest('.skyttrad[data-skytt]');
+  if (!rad) return;
+  const start = { rad, y: ev.clientY };
+  drag = { ...start, aktiv: false, timer: setTimeout(() => {
+    drag.aktiv = true;
+    rad.classList.add('lyft');
+    vibrera(40);
+  }, 500) };
+});
+
+document.addEventListener('pointermove', (ev) => {
+  if (!drag) return;
+  if (!drag.aktiv) {
+    // Rör sig fingret innan tiden gått ut är det en skrollning, inte ett drag.
+    if (Math.abs(ev.clientY - drag.y) > 10) {
+      clearTimeout(drag.timer);
+      drag = null;
+    }
+    return;
+  }
+  ev.preventDefault();
+  const rader = [...app.querySelectorAll('.skyttrad[data-skytt]')];
+  const nu = rader.indexOf(drag.rad);
+  const mal = malIndex(ev.clientY);
+  if (mal !== nu && mal >= 0) {
+    const referens = rader[mal];
+    referens.parentNode.insertBefore(drag.rad, mal < nu ? referens : referens.nextSibling);
+    renumrera();
+    vibrera(10);
+  }
+});
+
+document.addEventListener('pointerup', () => {
+  if (!drag) return;
+  clearTimeout(drag.timer);
+  const { rad, aktiv } = drag;
+  drag = null;
+  rad.classList.remove('lyft');
+  if (!aktiv) return;
+  rad.dataset.spärrKlick = '1';         // släppet ska inte öppna skytten
+  const ordning = [...app.querySelectorAll('.skyttrad[data-skytt]')]
+    .map((el) => el.dataset.skytt);
+  lager.andraOmgang(vy.omgangId, { deltagare: ordning });
+  const namn = lager.person(rad.dataset.skytt).namn;
+  flash(`${namn} är tavla ${ordning.indexOf(rad.dataset.skytt) + 1}.`);
   rita();
 });
 
