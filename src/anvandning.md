@@ -2,7 +2,7 @@ Appen är ett **stöd för instruktören** vid genomförandet av kompetensproven
 
 ## Innan ni börjar
 
-Lägg upp skyttarna en gång under **Lägg till skyttar** — namn och förband. Registret ligger kvar mellan tillfällen, så samma grupp kan skjuta både pistol och automatkarbin utan att skrivas in två gånger.
+Lägg upp skyttarna en gång under **Lägg till & hantera skyttar** — namn och förband. Registret ligger kvar mellan tillfällen, så samma grupp kan skjuta både pistol och automatkarbin utan att skrivas in två gånger.
 
 Överst i skyttelistan finns en genväg till *+ Ny omgång*, när registret är påfyllt och ni är redo att börja.
 

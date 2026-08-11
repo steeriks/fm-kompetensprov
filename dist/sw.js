@@ -5,7 +5,7 @@
 // vilket gör att en ny version verkligen slår igenom i stället för att den
 // gamla ligger kvar i cachen.
 
-const CACHE = 'fm-kompetensprov-523d46b7b6b4';   // byts av bygg.py till appens fingeravtryck
+const CACHE = 'fm-kompetensprov-c3ab481744a8';   // byts av bygg.py till appens fingeravtryck
 const FILER = ['./', './index.html', './manifest.webmanifest', './ikon-180.png', './ikon-512.png'];
 
 self.addEventListener('install', (e) => {

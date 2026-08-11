@@ -299,7 +299,7 @@ test('att radera en skytt tar med sig resultaten', async () => {
 
   win.confirm = () => true;
   hem();
-  klicka('Lägg till skyttar');
+  klicka('Lägg till & hantera skyttar');
   // Skyttarna raderas med samma gest som omgångarna: håll in, tryck soptunnan
   const rad = doc.querySelector('#app .personrad');
   assert.match(rad.textContent, /Berg/, 'registret är sorterat på namn');
@@ -512,7 +512,7 @@ test('radera alla skyttar frågar först och tar med sig resultaten', () => {
   knappaTid('10,00');
   klicka('Spara och tillbaka');
   hem();
-  klicka('Lägg till skyttar');
+  klicka('Lägg till & hantera skyttar');
 
   let fragad = '';
   win.confirm = (text) => { fragad = text; return false; };
@@ -946,7 +946,7 @@ test('startsidans knappar heter vad de gör, två och två', () => {
     .map((b) => b.textContent.trim());
   assert.deepEqual(namn, [
     'Så använder du appen', 'Anvisningar för genomförande',
-    'Lägg till skyttar', 'Appinställningar',
+    'Lägg till & hantera skyttar', 'Appinställningar',
   ]);
   assert.equal(doc.querySelectorAll('#bottenrad .knapprad').length, 2,
     'fyra på en rad blir oläsligt, fyra egna rader äter halva skärmen');
@@ -1052,7 +1052,7 @@ test('användarinstruktionen nås från startsidan och beskriver arbetsgången',
   klicka('Så använder du appen');
   const text = doc.querySelector('#app').textContent.replace(/\s+/g, ' ');
 
-  assert.match(text, /Lägg till skyttar/, 'förberedelsen');
+  assert.match(text, /Lägg till & hantera skyttar/, 'förberedelsen');
   assert.match(text, /i skjutordning/, 'omgången läggs upp');
   assert.match(text, /555.*5,55/, 'hur tiden knappas');
   assert.match(text, /Spara & nästa skytt/);
@@ -1092,7 +1092,7 @@ test('hjälpen och användarinstruktionen är två olika texter', () => {
 });
 
 test('skyttelistan har en genväg till ny omgång överst', () => {
-  klicka('Lägg till skyttar');
+  klicka('Lägg till & hantera skyttar');
   const forsta = doc.querySelector('#app button');
   assert.equal(forsta.textContent.trim(), '+ Ny omgång', 'genvägen ska ligga överst');
 
@@ -1107,7 +1107,7 @@ test('skyttelistan har en genväg till ny omgång överst', () => {
   klicka('Appinställningar');
   win.prompt = () => 'RADERA';
   klicka('Radera allt innehåll');
-  klicka('Lägg till skyttar');
+  klicka('Lägg till & hantera skyttar');
   assert.equal(doc.querySelector('#app button').textContent.trim(), '+ Ny omgång');
   assert.match(doc.querySelector('#app').textContent, /Inga skyttar ännu/);
 });

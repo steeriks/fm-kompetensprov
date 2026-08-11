@@ -70,8 +70,8 @@ påfyllt.
 
 En enskild omgång eller skytt raderas med samma grepp: **håll in** raden tills en soptunna
 läggs fram i den, och tryck sedan på soptunnan. Omgångarna ligger på startsidan, skyttarna
-under *Lägg till skyttar*, där alla också går att ta bort på en gång med *Radera alla*.
-Allt frågar först, och en raderad skytt tar sina resultat med sig.
+under *Lägg till & hantera skyttar*, där alla också går att ta bort på en gång med
+*Radera alla*. Allt frågar först, och en raderad skytt tar sina resultat med sig.
 
 ## Regler appen känner till
 

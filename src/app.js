@@ -133,7 +133,7 @@ function ritaStart() {
       <button class="knapp liten smal" data-vy="anvisning">Anvisningar för genomförande</button>
     </div>
     <div class="knapprad">
-      <button class="knapp liten smal" data-vy="register">Lägg till skyttar</button>
+      <button class="knapp liten smal" data-vy="register">Lägg till &amp; hantera skyttar</button>
       <button class="knapp liten smal" data-vy="installningar">Appinställningar</button>
     </div>`;
 }
