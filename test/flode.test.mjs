@@ -553,13 +553,14 @@ test('skyttar går att lägga till i en pågående omgång', () => {
   assert.equal(lagret().omgangar[0].deltagare.length, 2);
 });
 
-test('flytta en skytt: numret sitter på tavlan, inte på personen', async () => {
+test('långt tryck slår på flyttläget, sedan dras det i handtaget', async () => {
   klicka('+ Ny omgång');
   bockaIAlla();
   klicka('Starta omgången');
   const fore = rader().map((r) => r.textContent.replace(/\s+/g, ' ').trim());
   assert.match(fore[0], /^1\. Berg/);
   assert.match(fore[2], /^3\. Ek/);
+  assert.equal(doc.querySelector('[data-dra]'), null, 'inga handtag i vanligt läge');
 
   // jsdom mäter inga element — ge raderna höjd så att drop-läget går att räkna
   const höjd = 70;
@@ -568,23 +569,39 @@ test('flytta en skytt: numret sitter på tavlan, inte på personen', async () =>
     const i = Math.max(0, syskon.indexOf(this));
     return { top: i * höjd, bottom: (i + 1) * höjd, height: höjd, left: 0, right: 300, width: 300 };
   };
-
-  const rad = rader()[2];                       // Ek, tavla 3
-  const hand = (typ, y) => rad.dispatchEvent(
+  const peka = (el, typ, y) => el.dispatchEvent(
     new win.MouseEvent(typ, { bubbles: true, cancelable: true, clientX: 50, clientY: y }));
 
-  hand('pointerdown', 3 * höjd + 10);
-  await new Promise((r) => setTimeout(r, 600));  // håll in
-  assert.ok(rad.classList.contains('lyft'), 'raden ska lyftas efter ett långt tryck');
-  hand('pointermove', 10);                       // dra högst upp
-  hand('pointerup', 10);
+  // Håll in en rad: läget slås på, men ingenting flyttas av själva trycket
+  peka(rader()[2], 'pointerdown', 3 * höjd + 10);
+  await new Promise((r) => setTimeout(r, 600));
+  peka(rader()[2], 'pointerup', 3 * höjd + 10);
+  assert.equal(rader().length, 3);
+  assert.equal(doc.querySelectorAll('[data-dra]').length, 3, 'alla rader får handtag');
+  assert.match(doc.body.textContent, /Dra i ☰/);
+  assert.deepEqual(rader().map((r) => r.textContent.replace(/\s+/g, ' ').trim().slice(2, 8)),
+    fore.map((t) => t.slice(0, 6)), 'ordningen är orörd tills man drar');
+
+  // Dra Ek högst upp med handtaget
+  const rad = rader()[2];
+  const handtag = rad.querySelector('[data-dra]');
+  peka(handtag, 'pointerdown', 3 * höjd + 10);
+  assert.ok(rad.classList.contains('lyft'), 'draget börjar direkt i handtaget');
+  peka(handtag, 'pointermove', 10);
+  peka(handtag, 'pointerup', 10);
 
   const efter = rader().map((r) => r.textContent.replace(/\s+/g, ' ').trim());
-  assert.match(efter[0], /^1\. Ek/, 'den flyttade skytten får numret för sin nya tavla');
-  assert.match(efter[1], /^2\. Berg/);
-  assert.match(efter[2], /^3\. Craf/);
-  assert.deepEqual(lagret().omgangar[0].deltagare.length, 3);
+  assert.match(efter[0], /1\. Ek/, 'den flyttade skytten får numret för sin nya tavla');
+  assert.match(efter[1], /2\. Berg/);
+  assert.match(efter[2], /3\. Craf/);
   assert.match(doc.body.textContent, /Ek, Anna är tavla 1/);
+  assert.deepEqual(lagret().omgangar[0].deltagare.length, 3);
+
+  klicka('Klar med ordningen');
+  assert.equal(doc.querySelector('[data-dra]'), null, 'handtagen försvinner igen');
+  rader()[0].click();
+  assert.match(doc.querySelector('#underrubrik').textContent, /Tid · försök 1/,
+    'och raderna går att öppna som vanligt');
 });
 
 test('ett kort tryck öppnar skytten, det långa flyttar', async () => {
@@ -813,7 +830,40 @@ test('ett långt tryck markerar inte texten', async () => {
   const rad = rader()[0];
   rad.dispatchEvent(new win.MouseEvent('pointerdown', { bubbles: true, clientX: 50, clientY: 10 }));
   await new Promise((r) => setTimeout(r, 600));
-  assert.ok(rad.classList.contains('lyft'), 'raden ska vara lyft');
-  assert.ok(slapptes, 'markeringen ska släppas när raden lyfts');
+  assert.ok(slapptes, 'markeringen ska släppas när långtrycket slår till');
   rad.dispatchEvent(new win.MouseEvent('pointerup', { bubbles: true, clientX: 50, clientY: 10 }));
+});
+
+test('en färdig skytt får inget nytt försök av ett tryck på raden', () => {
+  klicka('+ Ny omgång');
+  rader()[0].click();
+  klicka('Starta omgången');
+  klicka('Nästa som saknar tid');
+  knappaTid('1000');
+  klicka('Poäng för');
+  knappaZon('B', 4);
+  knappaZon('A', 2);
+  klicka('Registrera');
+  assert.equal(lagret().resultat.length, 1);
+
+  // Raden i vallistan: ett tryck ska inte starta försök 2
+  rader()[0].click();
+  assert.equal(lagret().resultat.length, 1, 'inget nytt försök får uppstå');
+  assert.match(doc.querySelector('.flash').textContent, /är klar\. Tryck "\+ Nytt försök"/);
+  assert.match(doc.querySelector('#underrubrik').textContent, /krav PK/, 'vi står kvar i listan');
+
+  // Och lägesväljaren ska inte påstå att någon väntar
+  const lagen = [...doc.querySelectorAll('.lagesvaljare button')].map((b) => b.textContent.trim());
+  assert.deepEqual(lagen, ['TID', 'POÄNG'], 'ingen räknare när alla är klara: ' + lagen);
+
+  // "Nästa som saknar tid" ska inte heller hitta på något
+  klicka('TID');
+  klicka('Nästa som saknar tid');
+  assert.equal(lagret().resultat.length, 1);
+  assert.match(doc.body.textContent, /Alla har en tid/);
+
+  // Ett omtag startas med flit
+  klicka('+ Nytt försök');
+  assert.equal(lagret().resultat.length, 2);
+  assert.match(doc.querySelector('#underrubrik').textContent, /Tid · försök 2/);
 });

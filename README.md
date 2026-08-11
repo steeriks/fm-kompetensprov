@@ -41,9 +41,15 @@ inuti en omgång.
 
 **Efterhandsändringar i en omgång:** *+ Lägg till skytt* under listan tar in någon ur
 registret eller registrerar en ny på plats, utan att du lämnar omgången — hen hamnar på
-nästa lediga tavla. **Håll in en rad** för att lyfta skytten och dra hen till en annan
-plats. Numret sitter på *tavlan*, inte på personen: den som hamnar på tredje raden får
+nästa lediga tavla.
+
+**Byta ordning:** håll in en rad, så visar listan ett handtag (☰) på varje skytt. Dra i
+handtaget för att flytta någon till en annan tavla, och tryck *Klar med ordningen* när du
+är nöjd. Numret sitter på *tavlan*, inte på personen: den som hamnar på tredje raden får
 nummer 3.
+
+**Ett omtag startas alltid med flit.** Är skytten färdig händer ingenting av att du trycker
+på raden — *+ Nytt försök* startar försök 2.
 
 **Radera:** en enskild skytt raderas på sin rad under *Skyttar*, alla på en gång med
 *Radera alla*. En omgång raderas genom att **svepa vänster** på den i listan. Allt frågar

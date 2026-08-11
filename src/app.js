@@ -226,7 +226,9 @@ function ritaOmgang() {
       }
     }
     const oppen = vy.oppen === id;
-    return `<button class="skyttrad ${senaste && !pagar ? 'klar' : ''}" data-skytt="${id}">
+    return `<button class="skyttrad ${senaste && !pagar ? 'klar' : ''}${vy.flyttlage ? ' flyttbar' : ''}"
+        data-skytt="${id}">
+        ${vy.flyttlage ? `<span class="dra" data-dra="${id}" aria-label="Dra för att flytta">☰</span>` : ''}
         <span class="namn"><span class="nr">${nr}.</span> ${esc(p.namn)}</span>
         <span class="forband">${esc(p.forband || '')}${klara.length ? ` · ${klara.length} försök` : ''}</span>
         <span class="varden">${varden}</span>
@@ -240,20 +242,21 @@ function ritaOmgang() {
       ${oppen ? ritaHistorik(o, klara) : ''}`;
   }).join('');
 
-  const utanTid = o.deltagare.filter((id) => {
-    const r = lager.pagaende(o.id, id, false);
-    return !r || r.tid === null;
-  }).length;
-  const utanPoang = o.deltagare.filter((id) => {
-    const r = lager.pagaende(o.id, id, false);
-    return r && r.tid !== null;
-  }).length;
+  const utanTid = o.deltagare.filter((id) => behoverLage(o, id, 'tid')).length;
+  const utanPoang = o.deltagare.filter((id) => behoverLage(o, id, 'poang')).length;
 
   app.innerHTML = (rader || '<p class="tom">Inga deltagare i omgången.</p>')
-    + '<p class="dampad liten">Numret är skyttens tavla. Håll in en rad för att '
-    + 'flytta skytten till en annan tavla.</p>'
-    + '<div class="knapprad"><button class="knapp liten" data-lagg-till="1">'
-    + '+ Lägg till skytt</button></div>';
+    + (vy.flyttlage
+      ? '<p class="dampad liten">Dra i ☰ för att flytta en skytt till en annan tavla.</p>'
+      : '<p class="dampad liten">Numret är skyttens tavla. Håll in en rad för att '
+        + 'ändra ordningen.</p>'
+        + '<div class="knapprad"><button class="knapp liten" data-lagg-till="1">'
+        + '+ Lägg till skytt</button></div>');
+  if (vy.flyttlage) {
+    bottenrad.innerHTML =
+      '<button class="knapp primar" data-flyttlage="av">Klar med ordningen</button>';
+    return;
+  }
   bottenrad.innerHTML = `
     <div class="lagesvaljare">
       <button data-lage="tid" aria-pressed="${lage === 'tid'}">TID${utanTid ? ` (${utanTid})` : ''}</button>
@@ -322,7 +325,8 @@ function ritaTid() {
   const o = lager.omgang(vy.omgangId);
   const p = lager.person(vy.personId);
   if (!o || !p) return gaTill('start');
-  const r = lager.pagaende(o.id, p.id);
+  const r = lager.pagaende(o.id, p.id, false);
+  if (!r) return gaTill('omgang', { omgangId: o.id, lage: 'tid' }, true);
   if (!utkastTid && r.tid !== null) utkastTid = komma(r.tid);
   sattRubrik(p.namn, o.deltagare.indexOf(p.id) + 1);
   underrubrik.textContent = `Tid · försök ${r.forsok} · ${PROV[o.gren].namn}`;
@@ -373,7 +377,8 @@ function ritaPoang() {
   const p = lager.person(vy.personId);
   if (!o || !p) return gaTill('start');
   const prov = PROV[o.gren];
-  const r = lager.pagaende(o.id, p.id);
+  const r = lager.pagaende(o.id, p.id, false);
+  if (!r) return gaTill('omgang', { omgangId: o.id, lage: 'poang' }, true);
   sattRubrik(p.namn, o.deltagare.indexOf(p.id) + 1);
   underrubrik.textContent = `Poäng · försök ${r.forsok} · ${prov.namn}`;
   hemKnapp.hidden = false;
@@ -658,16 +663,46 @@ function rita() {
   window.scrollTo(0, 0);
 }
 
+/**
+ * Öppnar en skytt för inmatning.
+ *
+ * Ett nytt försök skapas BARA för den som aldrig skjutit. Är skytten färdig —
+ * registrerad och utan öppet försök — händer ingenting; ett omtag ska tryckas
+ * fram med "+ Nytt försök", inte råka uppstå för att man petade på raden.
+ */
+function oppnaSkytt(omgang, personId, lage) {
+  const alla = lager.resultatFor(omgang.id, personId);
+  const oppet = alla.find((r) => !r.registrerad);
+  if (!oppet && alla.length) {
+    return flash(`${lager.person(personId).namn} är klar. `
+      + 'Tryck "+ Nytt försök" på raden för ett omtag.', 4);
+  }
+  if (!oppet) lager.pagaende(omgang.id, personId);       // första försöket
+  return gaTill(lage === 'poang' ? 'poang' : 'tid',
+    { omgangId: omgang.id, personId, lage }, vy.namn !== 'omgang');
+}
+
+/**
+ * Väntar skytten på det här läget?
+ *
+ * Ett öppet försök utan tid väntar på sin tid; ett med tid väntar på poäng.
+ * Har skytten inget öppet försök väntar hen bara om hen aldrig skjutit — en
+ * färdig skytt ska varken räknas i lägesväljaren eller dras in i svepet och
+ * få ett nytt försök påhittat åt sig. Ett omtag startas med "+ Nytt försök".
+ */
+function behoverLage(omgang, personId, lage) {
+  const alla = lager.resultatFor(omgang.id, personId);
+  const oppet = alla.find((r) => !r.registrerad);
+  if (lage === 'tid') return oppet ? oppet.tid === null : alla.length === 0;
+  return !!oppet && oppet.tid !== null;
+}
+
 // ------------------------------------------------------- nästa i ordningen
 
 function nastaSkytt(omgang, lage, efterId = null) {
   const ordning = omgang.deltagare;
   const start = efterId ? ordning.indexOf(efterId) + 1 : 0;
-  const behover = (id) => {
-    const r = lager.pagaende(omgang.id, id, false);
-    if (lage === 'tid') return !r || r.tid === null;
-    return r && r.tid !== null;          // har tid men är inte registrerad
-  };
+  const behover = (id) => behoverLage(omgang, id, lage);
   // Sök framåt från den nyss avklarade, och varva sedan om från början —
   // instruktören ska aldrig behöva leta själv.
   for (let i = start; i < ordning.length; i++) if (behover(ordning[i])) return ordning[i];
@@ -683,7 +718,7 @@ document.addEventListener('click', async (ev) => {
     '[data-spara-tid], [data-till-poang], [data-till-tid], [data-registrera], [data-export], ' +
     '[data-format], [data-historik], [data-nytt-forsok], [data-radera-person], [data-kopia], ' +
     '[data-radera-allt], [data-radera-alla-skyttar], [data-skriv-ut], [data-anvisning], ' +
-    '[data-lagg-till], [data-lagg-in], .zonknapp');
+    '[data-lagg-till], [data-lagg-in], [data-flyttlage], .zonknapp');
   if (!t) return;
   const d = t.dataset;
 
@@ -744,10 +779,14 @@ document.addEventListener('click', async (ev) => {
     vy.lage = d.lage;
     return rita();
   }
+  if (d.flyttlage) {
+    vy.flyttlage = d.flyttlage === 'pa';
+    return rita();
+  }
   if (d.skytt) {
     if (t.dataset.spärrKlick) { delete t.dataset.spärrKlick; return; }
-    return gaTill(vy.lage === 'poang' ? 'poang' : 'tid',
-      { omgangId: vy.omgangId, personId: d.skytt, lage: vy.lage });
+    if (vy.flyttlage) return;                     // i flyttläge dras det, inte öppnas
+    return oppnaSkytt(lager.omgang(vy.omgangId), d.skytt, vy.lage);
   }
   if (d.historik) {
     vy.oppen = vy.oppen === d.historik ? null : d.historik;
@@ -773,8 +812,7 @@ document.addEventListener('click', async (ev) => {
         ? 'Alla har en tid. Byt till POÄNG.'
         : 'Ingen väntar på poäng.');
     }
-    return gaTill(d.nasta === 'tid' ? 'tid' : 'poang',
-      { omgangId: vy.omgangId, personId: id, lage: d.nasta });
+    return oppnaSkytt(o, id, d.nasta);
   }
 
   // --- sifferknappsatsen ---
@@ -802,13 +840,11 @@ document.addEventListener('click', async (ev) => {
     const o = lager.omgang(vy.omgangId);
     if (d.sparaTid === 'nasta') {
       const nasta = nastaEfterTid(o, vy.personId);
-      if (nasta && nasta.typ === 'tid') {
-        return gaTill('tid', { omgangId: o.id, personId: nasta.id, lage: 'tid' }, true);
-      }
+      if (nasta && nasta.typ === 'tid') return oppnaSkytt(o, nasta.id, 'tid');
       if (nasta) {
         // Hela linjen har skjutit — nästa steg är poängen, från tavla 1.
         flash('Alla har en tid. Nu poängen, från första tavlan.');
-        return gaTill('poang', { omgangId: o.id, personId: nasta.id, lage: 'poang' }, true);
+        return oppnaSkytt(o, nasta.id, 'poang');
       }
     }
     return gaTill('omgang', { omgangId: o.id, lage: 'tid' }, true);
@@ -855,7 +891,7 @@ document.addEventListener('click', async (ev) => {
     const id = nastaAnnan(o, 'poang', vy.personId);
     if (id) {
       flash(utfall);
-      return gaTill('poang', { omgangId: o.id, personId: id, lage: 'poang' }, true);
+      return oppnaSkytt(o, id, 'poang');
     }
     // Sista skytten: säg hur det gick för hela laget, det är ändå frågan man
     // ställer sig i det ögonblicket.
@@ -980,19 +1016,36 @@ function malIndex(y) {
 }
 
 document.addEventListener('pointerdown', (ev) => {
-  const rad = ev.target.closest('.skyttrad[data-skytt]');
-  if (!rad) return;
-  const start = { rad, y: ev.clientY };
-  drag = { ...start, aktiv: false, timer: setTimeout(() => {
-    drag.aktiv = true;
+  // I flyttläge dras det i handtaget, och draget börjar direkt — man har redan
+  // sagt vad man vill göra. Utanför flyttläget slår ett långt tryck på raden
+  // bara PÅ läget; att hålla in och dra i samma rörelse var för hal en gest.
+  const handtag = ev.target.closest('[data-dra]');
+  if (handtag) {
+    const rad = handtag.closest('.skyttrad');
+    drag = { rad, y: ev.clientY, aktiv: true, timer: null };
     rad.classList.add('lyft');
-    // Hann en markering uppstå innan CSS-regeln bet — släpp den, annars
-    // ligger iOS markeringshandtag kvar och stör draget.
-    const markering = window.getSelection && window.getSelection();
-    if (markering && markering.removeAllRanges) markering.removeAllRanges();
+    slappMarkering();
+    vibrera(20);
+    return;
+  }
+  const rad = ev.target.closest('.skyttrad[data-skytt]');
+  if (!rad || vy.flyttlage) return;
+  drag = { rad, y: ev.clientY, aktiv: false, timer: setTimeout(() => {
+    drag = null;                       // gesten är slut; nu är det läget som gäller
+    rad.dataset.spärrKlick = '1';
+    slappMarkering();
     vibrera(40);
+    vy.flyttlage = true;
+    rita();
+    flash('Dra i ☰ för att ändra ordningen.', 4);
   }, 500) };
 });
+
+/** Släpper en textmarkering som hunnit uppstå innan CSS-regeln bet. */
+function slappMarkering() {
+  const markering = window.getSelection && window.getSelection();
+  if (markering && markering.removeAllRanges) markering.removeAllRanges();
+}
 
 document.addEventListener('pointermove', (ev) => {
   if (!drag) return;

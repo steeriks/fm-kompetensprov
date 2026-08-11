@@ -281,3 +281,14 @@ label.falt input, label.falt select {
   margin: -0.1rem 0 0; text-align: center; font-size: 0.9rem; color: var(--dampad);
 }
 .nastaskytt b { color: var(--ink); }
+
+/* Flyttläge: raden får ett handtag att dra i. Att hålla in OCH dra i samma
+   rörelse visade sig för hal gest i fält — långtrycket slår i stället på
+   läget, och sedan drar man i ☰ med lugn hand. */
+.skyttrad.flyttbar { grid-template-columns: auto 1fr auto auto; }
+.skyttrad .dra {
+  grid-row: 1 / span 2; align-self: center;
+  padding: 0.4rem 0.7rem 0.4rem 0.1rem; margin-right: 0.2rem;
+  font-size: 1.4rem; line-height: 1; color: var(--accent);
+  touch-action: none; cursor: grab;
+}

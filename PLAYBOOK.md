@@ -43,6 +43,12 @@ alla poängen sedan. Det är därför vallistan har en **lägesväljare** i stä
 formulär per skytt, och därför `nastaSkytt()` finns — den letar upp nästa som saknar det
 som läget handlar om, och varvar om från början när den nått slutet.
 
+**Försök skapas bara med flit.** `oppnaSkytt()` skapar ett första försök åt den som
+aldrig skjutit, men aldrig ett omtag: är skytten färdig säger appen ifrån i stället. Vem
+som väntar på vad avgörs på ETT ställe, `behoverLage()`, som både lägesväljarens räknare
+och `nastaSkytt()` läser — annars börjar de två påstå olika saker, och svepet drar in
+färdiga skyttar och hittar på försök åt dem.
+
 `lagring.pagaende()` är gångjärnet: den ger skyttens *öppna* försök, det som ännu inte
 registrerats. Tidssvepet skapar det, poängsvepet hittar tillbaka till samma post
 timmar senare. Först `registrera()` låser posten, och då startar nästa tryck ett nytt
