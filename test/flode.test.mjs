@@ -269,26 +269,35 @@ test('att radera en skytt tar med sig resultaten', () => {
   assert.equal(lagret().resultat.length, 1);
 
   win.confirm = () => true;
-  klicka('‹');               // pilen går från vallistan till startsidan
+  klicka('Hem');
   klicka('Skyttar');
   klicka('Radera');
   assert.equal(lagret().personer.length, 2);
   assert.equal(lagret().resultat.length, 0, 'resultaten ska följa med personen');
 });
 
-test('pilen går till vallistan från en skytt, och till start från listan', () => {
+test('hemknappen går hem från vilken vy som helst, och sparar tiden på vägen', () => {
   klicka('+ Ny omgång');
   rader()[0].click();
   klicka('Starta omgången');
   klicka('Nästa som saknar tid');
   assert.match(doc.querySelector('#underrubrik').textContent, /Tid · försök 1/);
+  knappaTid('7,50');
 
-  klicka('‹');
-  assert.match(doc.querySelector('#underrubrik').textContent, /Delmoment/,
-    'från tidsknappsatsen ska pilen gå till vallistan');
-  klicka('‹');
+  klicka('Hem');
   assert.match(doc.querySelector('#app').textContent, /Omgångar/,
-    'från vallistan ska pilen gå till startsidan');
+    'hemknappen ska gå hela vägen hem, inte ett steg bakåt');
+  assert.equal(lagret().resultat[0].tid, 7.5,
+    'en påbörjad tid ska sparas i stället för att tappas');
+
+  // Och tillbaka in i omgången — vägen till vallistan finns i nederkant.
+  // Skytten har redan en tid, så raden får öppnas direkt i stället.
+  klicka('Pistol');
+  rader()[0].click();
+  assert.match(doc.querySelector('#underrubrik').textContent, /Tid · försök 1/);
+  klicka('Spara och tillbaka');
+  assert.match(doc.querySelector('#underrubrik').textContent, /Delmoment/,
+    '"Spara och tillbaka" ska lämna till vallistan');
 });
 
 test('fler träffar än de som räknas går inte att knappa in', () => {
@@ -438,7 +447,85 @@ test('anvisningen nås mitt i en omgång och visar rätt prov', () => {
   klicka('Anvisning');
   assert.match(doc.querySelector('#underrubrik').textContent, /Automatkarbin/,
     'anvisningen ska öppnas på det prov som skjuts');
-  klicka('‹');
+  klicka('Tillbaka till listan');
   assert.match(doc.querySelector('#underrubrik').textContent, /Delmoment 12.*krav PK/,
-    'pilen ska lämna tillbaka till vallistan, inte till startsidan');
+    'och lämna tillbaka till vallistan, inte till startsidan');
+});
+
+test('skyttarna numreras i skjutordning, som tavlorna på banan', () => {
+  klicka('+ Ny omgång');
+  // Bocka i i en egen ordning: Craf först, sedan Berg
+  rader().find((r) => r.textContent.includes('Craf')).click();
+  rader().find((r) => r.textContent.includes('Berg')).click();
+  // Listan står i bokstavsordning, men numret följer ibockningsordningen:
+  // Craf bockades i först och är därför nummer 1.
+  const valda = rader().filter((r) => r.className.includes('klar'));
+  assert.match(valda[0].textContent.replace(/\s+/g, ' '), /2\. Berg/);
+  assert.match(valda[1].textContent.replace(/\s+/g, ' '), /1\. Craf/);
+
+  klicka('Starta omgången');
+  const rad = rader().map((r) => r.textContent.replace(/\s+/g, ' ').trim());
+  assert.match(rad[0], /^1\. Craf/, 'första ibockade skytten är nummer 1 på banan');
+  assert.match(rad[1], /^2\. Berg/);
+});
+
+test('radera alla skyttar frågar först och tar med sig resultaten', () => {
+  klicka('+ Ny omgång');
+  bockaIAlla();
+  klicka('Starta omgången');
+  klicka('Nästa som saknar tid');
+  knappaTid('10,00');
+  klicka('Spara och tillbaka');
+  klicka('Hem');
+  klicka('Skyttar');
+
+  let fragad = '';
+  win.confirm = (text) => { fragad = text; return false; };
+  klicka('Radera alla');
+  assert.match(fragad, /Radera alla 3 skyttar/, 'frågan ska säga hur många det gäller');
+  assert.equal(lagret().personer.length, 3, 'nej betyder nej');
+
+  win.confirm = () => true;
+  klicka('Radera alla');
+  assert.equal(lagret().personer.length, 0);
+  assert.equal(lagret().resultat.length, 0, 'resultaten följer med');
+  assert.equal(lagret().omgangar.length, 1, 'omgången finns kvar, men tom');
+});
+
+test('svep vänster raderar en omgång — efter fråga', () => {
+  klicka('+ Ny omgång');
+  rader()[0].click();
+  klicka('Starta omgången');
+  klicka('Hem');
+  assert.equal(rader().length, 1, 'omgången ligger på startsidan');
+
+  const svep = (rad, fran, till, dy = 0) => {
+    const hand = (typ, x, y) => rad.dispatchEvent(
+      new win.MouseEvent(typ, { bubbles: true, clientX: x, clientY: y }));
+    hand('pointerdown', fran, 100);
+    hand('pointermove', till, 100 + dy);
+    hand('pointerup', till, 100 + dy);
+  };
+
+  // Kort svep gör ingenting
+  win.confirm = () => true;
+  svep(rader()[0], 200, 170);
+  assert.equal(lagret().omgangar.length, 1, 'ett kort svep ska inte radera');
+
+  // Lodrätt drag är en skrollning, inte ett svep
+  svep(rader()[0], 200, 100, 80);
+  assert.equal(lagret().omgangar.length, 1, 'skrollning ska inte radera');
+
+  // Nej på frågan lämnar omgången kvar
+  let fragad = '';
+  win.confirm = (text) => { fragad = text; return false; };
+  svep(rader()[0], 200, 100);
+  assert.match(fragad, /Radera omgången Pistol/);
+  assert.equal(lagret().omgangar.length, 1);
+
+  // Ja raderar
+  win.confirm = () => true;
+  svep(rader()[0], 200, 100);
+  assert.equal(lagret().omgangar.length, 0);
+  assert.match(doc.querySelector('#app').textContent, /Inga omgångar ännu/);
 });

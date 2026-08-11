@@ -14,20 +14,23 @@ export function underlag(omgang, personer, resultat) {
   const prov = PROV[omgang.gren];
   const zoner = ZONORDNING;
   const kolumner = [
-    'Namn', 'Förband', 'Försök', 'Tid (s)',
+    // Numret är skyttens plats i skjutordningen — och därmed tavelnumret på
+    // banan. Det är det man matchar mot när protokollet läses efteråt.
+    'Nr', 'Namn', 'Förband', 'Försök', 'Tid (s)',
     ...zoner.map((z) => `${z} (${{ A: 5, B: 4, C: 3, D: 3, X: 2, H: 1 }[z]}p)`),
     'Poäng', 'PK', 'Utfall', 'Anmärkning',
   ];
   const rader = [];
   let godkanda = 0;
-  for (const id of omgang.deltagare) {
+  for (const [index, id] of omgang.deltagare.entries()) {
     const p = personer.find((x) => x.id === id);
     if (!p) continue;
+    const nr = index + 1;
     const forsok = resultat.filter((r) => r.personId === id && r.registrerad);
     if (!forsok.length) {
       rader.push({
-        person: p, forsok: null,
-        celler: [p.namn, p.forband, '', '', ...zoner.map(() => ''), '', '', 'Ej skjuten', ''],
+        person: p, nr, forsok: null,
+        celler: [nr, p.namn, p.forband, '', '', ...zoner.map(() => ''), '', '', 'Ej skjuten', ''],
       });
       continue;
     }
@@ -38,9 +41,9 @@ export function underlag(omgang, personer, resultat) {
     for (const r of forsok) {
       const b = bedom(omgang.gren, r.traffar, r.tid, r.vapenhanteringUnderkand);
       rader.push({
-        person: p, forsok: r, bedomning: b,
+        person: p, nr, forsok: r, bedomning: b,
         celler: [
-          p.namn, p.forband, r.forsok, r.tid === null ? '' : komma(r.tid),
+          nr, p.namn, p.forband, r.forsok, r.tid === null ? '' : komma(r.tid),
           ...zoner.map((z) => r.traffar[z] || 0),
           b.poang, b.pk === null ? '' : komma(b.pk),
           b.godkand ? 'Godkänd' : 'Underkänd',
@@ -90,7 +93,8 @@ export function somText(u) {
   for (const rad of u.rader) {
     if (rad.person.id !== nuvarande) {
       nuvarande = rad.person.id;
-      rader.push(`${rad.person.namn}${rad.person.forband ? ' (' + rad.person.forband + ')' : ''}`);
+      rader.push(`${rad.nr}. ${rad.person.namn}`
+        + `${rad.person.forband ? ' (' + rad.person.forband + ')' : ''}`);
     }
     if (!rad.forsok) {
       rader.push('   ej skjuten');
@@ -357,15 +361,16 @@ export function somPdf(u) {
   // Kolumnbredderna måste summera till sidbredden minus båda marginalerna
   // (595 − 72 = 523 pt), annars hamnar sista kolumnen utanför pappret.
   const kol = [
-    { rubrik: 'Namn', bredd: 92 },
-    { rubrik: 'Förband', bredd: 60 },
+    { rubrik: 'Nr', bredd: 16 },
+    { rubrik: 'Namn', bredd: 84 },
+    { rubrik: 'Förband', bredd: 56 },
     { rubrik: 'F', bredd: 12 },
     { rubrik: 'Tid', bredd: 30 },
     ...ZONORDNING.map((z) => ({ rubrik: z, bredd: 18 })),
     { rubrik: 'Poäng', bredd: 30 },
     { rubrik: 'PK', bredd: 28 },
-    { rubrik: 'Utfall', bredd: 48 },
-    { rubrik: 'Anmärkning', bredd: 115 },
+    { rubrik: 'Utfall', bredd: 46 },
+    { rubrik: 'Anmärkning', bredd: 113 },
   ];
   const summa = kol.reduce((n, k) => n + k.bredd, 0);
   if (summa > SIDBREDD - 2 * MARGINAL) {

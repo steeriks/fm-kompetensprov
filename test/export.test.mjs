@@ -37,13 +37,16 @@ test('underlaget räknar godkända per skytt, inte per försök', () => {
   assert.equal(u.godkanda, 2, 'p2 blev godkänd på andra försöket');
   assert.equal(u.rader.length, 4, 'tre försök plus en ej skjuten');
   assert.equal(u.rader.at(-1).celler.at(-2), 'Ej skjuten');
+  assert.deepEqual(u.rader.map((r) => r.nr), [1, 2, 2, 3],
+    'numret är skjutordningen, och upprepas för varje försök');
+  assert.equal(u.kolumner[0], 'Nr');
 });
 
 test('texten innehåller rubrik, försök och summering', () => {
   const t = somText(u);
   assert.match(t, /Pistol — Delmoment 14/);
   assert.match(t, /Hätilä skjutbana/);
-  assert.match(t, /Andersson, Åsa \(1\. plut\)/);
+  assert.match(t, /1\. Andersson, Åsa \(1\. plut\)/);
   // Träffarna skrivs alltid i zonordning A B C D X H, inte i den ordning de
   // knappades in — protokollet ska se likadant ut varje gång.
   assert.match(t, /Försök 1: 11,20 s · A2 B4 · 26 p · PK 2,32 · GODKÄND/);
@@ -56,8 +59,8 @@ test('texten innehåller rubrik, försök och summering', () => {
 test('csv:n har BOM, semikolon och tal med komma', () => {
   const c = somCsv(u);
   assert.ok(c.startsWith('﻿'), 'BOM krävs för att Excel ska läsa å ä ö');
-  assert.match(c, /Namn;Förband;Försök;Tid \(s\)/);
-  assert.match(c, /Andersson, Åsa;1\. plut;1;11,20/);
+  assert.match(c, /Nr;Namn;Förband;Försök;Tid \(s\)/);
+  assert.match(c, /1;Andersson, Åsa;1\. plut;1;11,20/);
   assert.ok(c.includes('\r\n'), 'radbrytning enligt csv-konvention');
 });
 

@@ -38,11 +38,17 @@ header {
 }
 header h1 { font-size: 1.05rem; margin: 0; font-weight: 600; letter-spacing: 0.01em; }
 header .under { display: block; font-size: 0.8rem; color: var(--dampad); font-weight: 400; }
-.tillbaka {
-  flex: 0 0 auto; min-width: 44px; min-height: 44px;
-  display: flex; align-items: center; justify-content: center;
-  background: none; border: 0; color: var(--accent); font-size: 1.5rem; cursor: pointer;
+/* Hemknappen: ikon OCH ordet "Hem", så att det inte går att missförstå vart
+   den leder. Sitter längst upp till vänster, där tummen når den. */
+.hem {
+  flex: 0 0 auto; min-height: 44px; display: flex; align-items: center; gap: 0.3rem;
+  padding: 0.3rem 0.7rem 0.3rem 0.5rem;
+  background: var(--kort-ljus); border: 1px solid var(--linje); border-radius: 999px;
+  color: var(--accent); cursor: pointer; touch-action: manipulation;
 }
+.hem .hemikon { font-size: 1.35rem; line-height: 1; }
+.hem .hemtext { font-size: 0.9rem; font-weight: 600; }
+.hem:active { transform: scale(0.96); }
 
 main { padding: 0.9rem 0.9rem 7.5rem; max-width: 46rem; margin: 0 auto; }
 h2 { font-size: 1rem; margin: 1.2rem 0 0.5rem; color: var(--dampad); font-weight: 600; }
@@ -238,4 +244,15 @@ label.falt input, label.falt select {
   header, .bottenrad, .knapp, .knapprad { display: none !important; }
   main { padding: 0; max-width: none; }
   .kort, .skyttrad { border-color: #999; background: #fff; color: #000; }
+}
+
+/* Svep vänster på en omgång för att radera den. Raden följer fingret och
+   färgas röd när svepet är långt nog — annars vet man inte att det tagit. */
+.skyttrad[data-oppna] { transition: transform 0.12s ease-out; touch-action: pan-y; }
+.skyttrad.sveps { border-color: var(--underkand); background: rgba(224, 122, 109, 0.14); }
+
+/* Skyttens nummer är samma som tavlans på banan. */
+.skyttrad .nr {
+  display: inline-block; min-width: 1.6rem;
+  color: var(--accent); font-variant-numeric: tabular-nums;
 }

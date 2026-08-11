@@ -12,6 +12,8 @@ Appen följer hur provet faktiskt går till. Skyttarna står uppställda på en 
 instruktören skjuter en åt gången:
 
 1. **Lägg upp en omgång** — prov, datum, plats, och bocka i deltagarna i skjutordning.
+   Numret de får är samma nummer som skyttens tavla på banan, och följer med hela vägen
+   ut i exporten.
 2. **TID-läget:** knappa in tiden för en skytt, tryck *Spara & nästa skytt*, och appen
    hoppar direkt till nästa i ordningen. Hela linjen i ett svep.
 3. Gå fram till tavlorna och byt till **POÄNG-läget**. *Nästa som saknar poäng* börjar om
@@ -26,6 +28,14 @@ instruktören skjuter en åt gången:
 den öppnas på det prov som skjuts. Den innehåller avstånd, mål, ställning, träffkrav,
 genomförandet steg för steg med instruktörens repliker, reglerna för tid och bättring,
 bedömningskraven och zontabellen.
+
+**Hem**-knappen längst upp till vänster går alltid tillbaka till startsidan; en påbörjad
+tid sparas på vägen. Vägen tillbaka till vallistan finns i nederkant på de vyer som ligger
+inuti en omgång.
+
+**Radera:** en enskild skytt raderas på sin rad under *Skyttar*, alla på en gång med
+*Radera alla*. En omgång raderas genom att **svepa vänster** på den i listan. Allt frågar
+först, och en raderad skytt tar sina resultat med sig.
 
 En skytt kan skjuta om provet — *+ Nytt försök* på raden. Provet får skjutas tre gånger
 innan kompletterande träning krävs, och appen räknar försöken.

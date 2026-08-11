@@ -17,7 +17,7 @@ const app = document.getElementById('app');
 const bottenrad = document.getElementById('bottenrad');
 const rubrik = document.getElementById('rubrik');
 const underrubrik = document.getElementById('underrubrik');
-const tillbakaKnapp = document.getElementById('tillbaka');
+const hemKnapp = document.getElementById('hem');
 
 // Vy, och vad vyn handlar om. Ingen router — appen är en enda skärm i taget
 // och webbläsarens bakåtknapp hanteras med history.state.
@@ -66,7 +66,7 @@ function ritaStart() {
   const omgangar = lager.omgangar();
   rubrik.firstChild.textContent = 'FM kompetensprov';
   underrubrik.textContent = 'Pistol och automatkarbin';
-  tillbakaKnapp.hidden = true;
+  hemKnapp.hidden = true;
 
   const lista = omgangar.length ? omgangar.map((o) => {
     const prov = PROV[o.gren];
@@ -81,7 +81,8 @@ function ritaStart() {
     </button>`;
   }).join('') : '<p class="tom">Inga omgångar ännu.<br>Börja med att lägga upp en.</p>';
 
-  app.innerHTML = `<h2>Omgångar</h2>${lista}`;
+  app.innerHTML = `<h2>Omgångar</h2>${lista}`
+    + (omgangar.length ? '<p class="dampad liten">Svep vänster på en omgång för att radera den.</p>' : '');
   bottenrad.innerHTML = `
     <button class="knapp primar" data-vy="ny">+ Ny omgång</button>
     <div class="knapprad">
@@ -96,10 +97,11 @@ function ritaStart() {
 function ritaNy() {
   rubrik.firstChild.textContent = 'Ny omgång';
   underrubrik.textContent = 'Välj prov och deltagare';
-  tillbakaKnapp.hidden = false;
+  hemKnapp.hidden = false;
 
   const personer = lager.personer();
-  const valda = new Set(vy.valda || []);
+  const ordning = vy.valda || [];       // ibockningsordningen ÄR skjutordningen
+  const valda = new Set(ordning);
   app.innerHTML = `
     <label class="falt">Prov
       <select id="gren">
@@ -118,9 +120,12 @@ function ritaNy() {
     <label class="falt">Instruktör<input type="text" id="instruktor" autocomplete="off"></label>
 
     <h2>Deltagare i skjutordning</h2>
+    <p class="dampad liten">Numret följer ordningen du bockar i dem, och är samma
+    nummer som skyttens tavla på banan.</p>
     ${personer.length ? personer.map((p) => `
       <button class="skyttrad ${valda.has(p.id) ? 'klar' : ''}" data-vaxla="${p.id}">
-        <span class="namn">${esc(p.namn)}</span>
+        <span class="namn">${valda.has(p.id)
+          ? `<span class="nr">${ordning.indexOf(p.id) + 1}.</span> ` : ''}${esc(p.namn)}</span>
         <span class="forband">${esc(p.forband || '')}</span>
         <span class="chip ${valda.has(p.id) ? 'g' : ''}">${valda.has(p.id) ? '✓ med' : 'lägg till'}</span>
       </button>`).join('')
@@ -154,11 +159,12 @@ function ritaOmgang() {
   const lage = vy.lage || 'tid';
   rubrik.firstChild.textContent = `${prov.namn} ${o.datum}`;
   underrubrik.textContent = `${prov.delmoment} · krav PK ${komma(prov.pkKrav)}`;
-  tillbakaKnapp.hidden = false;
+  hemKnapp.hidden = false;
 
-  const rader = o.deltagare.map((id) => {
+  const rader = o.deltagare.map((id, i) => {
     const p = lager.person(id);
     if (!p) return '';
+    const nr = i + 1;   // skjutordningen är också tavelnumret på banan
     const pagar = lager.pagaende(o.id, id, false);
     const klara = lager.resultatFor(o.id, id).filter((r) => r.registrerad);
     const senaste = klara[klara.length - 1];
@@ -179,7 +185,7 @@ function ritaOmgang() {
     }
     const oppen = vy.oppen === id;
     return `<button class="skyttrad ${senaste && !pagar ? 'klar' : ''}" data-skytt="${id}">
-        <span class="namn">${esc(p.namn)}</span>
+        <span class="namn"><span class="nr">${nr}.</span> ${esc(p.namn)}</span>
         <span class="forband">${esc(p.forband || '')}${klara.length ? ` · ${klara.length} försök` : ''}</span>
         <span class="varden">${varden}</span>
         ${chip}
@@ -238,7 +244,7 @@ function ritaTid() {
   if (!utkastTid && r.tid !== null) utkastTid = komma(r.tid);
   rubrik.firstChild.textContent = p.namn;
   underrubrik.textContent = `Tid · försök ${r.forsok} · ${PROV[o.gren].namn}`;
-  tillbakaKnapp.hidden = false;
+  hemKnapp.hidden = false;
 
   app.innerHTML = `
     <div class="tidvisning ${utkastTid ? '' : 'tom'}">${esc(utkastTid || '0,00')}<span class="enhet"> s</span></div>
@@ -279,7 +285,7 @@ function ritaPoang() {
   const r = lager.pagaende(o.id, p.id);
   rubrik.firstChild.textContent = p.namn;
   underrubrik.textContent = `Poäng · försök ${r.forsok} · ${prov.namn}`;
-  tillbakaKnapp.hidden = false;
+  hemKnapp.hidden = false;
 
   const grupper = prov.grupper.map((g) => `
     <div class="zongrupp" data-grupp="${g.id}">
@@ -373,7 +379,7 @@ function ritaAnvisning() {
   const a = prov.anvisning;
   rubrik.firstChild.textContent = 'Anvisning';
   underrubrik.textContent = `${prov.namn} · ${prov.delmoment}`;
-  tillbakaKnapp.hidden = false;
+  hemKnapp.hidden = false;
 
   app.innerHTML = `
     <div class="kort">
@@ -407,7 +413,9 @@ function ritaAnvisning() {
     <div class="lagesvaljare">
       <button data-anvisning="pist" aria-pressed="${gren === 'pist'}">PISTOL</button>
       <button data-anvisning="ak" aria-pressed="${gren === 'ak'}">AUTOMATKARBIN</button>
-    </div>`;
+    </div>
+    ${vy.omgangId ? '<div class="knapprad"><button class="knapp liten" '
+      + 'data-vy="omgang-ater">Tillbaka till listan</button></div>' : ''}`;
 }
 
 // ------------------------------------------------------------- skytteregister
@@ -415,7 +423,7 @@ function ritaAnvisning() {
 function ritaRegister() {
   rubrik.firstChild.textContent = 'Skyttar';
   underrubrik.textContent = 'Registret ligger kvar mellan omgångar';
-  tillbakaKnapp.hidden = false;
+  hemKnapp.hidden = false;
   const personer = lager.personer();
   app.innerHTML = personer.length ? personer.map((p) => `
     <div class="kort">
@@ -424,7 +432,10 @@ function ritaRegister() {
         <button class="knapp liten fara" data-radera-person="${p.id}">Radera</button>
       </div>
     </div>`).join('') : '<p class="tom">Inga skyttar ännu.</p>';
-  bottenrad.innerHTML = '<button class="knapp primar" data-ny-skytt="1">+ Ny skytt</button>';
+  bottenrad.innerHTML = `
+    <button class="knapp primar" data-ny-skytt="1">+ Ny skytt</button>
+    ${personer.length ? '<div class="knapprad"><button class="knapp liten fara" '
+      + 'data-radera-alla-skyttar="1">Radera alla</button></div>' : ''}`;
 }
 
 function nySkytt() {
@@ -441,7 +452,7 @@ function nySkytt() {
 function ritaInstallningar() {
   rubrik.firstChild.textContent = 'Inställningar';
   underrubrik.textContent = 'Säkerhetskopia och nollställning';
-  tillbakaKnapp.hidden = false;
+  hemKnapp.hidden = false;
   const d = lager.las();
   app.innerHTML = `
     ${lager.lagringFungerar() ? '' : `<div class="varningsruta">
@@ -488,7 +499,7 @@ function ritaExportval() {
   const u = underlag(o, lager.las().personer, lager.resultat(o.id));
   rubrik.firstChild.textContent = 'Dela resultatet';
   underrubrik.textContent = `${u.godkanda} av ${u.antalSkyttar} godkända`;
-  tillbakaKnapp.hidden = false;
+  hemKnapp.hidden = false;
   app.innerHTML = `
     <p class="dampad liten">Delningsrutan öppnar Mail, Meddelanden eller det du väljer.
     Kan telefonen inte dela filer laddas de ned i stället.</p>
@@ -498,7 +509,11 @@ function ritaExportval() {
     <div class="knapprad"><button class="knapp" data-format="csv">CSV</button></div>
     <h2>Förhandsgranskning</h2>
     <div class="kort"><pre style="white-space:pre-wrap;margin:0;font-size:0.8rem">${esc(somText(u))}</pre></div>`;
-  bottenrad.innerHTML = '<button class="knapp liten" data-skriv-ut="1">Skriv ut / spara som PDF</button>';
+  bottenrad.innerHTML = `
+    <div class="knapprad">
+      <button class="knapp liten" data-vy="omgang-ater">Tillbaka till listan</button>
+      <button class="knapp liten" data-skriv-ut="1">Skriv ut</button>
+    </div>`;
 }
 
 // -------------------------------------------------------------- rita om allt
@@ -541,7 +556,8 @@ document.addEventListener('click', async (ev) => {
     '[data-starta], [data-skytt], [data-lage], [data-nasta], [data-siffra], [data-radera], ' +
     '[data-spara-tid], [data-till-poang], [data-till-tid], [data-registrera], [data-export], ' +
     '[data-format], [data-historik], [data-nytt-forsok], [data-radera-person], [data-kopia], ' +
-    '[data-radera-allt], [data-skriv-ut], [data-anvisning], .zonknapp');
+    '[data-radera-allt], [data-radera-alla-skyttar], [data-skriv-ut], [data-anvisning], ' +
+    '.zonknapp');
   if (!t) return;
   const d = t.dataset;
 
@@ -559,7 +575,10 @@ document.addEventListener('click', async (ev) => {
   }
   if (d.vy === 'installningar') return gaTill('installningar');
   if (d.vy === 'omgang-ater') return gaTill('omgang', { omgangId: vy.omgangId, lage: 'poang' }, true);
-  if (d.oppna) return gaTill('omgang', { omgangId: d.oppna, lage: 'tid' });
+  if (d.oppna) {
+    if (t.dataset.spärrKlick) { delete t.dataset.spärrKlick; return; }
+    return gaTill('omgang', { omgangId: d.oppna, lage: 'tid' });
+  }
 
   // --- ny omgång ---
   if (d.vaxla) {
@@ -707,6 +726,16 @@ document.addEventListener('click', async (ev) => {
     }
     return;
   }
+  if (d.raderaAllaSkyttar) {
+    const antal = lager.personer().length;
+    if (confirm(`Radera alla ${antal} skyttar och deras resultat?\n\n`
+      + 'Omgångarna finns kvar, men blir tomma.')) {
+      for (const p of lager.personer()) lager.raderaPerson(p.id);
+      flash(`${antal} skyttar raderade.`);
+      rita();
+    }
+    return;
+  }
   if (d.kopia === 'ut') {
     const namn = `kompetensprov-kopia-${new Date().toISOString().slice(0, 10)}.json`;
     await dela(namn, lager.sakerhetskopia(), 'txt', 'Säkerhetskopia från FM kompetensprov');
@@ -724,6 +753,45 @@ document.addEventListener('click', async (ev) => {
     if (svar !== null) flash('Ingenting raderades.');
     return;
   }
+});
+
+// Svep vänster på en omgång för att radera den. Bara vågräta svep räknas, så
+// att listan fortfarande går att skrolla, och raden får inte öppnas av
+// släppet — därför spärras nästa klick.
+let svep = null;
+document.addEventListener('pointerdown', (ev) => {
+  const rad = ev.target.closest('.skyttrad[data-oppna]');
+  if (!rad) return;
+  svep = { rad, x: ev.clientX, y: ev.clientY };
+});
+document.addEventListener('pointermove', (ev) => {
+  if (!svep) return;
+  const dx = ev.clientX - svep.x;
+  const dy = ev.clientY - svep.y;
+  if (Math.abs(dy) > 30) { svep = null; return; }      // det här är en skrollning
+  svep.rad.style.transform = dx < 0 ? `translateX(${Math.max(dx, -90)}px)` : '';
+  svep.rad.classList.toggle('sveps', dx < -30);
+});
+document.addEventListener('pointerup', (ev) => {
+  if (!svep) return;
+  const { rad } = svep;
+  const dx = ev.clientX - svep.x;
+  svep = null;
+  rad.style.transform = '';
+  rad.classList.remove('sveps');
+  if (dx > -60) return;                                 // för kort svep
+  rad.dataset.spärrKlick = '1';
+  const o = lager.omgang(rad.dataset.oppna);
+  if (!o) return;
+  const antal = lager.resultat(o.id).filter((r) => r.registrerad).length;
+  vibrera(30);
+  if (confirm(`Radera omgången ${PROV[o.gren].namn} ${o.datum}`
+    + `${o.plats ? ' på ' + o.plats : ''}?\n\n`
+    + `${antal} registrerade försök raderas med den.`)) {
+    lager.raderaOmgang(o.id);
+    flash('Omgången raderad.');
+  }
+  rita();
 });
 
 // Håll in en zonknapp för att nolla den — enda vägen tillbaka efter en
@@ -765,19 +833,13 @@ document.addEventListener('change', (ev) => {
   }
 });
 
-// Pilen i huvudet går dit man rimligen vill, inte dit historiken råkar peka:
-// från en skytt till vallistan, från listan till startsidan. Telefonens egen
-// bakåtgest följer stacken som vanligt — den är grund tack vare gaTill(…, true).
-const OVANFOR = {
-  tid: 'omgang', poang: 'omgang', export: 'omgang',
-  omgang: 'start', ny: 'start', register: 'start', installningar: 'start',
-  anvisning: 'start',
-};
-tillbakaKnapp.addEventListener('click', () => {
-  // Anvisningen kan nås både från startsidan och mitt i en omgång — pilen ska
-  // lämna tillbaka dit man kom ifrån.
-  const mal = (vy.namn === 'anvisning' && vy.omgangId) ? 'omgang' : (OVANFOR[vy.namn] || 'start');
-  if (mal === 'omgang') return gaTill('omgang', { omgangId: vy.omgangId, lage: vy.lage }, true);
+// Hemknappen går alltid till startsidan — ett tryck, ingen gissning om var i
+// historiken man befinner sig. Vägen tillbaka till vallistan finns i stället
+// som en egen knapp i nederkant på varje vy som ligger inuti en omgång.
+hemKnapp.addEventListener('click', () => {
+  // En påbörjad tid sparas på vägen ut; annars försvinner det man knappat in
+  // bara för att man tryckte fel knapp.
+  if (vy.namn === 'tid') sparaTid();
   gaTill('start', {}, true);
 });
 
