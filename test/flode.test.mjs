@@ -861,7 +861,9 @@ test('tidvyn säger vem som står på tur — och byter till poäng när linjen 
   assert.equal(lagret().resultat.filter((r) => r.tid !== null).length, 3);
 });
 
-test('hemknappen är en ikon utan ram', () => {
+test('hemknappen är en ikon utan ram, och står kvar på startsidan', () => {
+  assert.equal(doc.querySelector('#hem').hidden, false,
+    'rubrikraden ska se likadan ut på varje skärm, startsidan inräknad');
   klicka('+ Ny omgång');
   const knapp = doc.querySelector('#hem');
   assert.equal(knapp.textContent.trim(), '', 'ingen text, bara ikonen');

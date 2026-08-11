@@ -116,6 +116,11 @@ det fick bytas ut.
 tillbaka till vallistan finns som egen knapp i nederkant på de vyer som ligger inuti en
 omgång; att navigera "uppåt" via historiken blev aldrig förutsägbart.
 
+Den står kvar **även på startsidan**, där den inte leder någonstans. `ritaStart` gömde den
+först, men `hidden` bet inte (se fällan nedan), så ikonen syntes ändå och hann bli en del
+av bilden. När felet rättades försvann den — och skulle tillbaka. Rubrikraden ska se
+likadan ut på varje skärm.
+
 **Bottenradens höjd mäts** efter varje omritning och skrivs till `--bottenhojd`, som
 sidans nedre marginal läser. Raden är olika hög i olika vyer, och en gissad marginal göms
 antingen bakom knapparna eller slösar skärm.
@@ -130,7 +135,8 @@ antingen bakom knapparna eller slösar skärm.
   `[hidden] { display: none }` ligger i UA-lagret, och en klassregel med `display: flex`
   i det här arket vinner över den. Hemknappen och stegningspilarna sätter `display: flex`
   och göms med `hidden` — därför finns `[hidden] { display: none !important }` överst i
-  `style.css`. Utan den står de kvar synliga i varje vy som gömt dem.
+  `style.css`. Utan den står de kvar synliga i varje vy som gömt dem — vilket hemknappen
+  gjorde på startsidan ända tills pilarna kom och tvingade fram rättningen.
 - **`rita()` fick inte städa bort flash-meddelanden.** Nästan varje bekräftelse följs av en
   omritning, så meddelandet rensades av just den omritning det skulle överleva och syntes
   aldrig. Flashen tar bort sig själv efter sina sekunder i stället.

@@ -1654,7 +1654,12 @@ function ritaStart() {
   const omgangar = lager.omgangar();
   sattRubrik('FM kompetensprov');
   underrubrik.textContent = 'Pistol och automatkarbin';
-  hemKnapp.hidden = true;
+  // Huset står kvar även här. Det gömdes först på startsidan — dit den ändå
+  // leder — men syntes ändå, eftersom `hidden` förlorade mot `.hem`s egen
+  // display-regel. När den buggen rättades försvann en ikon som hunnit bli
+  // en del av bilden, och den ska vara kvar: rubrikraden ska se likadan ut
+  // överallt, så att blicken hittar samma sak på varje skärm.
+  hemKnapp.hidden = false;
 
   const lista = omgangar.length ? omgangar.map((o) => {
     const prov = PROV[o.gren];
