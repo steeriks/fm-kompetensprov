@@ -283,7 +283,7 @@ test('att radera en skytt tar med sig resultaten', () => {
 
   win.confirm = () => true;
   hem();
-  klicka('Skyttar');
+  klicka('Lägg till skyttar');
   klicka('Radera');
   assert.equal(lagret().personer.length, 2);
   assert.equal(lagret().resultat.length, 0, 'resultaten ska följa med personen');
@@ -490,7 +490,7 @@ test('radera alla skyttar frågar först och tar med sig resultaten', () => {
   knappaTid('10,00');
   klicka('Spara och tillbaka');
   hem();
-  klicka('Skyttar');
+  klicka('Lägg till skyttar');
 
   let fragad = '';
   win.confirm = (text) => { fragad = text; return false; };
@@ -691,7 +691,7 @@ test('backsteg fungerar i båda lägena', () => {
 });
 
 test('inställningarna har ingen utskriftsknapp', () => {
-  klicka('Inställningar');
+  klicka('Appinställningar');
   const knappar = [...doc.querySelectorAll('#bottenrad button, #app button')]
     .map((b) => b.textContent.trim());
   assert.ok(!knappar.some((t) => /skriv ut/i.test(t)),
@@ -903,4 +903,25 @@ test('knapparna säger vad som ska göras, inte bara "nästa"', () => {
   if (!doc.querySelector('#bottenrad .knapp.primar').textContent.includes('Registrera &')) {
     assert.equal(primar(), 'Nästa som saknar poäng');
   }
+});
+
+test('startsidans knappar heter vad de gör, på en enda rad', () => {
+  const rad = doc.querySelector('#bottenrad .knapprad');
+  const namn = [...rad.querySelectorAll('button')].map((b) => b.textContent.trim());
+  assert.deepEqual(namn,
+    ['Anvisningar för genomförande', 'Lägg till skyttar', 'Appinställningar']);
+  assert.equal(doc.querySelectorAll('#bottenrad .knapprad').length, 1,
+    'de tre ska dela en rad — tre egna rader äter en fjärdedel av skärmen');
+  assert.ok([...rad.querySelectorAll('button')].every((b) => b.className.includes('smal')),
+    'och bära den smala stilen som gör att de får plats');
+});
+
+test('sidans nedre marginal följer bottenradens höjd', () => {
+  const css = fs.readFileSync(FIL, 'utf8');
+  assert.match(css, /padding: 0\.9rem 0\.9rem calc\(var\(--bottenhojd, 7\.5rem\) \+ 1rem\)/,
+    'marginalen ska läsa variabeln, med ett reservvärde om mätningen uteblir');
+  // jsdom mäter inte layout (offsetHeight = 0), så variabeln ska lämnas orörd
+  // och reservvärdet gälla — mätningen sker i den riktiga webbläsaren.
+  assert.equal(doc.documentElement.style.getPropertyValue('--bottenhojd'), '',
+    'utan verklig mätning ska ingen nolla skrivas in');
 });

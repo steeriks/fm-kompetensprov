@@ -128,9 +128,9 @@ function ritaStart() {
   bottenrad.innerHTML = `
     <button class="knapp primar" data-vy="ny">+ Ny omgång</button>
     <div class="knapprad">
-      <button class="knapp liten" data-vy="anvisning">Anvisningar</button>
-      <button class="knapp liten" data-vy="register">Skyttar</button>
-      <button class="knapp liten" data-vy="installningar">Inställningar</button>
+      <button class="knapp liten smal" data-vy="anvisning">Anvisningar för genomförande</button>
+      <button class="knapp liten smal" data-vy="register">Lägg till skyttar</button>
+      <button class="knapp liten smal" data-vy="installningar">Appinställningar</button>
     </div>`;
 }
 
@@ -672,7 +672,19 @@ function rita() {
   else if (vy.namn === 'anvisning') ritaAnvisning();
   else if (vy.namn === 'lagg-till') ritaLaggTill();
   window.scrollTo(0, 0);
+  mätBottenrad();
 }
+
+/**
+ * Skriver bottenradens höjd till en CSS-variabel, så att sidans nedre
+ * marginal alltid räcker. Raden är fast förankrad och olika hög i olika vyer
+ * — en fast marginal göms antingen bakom knapparna eller slösar skärm.
+ */
+function mätBottenrad() {
+  const h = bottenrad.offsetHeight;
+  if (h > 0) document.documentElement.style.setProperty('--bottenhojd', `${h}px`);
+}
+window.addEventListener('resize', mätBottenrad);
 
 /**
  * Öppnar en skytt för inmatning.
