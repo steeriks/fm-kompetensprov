@@ -17,7 +17,11 @@
 <body>
 <header>
   <button class="hem" id="hem" hidden aria-label="Till startsidan" title="Till startsidan">
-    <span class="hemikon" aria-hidden="true">⌂</span>
+    <!-- Ritad ikon i stället för tecknet ⌂, som är tunt och tecknas olika på
+         olika telefoner. Fylld form ger kontrast nog att träffas i mörker. -->
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M12 3 2.5 11.2h2.6V21h5.1v-5.9h3.6V21h5.1v-9.8h2.6z"/>
+    </svg>
   </button>
   <h1 id="rubrik">FM kompetensprov<span class="under" id="underrubrik">Pistol och automatkarbin</span></h1>
 </header>

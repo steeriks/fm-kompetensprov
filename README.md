@@ -18,8 +18,10 @@ instruktören skjuter en åt gången:
    hoppar direkt till nästa i ordningen. Hela linjen i ett svep. Siffrorna knappas rakt
    av som de står på timern — **555** blir 5,55 och **6667** blir 66,67 — men komma går
    också att använda.
-3. Gå fram till tavlorna och byt till **POÄNG-läget**. *Nästa som saknar poäng* börjar om
-   från första skytten.
+   Under knappen står vem som är näste man, med tavelnummer. När sista skytten fått sin
+   tid byter knappen till *Spara & börja med poängen*.
+3. Gå fram till tavlorna. Appen står redan på första tavlan i **POÄNG-läget**; annars
+   tar *Nästa som saknar poäng* dig dit.
 4. **Knappa in träffarna** — en tryckning per träff på respektive zon. Poängen står under
    varje knapp och kvoten räknas medan du knappar. Håll in en knapp för att nolla den.
 5. **Registrera resultat** låser försöket och går vidare till nästa skytt. Kvoten och

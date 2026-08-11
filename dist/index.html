@@ -53,16 +53,16 @@ header {
 }
 header h1 { font-size: 1.05rem; margin: 0; font-weight: 600; letter-spacing: 0.01em; }
 header .under { display: block; font-size: 0.8rem; color: var(--dampad); font-weight: 400; }
-/* Hemknappen: bara husikonen, för att spara bredd åt rubriken. Den är
-   inramad så att den läses som en knapp och inte som dekoration. */
+/* Hemknappen: bara huset, ingen ram. Träffytan är kvar på 44 px även om
+   själva ikonen är mindre — det är fingret som ska ha plats, inte ramen. */
 .hem {
-  flex: 0 0 auto; width: 44px; height: 44px;
+  flex: 0 0 auto; width: 44px; height: 44px; padding: 0;
   display: flex; align-items: center; justify-content: center;
-  background: var(--kort-ljus); border: 1px solid var(--linje); border-radius: 999px;
-  color: var(--accent); cursor: pointer; touch-action: manipulation;
+  background: none; border: 0; color: var(--ink);
+  cursor: pointer; touch-action: manipulation;
 }
-.hem .hemikon { font-size: 1.5rem; line-height: 1; }
-.hem:active { transform: scale(0.96); }
+.hem svg { width: 27px; height: 27px; fill: currentColor; display: block; }
+.hem:active { transform: scale(0.9); color: var(--accent); }
 
 main { padding: 0.9rem 0.9rem 7.5rem; max-width: 46rem; margin: 0 auto; }
 h2 { font-size: 1rem; margin: 1.2rem 0 0.5rem; color: var(--dampad); font-weight: 600; }
@@ -279,12 +279,22 @@ label.falt input, label.falt select {
   position: relative; z-index: 5; touch-action: none;
 }
 
+/* Vem som står på tur, direkt under knappen som leder dit. */
+.nastaskytt {
+  margin: -0.1rem 0 0; text-align: center; font-size: 0.9rem; color: var(--dampad);
+}
+.nastaskytt b { color: var(--ink); }
+
 </style>
 </head>
 <body>
 <header>
   <button class="hem" id="hem" hidden aria-label="Till startsidan" title="Till startsidan">
-    <span class="hemikon" aria-hidden="true">⌂</span>
+    <!-- Ritad ikon i stället för tecknet ⌂, som är tunt och tecknas olika på
+         olika telefoner. Fylld form ger kontrast nog att träffas i mörker. -->
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M12 3 2.5 11.2h2.6V21h5.1v-5.9h3.6V21h5.1v-9.8h2.6z"/>
+    </svg>
   </button>
   <h1 id="rubrik">FM kompetensprov<span class="under" id="underrubrik">Pistol och automatkarbin</span></h1>
 </header>
@@ -1556,6 +1566,33 @@ function ritaHistorik(o, forsok) {
   }).join('')}</div>`;
 }
 
+/**
+ * Vem som står på tur efter den skytt vars tid just knappas in, och med vad.
+ *
+ * Saknar någon annan sin tid är det tid som gäller. Har alla fått sin tid är
+ * nästa steg poängen, och då pekas den första skytten i ordningen ut — man går
+ * fram till tavlorna och börjar om från tavla 1. Den skytt som just nu står
+ * öppen räknas med, eftersom hen får sin tid i samma knapptryck.
+ */
+function nastaEfterTid(omgang, personId) {
+  const utanTid = nastaSkytt(omgang, 'tid', personId);
+  // nastaSkytt varvar om från början och hittar då skytten man står på, som
+  // ju ännu inte fått sin tid. Hen är inte "nästa" — hen är den här.
+  if (utanTid && utanTid !== personId) return { typ: 'tid', id: utanTid };
+  for (const id of omgang.deltagare) {
+    const r = lager.pagaende(omgang.id, id, false);
+    if (r && (r.tid !== null || id === personId)) return { typ: 'poang', id };
+  }
+  return null;
+}
+
+/** "3. Ek, Anna" — numret är tavlan, som överallt annars. */
+function skyttEtikett(omgang, personId) {
+  const p = lager.person(personId);
+  if (!p) return '';
+  return `${omgang.deltagare.indexOf(personId) + 1}. ${p.namn}`;
+}
+
 // ----------------------------------------------------------------- tiden
 
 function ritaTid() {
@@ -1579,8 +1616,15 @@ function ritaTid() {
       <button data-siffra="0">0</button>
       <button data-radera="1">⌫</button>
     </div>`;
+  // Vad knappen leder till ska stå på den, och VEM den leder till under den.
+  // I mörker vill man inte gissa om nästa tryck ger nästa skytt eller poängen.
+  const nasta = nastaEfterTid(o, p.id);
+  const text = !nasta ? 'Spara och tillbaka'
+    : nasta.typ === 'tid' ? 'Spara &amp; nästa skytt' : 'Spara &amp; börja med poängen';
   bottenrad.innerHTML = `
-    <button class="knapp primar" data-spara-tid="nasta">Spara &amp; nästa skytt</button>
+    <button class="knapp primar" data-spara-tid="nasta">${text}</button>
+    ${nasta ? `<p class="nastaskytt">Nästa: <b>${esc(skyttEtikett(o, nasta.id))}</b>`
+      + `${nasta.typ === 'poang' ? ' — poäng' : ''}</p>` : ''}
     <div class="knapprad">
       <button class="knapp liten" data-spara-tid="lista">Spara och tillbaka</button>
       <button class="knapp liten" data-till-poang="1">Poäng för ${esc(p.namn.split(' ')[0])}</button>
@@ -2028,9 +2072,15 @@ document.addEventListener('click', async (ev) => {
     if (!sparaTid()) return;
     const o = lager.omgang(vy.omgangId);
     if (d.sparaTid === 'nasta') {
-      const id = nastaSkytt(o, 'tid', vy.personId);
-      if (id) return gaTill('tid', { omgangId: o.id, personId: id, lage: 'tid' }, true);
-      flash('Alla har en tid. Byt till POÄNG när ni gått fram.');
+      const nasta = nastaEfterTid(o, vy.personId);
+      if (nasta && nasta.typ === 'tid') {
+        return gaTill('tid', { omgangId: o.id, personId: nasta.id, lage: 'tid' }, true);
+      }
+      if (nasta) {
+        // Hela linjen har skjutit — nästa steg är poängen, från tavla 1.
+        flash('Alla har en tid. Nu poängen, från första tavlan.');
+        return gaTill('poang', { omgangId: o.id, personId: nasta.id, lage: 'poang' }, true);
+      }
     }
     return gaTill('omgang', { omgangId: o.id, lage: 'tid' }, true);
   }

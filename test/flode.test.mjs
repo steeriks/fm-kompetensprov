@@ -52,6 +52,11 @@ function klicka(text, rot = doc) {
   knapp(text, rot).click();
 }
 
+/** Hemknappen bär en ritad ikon och alltså ingen text — den hämtas på id. */
+function hem() {
+  doc.querySelector('#hem').click();
+}
+
 function rader() {
   return [...doc.querySelectorAll('#app .skyttrad')];
 }
@@ -123,10 +128,11 @@ test('tidssvepet går genom hela linjen utan omvägar', () => {
   knappaTid('9,80');
   klicka('Spara & nästa skytt');
   knappaTid('14,05');
-  klicka('Spara & nästa skytt');
-
-  // Alla har tid — appen ska säga till och lämna tillbaka till listan
+  // Sista tiden: knappen leder vidare till poängsteget i stället
+  klicka('Spara & börja med poängen');
   assert.match(doc.body.textContent, /Alla har en tid/);
+  assert.match(doc.querySelector('#underrubrik').textContent, /Poäng · försök 1/);
+
   const tider = lagret().resultat.map((r) => r.tid).sort((a, b) => a - b);
   assert.deepEqual(tider, [9.8, 11.2, 14.05]);
   assert.equal(lagret().resultat.filter((r) => r.registrerad).length, 0,
@@ -269,7 +275,7 @@ test('att radera en skytt tar med sig resultaten', () => {
   assert.equal(lagret().resultat.length, 1);
 
   win.confirm = () => true;
-  klicka('⌂');
+  hem();
   klicka('Skyttar');
   klicka('Radera');
   assert.equal(lagret().personer.length, 2);
@@ -284,7 +290,7 @@ test('hemikonen går hem från vilken vy som helst, och sparar tiden på vägen'
   assert.match(doc.querySelector('#underrubrik').textContent, /Tid · försök 1/);
   knappaTid('7,50');
 
-  klicka('⌂');
+  hem();
   assert.match(doc.querySelector('#app').textContent, /Omgångar/,
     'hemknappen ska gå hela vägen hem, inte ett steg bakåt');
   assert.equal(lagret().resultat[0].tid, 7.5,
@@ -476,7 +482,7 @@ test('radera alla skyttar frågar först och tar med sig resultaten', () => {
   klicka('Nästa som saknar tid');
   knappaTid('10,00');
   klicka('Spara och tillbaka');
-  klicka('⌂');
+  hem();
   klicka('Skyttar');
 
   let fragad = '';
@@ -496,7 +502,7 @@ test('svep vänster raderar en omgång — efter fråga', () => {
   klicka('+ Ny omgång');
   rader()[0].click();
   klicka('Starta omgången');
-  klicka('⌂');
+  hem();
   assert.equal(rader().length, 1, 'omgången ligger på startsidan');
 
   const svep = (rad, fran, till, dy = 0) => {
@@ -682,4 +688,44 @@ test('knappsatsen byggs inte om vid varje siffra', () => {
   femman.click(); femman.click(); femman.click();
   assert.equal(doc.querySelector('.knappsats'), knappsats, 'knappsatsen ska vara kvar');
   assert.match(doc.querySelector('.tidvisning').textContent, /5,55/);
+});
+
+test('tidvyn säger vem som står på tur — och byter till poäng när linjen är klar', () => {
+  klicka('+ Ny omgång');
+  bockaIAlla();                       // Berg (1), Craf (2), Ek (3)
+  klicka('Starta omgången');
+  const ordning = rader().map((r) => r.textContent.replace(/\s+/g, ' ').trim().slice(0, 8));
+
+  klicka('Nästa som saknar tid');
+  const nasta = () => doc.querySelector('.nastaskytt').textContent.replace(/\s+/g, ' ').trim();
+  assert.match(nasta(), /^Nästa: 2\./, 'näste man ska stå under knappen');
+  assert.ok(!nasta().includes('poäng'));
+  knappaTid('550');
+  klicka('Spara & nästa skytt');
+
+  assert.match(nasta(), /^Nästa: 3\./);
+  knappaTid('600');
+  klicka('Spara & nästa skytt');
+
+  // Sista skytten: nu är nästa steg poängen, från tavla 1
+  assert.match(doc.querySelector('.knapp.primar').textContent, /börja med poängen/);
+  assert.match(nasta(), /^Nästa: 1\..*— poäng$/,
+    'sista tiden ska peka på första tavlan och på poängsteget');
+  knappaTid('700');
+  klicka('Spara & börja med poängen');
+
+  assert.match(doc.querySelector('#underrubrik').textContent, /Poäng · försök 1/);
+  assert.match(doc.querySelector('#rubrik').textContent, new RegExp(ordning[0].slice(3, 7)),
+    'och öppna första skytten i ordningen');
+  assert.match(doc.body.textContent, /Nu poängen, från första tavlan/);
+  assert.equal(lagret().resultat.filter((r) => r.tid !== null).length, 3);
+});
+
+test('hemknappen är en ikon utan ram', () => {
+  klicka('+ Ny omgång');
+  const knapp = doc.querySelector('#hem');
+  assert.equal(knapp.textContent.trim(), '', 'ingen text, bara ikonen');
+  assert.ok(knapp.querySelector('svg'), 'huset är ritat, inte ett tecken');
+  assert.equal(knapp.getAttribute('aria-label'), 'Till startsidan',
+    'skärmläsare och långtryck ska ändå få veta vad den gör');
 });

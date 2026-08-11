@@ -271,6 +271,33 @@ function ritaHistorik(o, forsok) {
   }).join('')}</div>`;
 }
 
+/**
+ * Vem som står på tur efter den skytt vars tid just knappas in, och med vad.
+ *
+ * Saknar någon annan sin tid är det tid som gäller. Har alla fått sin tid är
+ * nästa steg poängen, och då pekas den första skytten i ordningen ut — man går
+ * fram till tavlorna och börjar om från tavla 1. Den skytt som just nu står
+ * öppen räknas med, eftersom hen får sin tid i samma knapptryck.
+ */
+function nastaEfterTid(omgang, personId) {
+  const utanTid = nastaSkytt(omgang, 'tid', personId);
+  // nastaSkytt varvar om från början och hittar då skytten man står på, som
+  // ju ännu inte fått sin tid. Hen är inte "nästa" — hen är den här.
+  if (utanTid && utanTid !== personId) return { typ: 'tid', id: utanTid };
+  for (const id of omgang.deltagare) {
+    const r = lager.pagaende(omgang.id, id, false);
+    if (r && (r.tid !== null || id === personId)) return { typ: 'poang', id };
+  }
+  return null;
+}
+
+/** "3. Ek, Anna" — numret är tavlan, som överallt annars. */
+function skyttEtikett(omgang, personId) {
+  const p = lager.person(personId);
+  if (!p) return '';
+  return `${omgang.deltagare.indexOf(personId) + 1}. ${p.namn}`;
+}
+
 // ----------------------------------------------------------------- tiden
 
 function ritaTid() {
@@ -294,8 +321,15 @@ function ritaTid() {
       <button data-siffra="0">0</button>
       <button data-radera="1">⌫</button>
     </div>`;
+  // Vad knappen leder till ska stå på den, och VEM den leder till under den.
+  // I mörker vill man inte gissa om nästa tryck ger nästa skytt eller poängen.
+  const nasta = nastaEfterTid(o, p.id);
+  const text = !nasta ? 'Spara och tillbaka'
+    : nasta.typ === 'tid' ? 'Spara &amp; nästa skytt' : 'Spara &amp; börja med poängen';
   bottenrad.innerHTML = `
-    <button class="knapp primar" data-spara-tid="nasta">Spara &amp; nästa skytt</button>
+    <button class="knapp primar" data-spara-tid="nasta">${text}</button>
+    ${nasta ? `<p class="nastaskytt">Nästa: <b>${esc(skyttEtikett(o, nasta.id))}</b>`
+      + `${nasta.typ === 'poang' ? ' — poäng' : ''}</p>` : ''}
     <div class="knapprad">
       <button class="knapp liten" data-spara-tid="lista">Spara och tillbaka</button>
       <button class="knapp liten" data-till-poang="1">Poäng för ${esc(p.namn.split(' ')[0])}</button>
@@ -743,9 +777,15 @@ document.addEventListener('click', async (ev) => {
     if (!sparaTid()) return;
     const o = lager.omgang(vy.omgangId);
     if (d.sparaTid === 'nasta') {
-      const id = nastaSkytt(o, 'tid', vy.personId);
-      if (id) return gaTill('tid', { omgangId: o.id, personId: id, lage: 'tid' }, true);
-      flash('Alla har en tid. Byt till POÄNG när ni gått fram.');
+      const nasta = nastaEfterTid(o, vy.personId);
+      if (nasta && nasta.typ === 'tid') {
+        return gaTill('tid', { omgangId: o.id, personId: nasta.id, lage: 'tid' }, true);
+      }
+      if (nasta) {
+        // Hela linjen har skjutit — nästa steg är poängen, från tavla 1.
+        flash('Alla har en tid. Nu poängen, från första tavlan.');
+        return gaTill('poang', { omgangId: o.id, personId: nasta.id, lage: 'poang' }, true);
+      }
     }
     return gaTill('omgang', { omgangId: o.id, lage: 'tid' }, true);
   }
