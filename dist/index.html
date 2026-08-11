@@ -1324,6 +1324,16 @@ function tolkadTid(text) {
   return n === null ? null : n / 100;
 }
 
+/** Skriver om enbart siffervisningen. Att rita om hela vyn per knapptryck
+ *  gör att knappsatsen byggs upp på nytt mitt under fingret — det syns som
+ *  flimmer, och gamla elementreferenser dör. */
+function uppdateraTidvisning() {
+  const ruta = app.querySelector('.tidvisning');
+  if (!ruta) return;
+  ruta.classList.toggle('tom', !utkastTid);
+  ruta.firstChild.textContent = visadTid(utkastTid) || '0,00';
+}
+
 /** Vad som står i den stora siffervisningen medan man knappar. */
 function visadTid(text) {
   if (!text) return '';
@@ -1559,7 +1569,8 @@ function ritaTid() {
   hemKnapp.hidden = false;
 
   app.innerHTML = `
-    <div class="tidvisning ${utkastTid ? '' : 'tom'}">${esc(visadTid(utkastTid) || '0,00')}<span class="enhet"> s</span></div>
+    <div class="tidvisning ${utkastTid ? '' : 'tom'}"
+      >${esc(visadTid(utkastTid) || '0,00')}<span class="enhet"> s</span></div>
     <p class="dampad liten" style="text-align:center">Tiden mäts mellan startsignal och sista skott.<br>
     Knappa siffrorna rakt av — <b>555</b> blir 5,55 och <b>6667</b> blir 66,67. Komma går också bra.</p>
     <div class="knappsats">
@@ -2000,18 +2011,18 @@ document.addEventListener('click', async (ev) => {
       if (utkastTid.includes(',')) return;
       // Komma utan siffror framför blir "0," — annars står det bara ett komma.
       utkastTid = (utkastTid || '0') + ',';
-      return rita();
+      return uppdateraTidvisning();
     }
     // Två decimaler räcker; en skjuttimer visar inte fler.
     if (utkastTid.includes(',') && utkastTid.split(',')[1].length >= 2) return;
     if (utkastTid.replace(',', '').length >= 6) return;
     utkastTid += d.siffra;
-    return rita();
+    return uppdateraTidvisning();
   }
   if (d.radera) {
     vibrera(12);
     utkastTid = utkastTid.slice(0, -1);
-    return rita();
+    return uppdateraTidvisning();
   }
   if (d.sparaTid) {
     if (!sparaTid()) return;

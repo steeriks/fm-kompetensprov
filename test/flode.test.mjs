@@ -668,3 +668,18 @@ test('inställningarna har ingen utskriftsknapp', () => {
     'utskrift hör hemma på exportskärmen, inte här: ' + knappar.join(', '));
   assert.ok(knappar.some((t) => /Spara kopia/.test(t)), 'säkerhetskopian ska finnas kvar');
 });
+
+test('knappsatsen byggs inte om vid varje siffra', () => {
+  klicka('+ Ny omgång');
+  rader()[0].click();
+  klicka('Starta omgången');
+  klicka('Nästa som saknar tid');
+  const knappsats = doc.querySelector('.knappsats');
+  const femman = [...knappsats.querySelectorAll('button')].find((b) => b.textContent === '5');
+
+  // Samma elementreferens ska fungera hela vägen — annars flimrar knappsatsen
+  // under fingret och sparade referenser dör mitt i inmatningen.
+  femman.click(); femman.click(); femman.click();
+  assert.equal(doc.querySelector('.knappsats'), knappsats, 'knappsatsen ska vara kvar');
+  assert.match(doc.querySelector('.tidvisning').textContent, /5,55/);
+});
