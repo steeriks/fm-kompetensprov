@@ -116,7 +116,7 @@ function ritaStart() {
     const godkanda = new Set(res
       .filter((r) => bedom(o.gren, r.traffar, r.tid, r.vapenhanteringUnderkand).godkand)
       .map((r) => r.personId)).size;
-    return `<button class="skyttrad" data-oppna="${o.id}">
+    return `<button class="skyttrad" data-oppna="${o.id}" data-hall-radera="omgang:${o.id}">
       <span class="namn">${esc(prov.namn)} · ${esc(o.datum)}</span>
       <span class="forband">${esc(o.plats || 'utan plats')}${o.instruktor ? ' · ' + esc(o.instruktor) : ''}</span>
       <span class="varden"><b>${godkanda}/${o.deltagare.length}</b><br>godkända</span>
@@ -124,7 +124,8 @@ function ritaStart() {
   }).join('') : '<p class="tom">Inga omgångar ännu.<br>Börja med att lägga upp en.</p>';
 
   app.innerHTML = `<h2>Omgångar</h2>${lista}`
-    + (omgangar.length ? '<p class="dampad liten">Svep vänster på en omgång för att radera den.</p>' : '');
+    + (omgangar.length ? '<p class="dampad liten">Håll in en omgång för att få fram '
+      + 'soptunnan som raderar den.</p>' : '');
   bottenrad.innerHTML = `
     <button class="knapp primar" data-vy="ny">+ Ny omgång</button>
     <div class="knapprad">
@@ -578,13 +579,15 @@ function ritaRegister() {
   // omgång, och då är nästa steg att lägga upp den.
   app.innerHTML = '<div class="knapprad"><button class="knapp liten" data-vy="ny">'
     + '+ Ny omgång</button></div>'
+    // Samma gest som raderar en omgång på startsidan: håll in, sikta på
+    // soptunnan. En Radera-knapp per rad låg annars framme hela tiden, mitt i
+    // en lista man skrollar med tummen.
     + (personer.length ? personer.map((p) => `
-    <div class="kort">
-      <div style="display:flex;justify-content:space-between;gap:0.6rem;align-items:center">
-        <div><b>${esc(p.namn)}</b><br><span class="dampad liten">${esc(p.forband || 'utan förband')}</span></div>
-        <button class="knapp liten fara" data-radera-person="${p.id}">Radera</button>
-      </div>
-    </div>`).join('') : '<p class="tom">Inga skyttar ännu.</p>');
+    <div class="kort personrad" data-hall-radera="person:${p.id}">
+      <div><b>${esc(p.namn)}</b><br><span class="dampad liten">${esc(p.forband || 'utan förband')}</span></div>
+    </div>`).join('')
+      + '<p class="dampad liten">Håll in en skytt för att få fram soptunnan som raderar hen.</p>'
+      : '<p class="tom">Inga skyttar ännu.</p>');
   bottenrad.innerHTML = `
     <button class="knapp primar" data-ny-skytt="1">+ Ny skytt</button>
     ${personer.length ? '<div class="knapprad"><button class="knapp liten fara" '
@@ -835,7 +838,7 @@ document.addEventListener('click', async (ev) => {
   const t = ev.target.closest('[data-vy], [data-oppna], [data-vaxla], [data-ny-skytt], ' +
     '[data-starta], [data-skytt], [data-lage], [data-nasta], [data-siffra], [data-radera], ' +
     '[data-spara-tid], [data-till-poang], [data-till-tid], [data-registrera], [data-export], ' +
-    '[data-format], [data-historik], [data-nytt-forsok], [data-radera-person], [data-kopia], ' +
+    '[data-format], [data-historik], [data-nytt-forsok], [data-soptunna], [data-kopia], ' +
     '[data-radera-allt], [data-radera-alla-skyttar], [data-skriv-ut], [data-anvisning], ' +
     '[data-lagg-till], [data-lagg-in], [data-flyttlage], [data-dok], .zonknapp');
   if (!t) return;
@@ -867,6 +870,33 @@ document.addEventListener('click', async (ev) => {
   if (d.oppna) {
     if (t.dataset.spärrKlick) { delete t.dataset.spärrKlick; return; }
     return gaTill('omgang', { omgangId: d.oppna, lage: 'tid' });
+  }
+  // Soptunnan som långtrycket lade fram. Samma knapp för båda listorna —
+  // raden talade om vad den var när den lämnade över strängen.
+  if (d.soptunna) {
+    const [typ, id] = d.soptunna.split(':');
+    taBortSoptunnan();
+    vibrera(30);
+    if (typ === 'omgang') {
+      const o = lager.omgang(id);
+      if (o) {
+        const antal = lager.resultat(o.id).filter((r) => r.registrerad).length;
+        if (confirm(`Radera omgången ${PROV[o.gren].namn} ${o.datum}`
+          + `${o.plats ? ' på ' + o.plats : ''}?\n\n`
+          + `${antal} registrerade försök raderas med den.`)) {
+          lager.raderaOmgang(o.id);
+          flash('Omgången raderad.');
+        }
+      }
+    }
+    if (typ === 'person') {
+      const p = lager.person(id);
+      if (p && confirm(`Radera ${p.namn} och alla resultat för hen?`)) {
+        lager.raderaPerson(p.id);
+        flash(`${p.namn} raderad.`);
+      }
+    }
+    return rita();
   }
 
   // --- ny omgång ---
@@ -1042,15 +1072,6 @@ document.addEventListener('click', async (ev) => {
   if (d.skrivUt) return window.print();
 
   // --- register och inställningar ---
-  if (d.raderaPerson) {
-    const p = lager.person(d.raderaPerson);
-    if (confirm(`Radera ${p.namn} och alla resultat för hen?`)) {
-      lager.raderaPerson(p.id);
-      flash(`${p.namn} raderad.`);
-      rita();
-    }
-    return;
-  }
   if (d.raderaAllaSkyttar) {
     const antal = lager.personer().length;
     if (confirm(`Radera alla ${antal} skyttar och deras resultat?\n\n`
@@ -1080,43 +1101,68 @@ document.addEventListener('click', async (ev) => {
   }
 });
 
-// Svep vänster på en omgång för att radera den. Bara vågräta svep räknas, så
-// att listan fortfarande går att skrolla, och raden får inte öppnas av
-// släppet — därför spärras nästa klick.
-let svep = null;
+// Håll in en rad för att radera den — omgångarna på startsidan, skyttarna i
+// registret. Gesten var först ett svep vänster, men ett svep syns inte förrän
+// man råkar hitta det, och på en lista som också skrollar tolkades halva
+// försöken som skrollning. Långtrycket lägger i stället fram en soptunna i
+// raden — ett mål att sikta på och trycka, samma gest som redan slår på
+// flyttläget i vallistan. Raden får inte öppnas av släppet, därför spärras
+// nästa klick.
+//
+// Raden säger själv vad den raderar med `data-hall-radera="typ:id"`, och
+// soptunnan bär samma sträng vidare. Två attribut, inte ett: ett tryck mitt i
+// raden ska öppna eller ingenting göra — bara soptunnan raderar.
+let hallRad = null;
+let raderbarRad = null;
+
+/** Tar bort soptunnan igen — ångrat, eller raden är omritad under fötterna. */
+function taBortSoptunnan() {
+  if (raderbarRad) {
+    raderbarRad.classList.remove('raderbar');
+    const knapp = raderbarRad.querySelector('.soptunna');
+    if (knapp) knapp.remove();
+  }
+  raderbarRad = null;
+}
+
 document.addEventListener('pointerdown', (ev) => {
-  const rad = ev.target.closest('.skyttrad[data-oppna]');
+  if (ev.target.closest('.soptunna')) return;    // trycket gäller soptunnan
+  const rad = ev.target.closest('[data-hall-radera]');
   if (!rad) return;
-  svep = { rad, x: ev.clientX, y: ev.clientY };
+  hallRad = { rad, y: ev.clientY, timer: setTimeout(() => {
+    hallRad = null;                              // gesten är slut; nu syns knappen
+    rad.dataset.spärrKlick = '1';
+    taBortSoptunnan();
+    slappMarkering();
+    rad.classList.add('raderbar');
+    rad.insertAdjacentHTML('beforeend',
+      `<span class="soptunna" data-soptunna="${rad.dataset.hallRadera}"`
+      + ' role="button" aria-label="Radera">🗑</span>');
+    raderbarRad = rad;
+    vibrera(40);
+  }, 500) };
 });
 document.addEventListener('pointermove', (ev) => {
-  if (!svep) return;
-  const dx = ev.clientX - svep.x;
-  const dy = ev.clientY - svep.y;
-  if (Math.abs(dy) > 30) { svep = null; return; }      // det här är en skrollning
-  svep.rad.style.transform = dx < 0 ? `translateX(${Math.max(dx, -90)}px)` : '';
-  svep.rad.classList.toggle('sveps', dx < -30);
-});
-document.addEventListener('pointerup', (ev) => {
-  if (!svep) return;
-  const { rad } = svep;
-  const dx = ev.clientX - svep.x;
-  svep = null;
-  rad.style.transform = '';
-  rad.classList.remove('sveps');
-  if (dx > -60) return;                                 // för kort svep
-  rad.dataset.spärrKlick = '1';
-  const o = lager.omgang(rad.dataset.oppna);
-  if (!o) return;
-  const antal = lager.resultat(o.id).filter((r) => r.registrerad).length;
-  vibrera(30);
-  if (confirm(`Radera omgången ${PROV[o.gren].namn} ${o.datum}`
-    + `${o.plats ? ' på ' + o.plats : ''}?\n\n`
-    + `${antal} registrerade försök raderas med den.`)) {
-    lager.raderaOmgang(o.id);
-    flash('Omgången raderad.');
+  if (!hallRad) return;
+  // Rör sig fingret innan tiden gått ut skrollar man i listan.
+  if (Math.abs(ev.clientY - hallRad.y) > 10) {
+    clearTimeout(hallRad.timer);
+    hallRad = null;
   }
-  rita();
+});
+for (const h of ['pointerup', 'pointercancel']) {
+  document.addEventListener(h, () => {
+    if (!hallRad) return;
+    clearTimeout(hallRad.timer);
+    hallRad = null;
+  });
+}
+
+// Ett tryck någon annanstans ångrar. Soptunnan själv går förbi, annars vore
+// den borta innan klicket hann räknas.
+document.addEventListener('click', (ev) => {
+  if (!raderbarRad || ev.target.closest('.soptunna')) return;
+  taBortSoptunnan();
 });
 
 // ---------------------------------------------- flytta en skytt i ordningen

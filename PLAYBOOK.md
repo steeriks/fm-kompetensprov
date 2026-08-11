@@ -90,7 +90,7 @@ skjutlaget.
 
 | Vy | Funktion | Vad den gör |
 |---|---|---|
-| `start` | `ritaStart` | Omgångarna. Svep vänster raderar. |
+| `start` | `ritaStart` | Omgångarna. Långt tryck lägger fram soptunnan som raderar; raden säger med `data-hall-radera="typ:id"` vad den är. |
 | `ny` | `ritaNy` | Prov, datum, plats, ibockning i skjutordning. |
 | `omgang` | `ritaOmgang` | Vallistan med lägesväljare — arbetsvyn. |
 | `tid` | `ritaTid` | Sifferknappsats. |
@@ -98,7 +98,7 @@ skjutlaget.
 | `lagg-till` | `ritaLaggTill` | Fyller på en pågående omgång. |
 | `anvisning` | `ritaAnvisning` | Regelverkets anvisning per prov. |
 | `export` | `ritaExportval` | Fyra format plus förhandsgranskning. |
-| `register` | `ritaRegister` | Skytteregistret. |
+| `register` | `ritaRegister` | Skytteregistret. Långt tryck raderar, som på startsidan. |
 | `installningar` | `ritaInstallningar` | Säkerhetskopia, nollställning, hjälp. |
 | `dok` | `ritaDokument` | `anvandning.md` eller `hjalp.md`, renderad. |
 

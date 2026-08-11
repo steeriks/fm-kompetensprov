@@ -265,10 +265,24 @@ label.falt input, label.falt select {
   .kort, .skyttrad { border-color: #999; background: #fff; color: #000; }
 }
 
-/* Svep vänster på en omgång för att radera den. Raden följer fingret och
-   färgas röd när svepet är långt nog — annars vet man inte att det tagit. */
-.skyttrad[data-oppna] { transition: transform 0.12s ease-out; touch-action: pan-y; }
-.skyttrad.sveps { border-color: var(--underkand); background: rgba(224, 122, 109, 0.14); }
+/* Håll in en rad för att radera den — en omgång på startsidan, en skytt i
+   registret: raden färgas röd och lämnar plats för en soptunna. Knappen ska
+   vara stor nog att träffa med handskar på, och sitta i utkanten så att den
+   inte trycks av misstag. */
+[data-hall-radera] { touch-action: pan-y; }
+.raderbar { border-color: var(--underkand); background: rgba(224, 122, 109, 0.14); }
+.soptunna {
+  padding: 0.5rem 0.2rem 0.5rem 0.7rem; margin-left: 0.2rem;
+  font-size: 1.5rem; line-height: 1;
+}
+.skyttrad .soptunna { grid-column: 3; grid-row: 1 / span 2; align-self: center; }
+
+/* Registrets rader är kort, inte vallistans knappar — men soptunnan ska hamna
+   i högerkanten på samma sätt, alltså är kortet självt raden. */
+.personrad {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+}
 
 /* Skyttens nummer är samma som tavlans på banan. */
 .skyttrad .nr {

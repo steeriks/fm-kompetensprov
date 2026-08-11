@@ -86,6 +86,22 @@ function knappaTid(text) {
   for (const tecken of text) klicka(tecken === ',' ? ',' : tecken, doc.querySelector('.knappsats'));
 }
 
+/** Håller in en rad tills soptunnan läggs fram. Ett dy skilt från noll är en
+ *  skrollning, och ska inte ge någon soptunna. */
+async function hall(rad, dy = 0) {
+  const peka = (typ, y) => rad.dispatchEvent(
+    new win.MouseEvent(typ, { bubbles: true, clientX: 50, clientY: y }));
+  peka('pointerdown', 100);
+  peka('pointermove', 100 + dy);
+  await new Promise((r) => setTimeout(r, 600));
+  peka('pointerup', 100 + dy);
+}
+
+/** Soptunnan som långtrycket lade fram, om någon ligger framme. */
+function soptunna() {
+  return doc.querySelector('[data-soptunna]');
+}
+
 /** Trycker n gånger på en zonknapp. */
 function knappaZon(bokstav, antal) {
   const z = [...doc.querySelectorAll('.zonknapp')].find((b) => b.dataset.zon === bokstav);
@@ -272,7 +288,7 @@ test('automatkarbin har en enda målyta med nio träff', () => {
   assert.equal(doc.querySelector('#pkvarde').textContent, '1,31');
 });
 
-test('att radera en skytt tar med sig resultaten', () => {
+test('att radera en skytt tar med sig resultaten', async () => {
   klicka('+ Ny omgång');
   rader()[0].click();
   klicka('Starta omgången');
@@ -284,7 +300,13 @@ test('att radera en skytt tar med sig resultaten', () => {
   win.confirm = () => true;
   hem();
   klicka('Lägg till skyttar');
-  klicka('Radera');
+  // Skyttarna raderas med samma gest som omgångarna: håll in, tryck soptunnan
+  const rad = doc.querySelector('#app .personrad');
+  assert.match(rad.textContent, /Berg/, 'registret är sorterat på namn');
+  assert.equal(soptunna(), null, 'ingen soptunna ligger framme av sig själv');
+  await hall(rad);
+  assert.equal(lagret().personer.length, 3, 'långtrycket raderar inte i sig');
+  soptunna().click();
   assert.equal(lagret().personer.length, 2);
   assert.equal(lagret().resultat.length, 0, 'resultaten ska följa med personen');
 });
@@ -505,40 +527,52 @@ test('radera alla skyttar frågar först och tar med sig resultaten', () => {
   assert.equal(lagret().omgangar.length, 1, 'omgången finns kvar, men tom');
 });
 
-test('svep vänster raderar en omgång — efter fråga', () => {
+test('långtryck fram soptunnan, som raderar omgången — efter fråga', async () => {
   klicka('+ Ny omgång');
   rader()[0].click();
   klicka('Starta omgången');
   hem();
   assert.equal(rader().length, 1, 'omgången ligger på startsidan');
 
-  const svep = (rad, fran, till, dy = 0) => {
-    const hand = (typ, x, y) => rad.dispatchEvent(
-      new win.MouseEvent(typ, { bubbles: true, clientX: x, clientY: y }));
-    hand('pointerdown', fran, 100);
-    hand('pointermove', till, 100 + dy);
-    hand('pointerup', till, 100 + dy);
-  };
-
-  // Kort svep gör ingenting
   win.confirm = () => true;
-  svep(rader()[0], 200, 170);
-  assert.equal(lagret().omgangar.length, 1, 'ett kort svep ska inte radera');
+  assert.equal(soptunna(), null, 'ingen soptunna innan man hållit in');
 
-  // Lodrätt drag är en skrollning, inte ett svep
-  svep(rader()[0], 200, 100, 80);
-  assert.equal(lagret().omgangar.length, 1, 'skrollning ska inte radera');
+  // Ett kort tryck öppnar omgången som vanligt
+  rader()[0].click();
+  assert.match(doc.querySelector('#underrubrik').textContent, /Delmoment 14/);
+  hem();
+
+  // Rör sig fingret är det en skrollning, inte ett långtryck
+  await hall(rader()[0], 80);
+  assert.equal(soptunna(), null, 'skrollning ska inte lägga fram soptunnan');
+
+  // Långtrycket lägger fram soptunnan men raderar ingenting av sig självt,
+  // och släppet får inte öppna omgången
+  await hall(rader()[0]);
+  assert.ok(soptunna(), 'soptunnan ligger i raden');
+  assert.equal(lagret().omgangar.length, 1, 'långtrycket raderar inte i sig');
+  rader()[0].click();
+  assert.match(doc.querySelector('#underrubrik').textContent, /Pistol och automatkarbin/,
+    'släppet ska inte öppna omgången');
+
+  // Ett tryck någon annanstans ångrar
+  await hall(rader()[0]);
+  doc.querySelector('#app').click();
+  assert.equal(soptunna(), null, 'soptunnan försvinner när man trycker bredvid');
 
   // Nej på frågan lämnar omgången kvar
   let fragad = '';
   win.confirm = (text) => { fragad = text; return false; };
-  svep(rader()[0], 200, 100);
+  await hall(rader()[0]);
+  soptunna().click();
   assert.match(fragad, /Radera omgången Pistol/);
   assert.equal(lagret().omgangar.length, 1);
+  assert.equal(soptunna(), null, 'och soptunnan läggs undan igen');
 
   // Ja raderar
   win.confirm = () => true;
-  svep(rader()[0], 200, 100);
+  await hall(rader()[0]);
+  soptunna().click();
   assert.equal(lagret().omgangar.length, 0);
   assert.match(doc.querySelector('#app').textContent, /Inga omgångar ännu/);
 });

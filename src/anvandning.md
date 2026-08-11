@@ -6,6 +6,8 @@ Lägg upp skyttarna en gång under **Lägg till skyttar** — namn och förband.
 
 Överst i skyttelistan finns en genväg till *+ Ny omgång*, när registret är påfyllt och ni är redo att börja.
 
+Behöver något bort — en skytt ur registret eller en hel omgång från startsidan — **håll in raden** tills en soptunna läggs fram i den, och tryck på soptunnan. Appen frågar först, och en raderad skytt tar sina resultat med sig.
+
 ## Så går en omgång till
 
 Appen följer hur provet genomförs: alla tiderna först, poängen när gruppen gått fram.

@@ -68,9 +68,10 @@ och zontabellen.
 Skyttelistan har en genväg till *+ Ny omgång* överst — dit man ändå ska när registret är
 påfyllt.
 
-En enskild skytt raderas på sin rad under *Lägg till skyttar*, alla på en gång med
-*Radera alla*. En omgång raderas genom att **svepa vänster** på den i listan. Allt frågar
-först, och en raderad skytt tar sina resultat med sig.
+En enskild omgång eller skytt raderas med samma grepp: **håll in** raden tills en soptunna
+läggs fram i den, och tryck sedan på soptunnan. Omgångarna ligger på startsidan, skyttarna
+under *Lägg till skyttar*, där alla också går att ta bort på en gång med *Radera alla*.
+Allt frågar först, och en raderad skytt tar sina resultat med sig.
 
 ## Regler appen känner till
 
