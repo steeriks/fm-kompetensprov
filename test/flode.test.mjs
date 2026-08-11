@@ -966,7 +966,7 @@ test('hjälpen finns i appen, med installation, data, buggar och licens', () => 
   assert.match(text, /stöd för instruktören/i, 'vad appen är ska stå först');
 
   const lank = doc.querySelector('#app a');
-  assert.match(lank.getAttribute('href'), /github\.com\/steeriks\/FM-Kompetensprov\/issues/);
+  assert.match(lank.getAttribute('href'), /github\.com\/steeriks\/fm-kompetensprov\/issues/);
   assert.equal(lank.getAttribute('rel'), 'noopener');
   assert.ok(doc.querySelectorAll('#app .dokument h2').length >= 4, 'fyra avsnitt');
 

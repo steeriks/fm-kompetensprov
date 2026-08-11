@@ -196,8 +196,9 @@ python3 bygg.py
 cp dist/index.html ~/Desktop/"FM kompetensprov.html"   # den mejlbara filen
 ```
 
-Källan ligger privat i `steeriks/FM-Kompetensprov-kalla`. Det som Pages serverar ligger i det
-publika `steeriks/FM-Kompetensprov` — GitHub Pages kräver publikt arkiv på gratisplanen. Appen
+Arkivnamnen är gemener enligt praxis, och därmed också adressen. Källan ligger privat i
+`steeriks/fm-kompetensprov-kalla`. Det som Pages serverar ligger i det
+publika `steeriks/fm-kompetensprov` — GitHub Pages kräver publikt arkiv på gratisplanen. Appen
 innehåller inga hemligheter och inga resultat lämnar telefonen, så det som blir publikt är
 enbart programmet självt. `LICENSE` följer med dit.
 
@@ -208,5 +209,5 @@ GitHub Pages ligger ofta en halv minut efter pushen. Jämför checksummor innan 
 slutsatser om att en ändring inte kom med:
 
 ```bash
-shasum dist/index.html <(curl -s https://steeriks.github.io/FM-Kompetensprov/)
+shasum dist/index.html <(curl -s https://steeriks.github.io/fm-kompetensprov/)
 ```

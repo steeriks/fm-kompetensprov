@@ -41,7 +41,7 @@ Delar du ett resultat via mail eller fil lämnar uppgifterna telefonen i det ög
 
 Fungerar något inte, eller saknas något? Skriv ett ärende:
 
-[github.com/steeriks/FM-Kompetensprov/issues](https://github.com/steeriks/FM-Kompetensprov/issues)
+[github.com/steeriks/fm-kompetensprov/issues](https://github.com/steeriks/fm-kompetensprov/issues)
 
 Skriv gärna vilken telefon och webbläsare det gäller, vad du gjorde, och vad som hände i stället för det du väntade dig.
 

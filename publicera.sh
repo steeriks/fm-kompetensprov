@@ -7,8 +7,8 @@
 #   ./publicera.sh -m "text"    med eget commit-meddelande
 set -euo pipefail
 
-PUBLIKT="${PUBLIKT_REPO:-$HOME/Documents/FM-Kompetensprov-publik}"
-FJARR="git@github.com:steeriks/FM-Kompetensprov.git"
+PUBLIKT="${PUBLIKT_REPO:-$HOME/Documents/fm-kompetensprov-publik}"
+FJARR="git@github.com:steeriks/fm-kompetensprov.git"
 HAR="$(cd "$(dirname "$0")" && pwd)"
 meddelande="Uppdatera appen"
 [ "${1:-}" = "-m" ] && meddelande="${2:?-m kräver text}"
@@ -33,4 +33,4 @@ if git diff --cached --quiet; then
 fi
 git commit -q -m "$meddelande"
 git push -q origin main
-echo "==> publicerat: https://steeriks.github.io/FM-Kompetensprov/"
+echo "==> publicerat: https://steeriks.github.io/fm-kompetensprov/"

@@ -11,7 +11,7 @@ allt lokalt.
 > respektive delmoment och ska kontrolleras mot gällande utgåva. Bedömningen är
 > instruktörens.
 
-**Appen:** <https://steeriks.github.io/FM-Kompetensprov/>
+**Appen:** <https://steeriks.github.io/fm-kompetensprov/>
 — öppna i telefonen och välj *Lägg till på hemskärmen*.
 
 Byggd för att användas i fält: **en hand, i mörker, utan täckning**. Stora knappar i
@@ -152,4 +152,4 @@ Appen lämnas som den är, utan garantier. Se förbehållet överst: den är int
 Försvarsmakten, och ansvaret för bedömningen ligger hos instruktören.
 
 Buggar och önskemål: [issues i det publika
-arkivet](https://github.com/steeriks/FM-Kompetensprov/issues).
+arkivet](https://github.com/steeriks/fm-kompetensprov/issues).
