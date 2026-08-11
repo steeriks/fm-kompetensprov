@@ -6,7 +6,10 @@
 // vallistan två lägen i stället för ett formulär per skytt — och därför finns
 // "Nästa som saknar …", som är hela svepet i en knapp.
 
-import { PROV, ZONPOANG, bedom, komma, taltolk, gruppFor, antalIGrupp, arFull } from './regler.js';
+import {
+  PROV, BEDOMNING, ZONPOANG, ZONORDNING, bedom, komma, taltolk,
+  gruppFor, antalIGrupp, arFull,
+} from './regler.js';
 import * as lager from './lagring.js';
 import { underlag, somText, somCsv, somXlsx, somPdf, dela } from './export.js';
 
@@ -82,6 +85,7 @@ function ritaStart() {
   bottenrad.innerHTML = `
     <button class="knapp primar" data-vy="ny">+ Ny omgång</button>
     <div class="knapprad">
+      <button class="knapp liten" data-vy="anvisning">Anvisningar</button>
       <button class="knapp liten" data-vy="register">Skyttar</button>
       <button class="knapp liten" data-vy="installningar">Inställningar</button>
     </div>`;
@@ -203,9 +207,10 @@ function ritaOmgang() {
       <button data-lage="tid" aria-pressed="${lage === 'tid'}">TID${utanTid ? ` (${utanTid})` : ''}</button>
       <button data-lage="poang" aria-pressed="${lage === 'poang'}">POÄNG${utanPoang ? ` (${utanPoang})` : ''}</button>
     </div>
+    <button class="knapp primar" data-nasta="${lage}">
+      ${lage === 'tid' ? 'Nästa som saknar tid' : 'Nästa som saknar poäng'}</button>
     <div class="knapprad">
-      <button class="knapp primar" data-nasta="${lage}">
-        ${lage === 'tid' ? 'Nästa som saknar tid' : 'Nästa som saknar poäng'}</button>
+      <button class="knapp liten" data-vy="anvisning">Anvisning</button>
       <button class="knapp liten" data-export="1">Dela</button>
     </div>`;
 }
@@ -360,6 +365,51 @@ function sattZon(knapp, antal) {
   uppdateraPoang();
 }
 
+// ------------------------------------------------------------- anvisningar
+
+function ritaAnvisning() {
+  const gren = vy.gren || 'pist';
+  const prov = PROV[gren];
+  const a = prov.anvisning;
+  rubrik.firstChild.textContent = 'Anvisning';
+  underrubrik.textContent = `${prov.namn} · ${prov.delmoment}`;
+  tillbakaKnapp.hidden = false;
+
+  app.innerHTML = `
+    <div class="kort">
+      <h3 class="anvisningsrubrik">${esc(a.rubrik)}</h3>
+      <dl class="fakta">
+        ${a.fakta.map(([namn, varde]) =>
+          `<dt>${esc(namn)}</dt><dd>${esc(varde)}</dd>`).join('')}
+      </dl>
+    </div>
+
+    <h2>Genomförande</h2>
+    <ol class="steg">${a.genomforande.map((s) => `<li>${esc(s)}</li>`).join('')}</ol>
+
+    <h2>Tid och bättring</h2>
+    ${a.matning.map((s) => `<p class="dampad liten">${esc(s)}</p>`).join('')}
+
+    <h2>Bedömningar och krav</h2>
+    ${BEDOMNING.map((s) => `<p class="dampad liten">${esc(s)}</p>`).join('')}
+
+    <h2>Poängzoner — Helfigur 2020</h2>
+    <div class="kort">
+      <dl class="fakta">
+        ${ZONORDNING.map((z) =>
+          `<dt>${z}</dt><dd>${ZONPOANG[z]} poäng</dd>`).join('')}
+      </dl>
+      <p class="dampad liten" style="margin-bottom:0">Poängkvot = räknade poäng delat med
+      tiden. Kravet är ${komma(prov.pkKrav)} för ${esc(prov.namn.toLowerCase())}.</p>
+    </div>`;
+
+  bottenrad.innerHTML = `
+    <div class="lagesvaljare">
+      <button data-anvisning="pist" aria-pressed="${gren === 'pist'}">PISTOL</button>
+      <button data-anvisning="ak" aria-pressed="${gren === 'ak'}">AUTOMATKARBIN</button>
+    </div>`;
+}
+
 // ------------------------------------------------------------- skytteregister
 
 function ritaRegister() {
@@ -463,6 +513,7 @@ function rita() {
   else if (vy.namn === 'register') ritaRegister();
   else if (vy.namn === 'installningar') ritaInstallningar();
   else if (vy.namn === 'export') ritaExportval();
+  else if (vy.namn === 'anvisning') ritaAnvisning();
   window.scrollTo(0, 0);
 }
 
@@ -490,13 +541,22 @@ document.addEventListener('click', async (ev) => {
     '[data-starta], [data-skytt], [data-lage], [data-nasta], [data-siffra], [data-radera], ' +
     '[data-spara-tid], [data-till-poang], [data-till-tid], [data-registrera], [data-export], ' +
     '[data-format], [data-historik], [data-nytt-forsok], [data-radera-person], [data-kopia], ' +
-    '[data-radera-allt], [data-skriv-ut], .zonknapp');
+    '[data-radera-allt], [data-skriv-ut], [data-anvisning], .zonknapp');
   if (!t) return;
   const d = t.dataset;
 
   // --- navigering ---
   if (d.vy === 'ny') return gaTill('ny', { valda: [] });
   if (d.vy === 'register') return gaTill('register');
+  if (d.vy === 'anvisning') {
+    // Öppnas anvisningen från en omgång ska den visa det prov som skjuts.
+    const o = vy.omgangId ? lager.omgang(vy.omgangId) : null;
+    return gaTill('anvisning', { gren: o ? o.gren : (vy.gren || 'pist'), omgangId: vy.omgangId });
+  }
+  if (d.anvisning) {
+    vy.gren = d.anvisning;
+    return rita();
+  }
   if (d.vy === 'installningar') return gaTill('installningar');
   if (d.vy === 'omgang-ater') return gaTill('omgang', { omgangId: vy.omgangId, lage: 'poang' }, true);
   if (d.oppna) return gaTill('omgang', { omgangId: d.oppna, lage: 'tid' });
@@ -711,9 +771,12 @@ document.addEventListener('change', (ev) => {
 const OVANFOR = {
   tid: 'omgang', poang: 'omgang', export: 'omgang',
   omgang: 'start', ny: 'start', register: 'start', installningar: 'start',
+  anvisning: 'start',
 };
 tillbakaKnapp.addEventListener('click', () => {
-  const mal = OVANFOR[vy.namn] || 'start';
+  // Anvisningen kan nås både från startsidan och mitt i en omgång — pilen ska
+  // lämna tillbaka dit man kom ifrån.
+  const mal = (vy.namn === 'anvisning' && vy.omgangId) ? 'omgang' : (OVANFOR[vy.namn] || 'start');
   if (mal === 'omgang') return gaTill('omgang', { omgangId: vy.omgangId, lage: vy.lage }, true);
   gaTill('start', {}, true);
 });

@@ -204,6 +204,19 @@ label.falt input, label.falt select {
 .summering .utfall.u { color: var(--underkand); }
 .brister { color: var(--underkand); font-size: 0.85rem; margin: 0.2rem 0 0.6rem; }
 
+/* ----------------------------------------------------------- anvisningar */
+
+.anvisningsrubrik { margin: 0 0 0.6rem; font-size: 0.95rem; }
+.fakta {
+  display: grid; grid-template-columns: 7rem 1fr; gap: 0.3rem 0.8rem; margin: 0;
+  font-size: 0.9rem;
+}
+.fakta dt { color: var(--dampad); }
+.fakta dd { margin: 0; }
+.steg { margin: 0 0 1rem; padding-left: 1.4rem; }
+.steg li { margin-bottom: 0.6rem; padding-left: 0.2rem; }
+.steg li::marker { color: var(--accent); font-weight: 700; }
+
 /* ---------------------------------------------------------------- dialog */
 
 .flash {

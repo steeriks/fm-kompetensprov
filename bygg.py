@@ -26,7 +26,10 @@ MODULER = ['regler.js', 'lagring.js', 'export.js', 'app.js']
 MEDFOLJANDE = ['sw.js', 'manifest.webmanifest', 'ikon-180.png', 'ikon-512.png']
 
 EXPORTERAT = re.compile(r'^export\s+(?:async\s+)?(?:function|const|let|class)\s+(\w+)', re.M)
-IMPORTRAD = re.compile(r'^import\s+.*?;\s*$', re.M)
+# [^;]* spänner över radbrytningar, så både `import { a } from '…';` och en
+# importlista över flera rader plockas bort. Utan det stannade bygget på sin
+# egen kontroll, vilket är precis vad kontrollen är till för.
+IMPORTRAD = re.compile(r'^import\b[^;]*;\s*$', re.M)
 NAMNRYMD = re.compile(r"^import\s+\*\s+as\s+(\w+)\s+from\s+'\./([\w.]+)';\s*$", re.M)
 
 

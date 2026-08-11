@@ -23,6 +23,36 @@ export const PROV = {
     grupper: [
       { id: 'alla', namn: 'Träffar', zoner: ['A', 'B', 'C', 'D', 'X', 'H'], antal: 9 },
     ],
+    anvisning: {
+      rubrik: 'Kompetensprov Bas — liggande med stöd, knästående/sittande, stående',
+      fakta: [
+        ['Avstånd', '50 m'],
+        ['Mål', '1/1-figur'],
+        ['Ställning', 'Stående grundställning → valfri liggande skjutställning (stöd är tillåtet) '
+          + '→ valfri knästående/sittande skjutställning → stående skjutställning'],
+        ['Antal', '9 träff'],
+        ['Krav', '9 träff, poängkvot minst 1,0'],
+      ],
+      matning: [
+        'Skjuttiden mäts med skjuttimer. Tiden mäts mellan startsignal och sista skott.',
+        'Skytten får bättra missar eller dåliga träffar genom att skjuta fler än tre skott i '
+          + 'stående ställning efter att ha genomfört omladdning. De nio bästa träffarna räknas.',
+        'Det är inte meningen att skyttarna ska utnyttja reglerna genom att skjuta orimligt '
+          + 'många skott väldigt fort — bättringen ska komma som en konsekvens av att skytten '
+          + 'tolkar siktbilden.',
+      ],
+      genomforande: [
+        'Startposition: stående grundställning bakom eldställningen. Vapnet laddat med sex '
+          + 'patroner. Ett fullt magasin i en stängd magasinsficka.',
+        'På startsignal inta valfri liggande ställning, skjut tre skott.',
+        'Inta därefter valfri knästående/sittande ställning och skjut tre skott.',
+        'Genomför därefter omladdning och skjut tre träff från stående ställning. Totalt antal '
+          + 'träff för att vara godkänd är nio; eventuella bättringar genomförs efter omladdning '
+          + 'och i stående ställning.',
+        '”Har skytten några frågor?”',
+        '”Grundställning” — ge startsignal med timer.',
+      ],
+    },
   },
   pist: {
     kod: 'pist',
@@ -39,8 +69,45 @@ export const PROV = {
       { id: 'xbcd', namn: 'XBCD', zoner: ['X', 'B', 'C', 'D'], antal: 4 },
       { id: 'ah', namn: 'AH', zoner: ['A', 'H'], antal: 2 },
     ],
+    anvisning: {
+      rubrik: 'Kompetensprov BAS — PILEN (18 skott)',
+      fakta: [
+        ['Avstånd', '10 m'],
+        ['Mål', '1/1-figur'],
+        ['Ställning', 'Stående grundställning'],
+        ['Antal', '6 träff'],
+        ['Träffkrav', 'PK 2,0 (4 träff XBCD, 2 träff AH)'],
+        ['Målyta', 'XBCD och AH'],
+        ['Fokus', 'Vändning, drag och omladdning'],
+      ],
+      matning: [
+        'Skjuttiden mäts med skjuttimer. Tiden mäts mellan startsignal och sista skott.',
+        'Skytten får bättra missar eller dåliga träffar genom att skjuta fler än två skott i '
+          + 'stående ställning efter att ha genomfört omladdning. De sex bästa träffarna räknas: '
+          + 'de fyra bästa mot XBCD och de två bästa mot AH.',
+        'Det är inte meningen att skyttarna ska utnyttja reglerna genom att skjuta orimligt '
+          + 'många skott väldigt fort — bättringen ska komma som en konsekvens av att skytten '
+          + 'tolkar siktbilden.',
+      ],
+      genomforande: [
+        'Startposition: skytten är vänd med ryggen mot målet, pistolen hölstrad samt laddad. '
+          + 'Magasin om 3 patroner samt 1 i vapnet. Omladdningsmagasinet är fullt.',
+        'Inledningsvis, på signal: genomför skytten en vändning och skjuter 4 träff mot XBCD.',
+        'Därefter genomför skytten omladdning.',
+        'Slutligen skjuter skytten 2 träff i AH. Bättringsskott får genomföras mot samtliga '
+          + 'träffzoner efter omladdning.',
+      ],
+    },
   },
 };
+
+// Gemensamt för båda delmomenten — står i regelverket under "Bedömningar och krav".
+export const BEDOMNING = [
+  'Vid osäker eller felaktig vapenhantering blir skytten underkänd. Vapenhantering ska '
+    + 'genomföras enligt respektive manual och SäkR.',
+  'Övningen får skjutas tre gånger. Skytten ska därefter ges kompletterande träning och '
+    + 'erbjudas nytt provtillfälle. Nytt provtillfälle kan vara samma dag.',
+];
 
 export const ZONORDNING = ['A', 'B', 'C', 'D', 'X', 'H'];
 

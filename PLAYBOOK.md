@@ -12,9 +12,12 @@ externt smugit sig in (`src=`/`href=` mot `http`), för appen ska fungera på en
 utan täckning.
 
 **Reglerna är data, inte kod.** `PROV` i `src/regler.js` beskriver varje delmoment:
-målytor, hur många träffar som räknas i varje målyta, kravet på poängkvot, och hur många
-försök som är tillåtna. `bedom()` känner inte till något prov — den läser tabellen. Ett
-nytt delmoment läggs till genom att fylla på `PROV`, inte genom att skriva om räkningen.
+målytor, hur många träffar som räknas i varje målyta, kravet på poängkvot, hur många
+försök som är tillåtna — och `anvisning` med avstånd, ställning, genomförande och
+mätregler i klartext. `bedom()` känner inte till något prov, och `ritaAnvisning()` känner
+inte till något innehåll; båda läser tabellen. Ett nytt delmoment läggs till genom att
+fylla på `PROV`, inte genom att skriva om vare sig räkningen eller vyn. Texten som är
+gemensam för delmomenten står i `BEDOMNING`.
 
 **Målytan har ett tak, inte ett urval.** Både pistol och Ak tillåter bättringsskott efter
 omladdning, men bara de räknande träffarna förs in: nio på Ak, fyra plus två på pistol.

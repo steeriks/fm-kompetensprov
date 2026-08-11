@@ -22,6 +22,11 @@ instruktören skjuter en åt gången:
    godkänt/underkänt syns på skyttens rad i listan.
 6. **Dela** ger hela omgången som text, PDF, Excel eller CSV, redo att mejla.
 
+**Anvisningen** finns alltid till hands — på startsidan och som knapp mitt i en omgång, där
+den öppnas på det prov som skjuts. Den innehåller avstånd, mål, ställning, träffkrav,
+genomförandet steg för steg med instruktörens repliker, reglerna för tid och bättring,
+bedömningskraven och zontabellen.
+
 En skytt kan skjuta om provet — *+ Nytt försök* på raden. Provet får skjutas tre gånger
 innan kompletterande träning krävs, och appen räknar försöken.
 

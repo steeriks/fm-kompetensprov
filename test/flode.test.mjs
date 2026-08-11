@@ -389,3 +389,56 @@ test('platsfältet är tomt utan spår av tidigare text', () => {
   assert.equal(plats.getAttribute('autocomplete'), 'off',
     'webbläsaren ska inte heller fylla i åt oss');
 });
+
+/** Faktarutans dt/dd som ett uppslagsverk. */
+function fakta() {
+  const ut = {};
+  doc.querySelectorAll('.fakta').forEach((dl) => {
+    const barn = [...dl.children];
+    for (let i = 0; i < barn.length - 1; i += 2) ut[barn[i].textContent.trim()] = barn[i + 1].textContent.trim();
+  });
+  return ut;
+}
+
+test('anvisningen finns för båda proven, med avstånd och genomförande', () => {
+  klicka('Anvisningar');
+  const text = () => doc.querySelector('#app').textContent.replace(/\s+/g, ' ');
+
+  // Pistol visas först
+  assert.match(doc.querySelector('#underrubrik').textContent, /Pistol · Delmoment 14/);
+  assert.match(text(), /PILEN/);
+  assert.equal(fakta()['Avstånd'], '10 m');
+  assert.equal(fakta()['Mål'], '1/1-figur');
+  assert.equal(fakta()['Träffkrav'], 'PK 2,0 (4 träff XBCD, 2 träff AH)');
+  assert.equal(fakta()['Fokus'], 'Vändning, drag och omladdning');
+  assert.equal(fakta()['A'], '5 poäng', 'zontabellen ska finnas i anvisningen');
+  assert.equal(fakta()['H'], '1 poäng');
+  assert.match(text(), /vänd med ryggen mot målet/);
+  assert.match(text(), /genomför skytten omladdning/i);
+  assert.match(text(), /Vid osäker eller felaktig vapenhantering/);
+  assert.match(text(), /Övningen får skjutas tre gånger/);
+
+  klicka('AUTOMATKARBIN');
+  assert.match(doc.querySelector('#underrubrik').textContent, /Automatkarbin · Delmoment 12/);
+  assert.equal(fakta()['Avstånd'], '50 m');
+  assert.equal(fakta()['Krav'], '9 träff, poängkvot minst 1,0');
+  assert.match(text(), /Vapnet laddat med sex patroner/);
+  assert.match(text(), /valfri knästående\/sittande ställning/);
+  assert.match(text(), /Grundställning/);
+  assert.match(text(), /Kravet är 1,00 för automatkarbin/);
+  assert.equal(doc.querySelectorAll('.steg li').length, 6, 'sex punkter i genomförandet');
+});
+
+test('anvisningen nås mitt i en omgång och visar rätt prov', () => {
+  klicka('+ Ny omgång');
+  doc.querySelector('#gren').value = 'ak';
+  rader()[0].click();
+  klicka('Starta omgången');
+
+  klicka('Anvisning');
+  assert.match(doc.querySelector('#underrubrik').textContent, /Automatkarbin/,
+    'anvisningen ska öppnas på det prov som skjuts');
+  klicka('‹');
+  assert.match(doc.querySelector('#underrubrik').textContent, /Delmoment 12.*krav PK/,
+    'pilen ska lämna tillbaka till vallistan, inte till startsidan');
+});
