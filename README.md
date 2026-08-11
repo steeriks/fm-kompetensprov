@@ -33,6 +33,9 @@ och poängen förs in. Två svep genom samma lista.
    godkända."*
 6. **Dela resultat** ger hela omgången som text, PDF, Excel eller CSV, redo att mejla.
 
+**Så använder du appen** på startsidan är en kortfattad användarinstruktion: arbetsgången,
+ändringar under omgången, delning och säkerhetskopior.
+
 **Anvisning för genomförande** finns både på startsidan och som knapp mitt i en omgång,
 där den öppnas på det prov som skjuts: avstånd, mål, ställning, träffkrav, genomförandet
 steg för steg med instruktörens repliker, reglerna för tid och bättring, bedömningskraven
@@ -118,7 +121,8 @@ Testerna kör mot `dist/`, så **bygg innan du provar**.
 | `src/lagring.js` | localStorage, säkerhetskopia, radering. |
 | `src/export.js` | Text, CSV, XLSX och PDF — skrivna för hand, utan bibliotek. |
 | `src/app.js` | Vyer, flöde och inmatning. |
-| `src/hjalp.md` | Hjälptexten i appen; bakas in av bygget. |
+| `src/anvandning.md` | Användarinstruktionen i appen; bakas in av bygget. |
+| `src/hjalp.md` | Installation, data och licens; bakas in av bygget. |
 | `bygg.py` | Slår ihop `src/` till en enda `dist/index.html`. |
 | `gen_ikon.py` | Genererar ikonerna, ren stdlib. |
 | `publicera.sh` | Kopierar `dist/` till det publika arkivet som GitHub Pages serverar. |

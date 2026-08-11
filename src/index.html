@@ -29,9 +29,11 @@
   </h1>
 </header>
 <main id="app"></main>
-<!-- Hjälptexten bor i src/hjalp.md och bakas in hit av bygg.py. Att hämta
-     filen vid körning hade brutit löftet om en app utan externa anrop. -->
-<script type="text/markdown" id="hjalptext"></script>
+<!-- Texterna bor som .md-filer i src/ och bakas in hit av bygg.py, som läser
+     data-fil. Att hämta dem vid körning hade brutit löftet om en app utan
+     externa anrop. -->
+<script type="text/markdown" id="dok-anvandning" data-fil="anvandning.md"></script>
+<script type="text/markdown" id="dok-hjalp" data-fil="hjalp.md"></script>
 <div class="bottenrad" id="bottenrad"></div>
 <script type="module" src="app.js"></script>
 </body>

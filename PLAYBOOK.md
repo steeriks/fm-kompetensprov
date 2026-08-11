@@ -95,7 +95,7 @@ skjutlaget.
 | `export` | `ritaExportval` | Fyra format plus förhandsgranskning. |
 | `register` | `ritaRegister` | Skytteregistret. |
 | `installningar` | `ritaInstallningar` | Säkerhetskopia, nollställning, hjälp. |
-| `hjalp` | `ritaHjalp` | `src/hjalp.md`, renderad. |
+| `dok` | `ritaDokument` | `anvandning.md` eller `hjalp.md`, renderad. |
 
 **Flyttläge** är ett tillstånd på vallistan (`vy.flyttlage`), inte en egen vy: ett långt
 tryck slår på det, varje rad får ett handtag (☰) och draget börjar när man tar i handtaget.
@@ -149,12 +149,20 @@ iOS och papper på banan, och är reserven om den handskrivna PDF:en någon gån
 sig spröd. Knappen finns på exportskärmen — inte under inställningar, där det inte finns
 något resultat att skriva ut.
 
-## Hjälptexten
+## Texterna i appen
 
-`src/hjalp.md` är en riktig markdown-fil, men bakas in i sidan av `bygg.py` i en
-`<script type="text/markdown">`. Att hämta den vid körning hade brutit löftet om noll
-externa anrop. Renderaren i `app.js` klarar rubriker, stycken, punktlistor, fet stil och
-länkar — skriv inte annat i filen utan att utöka den, och skriv aldrig `</script`.
+Två markdown-filer: `src/anvandning.md` (hur appen används) och `src/hjalp.md`
+(installation, data, buggar, licens). Båda är riktiga .md-filer, men bakas in i sidan av
+`bygg.py` i var sin `<script type="text/markdown" data-fil="…">`. Att hämta dem vid
+körning hade brutit löftet om noll externa anrop.
+
+Vill du lägga till en text till: skapa filen, lägg en behållare med `data-fil` i
+`index.html`, och en post i `DOKUMENT` i `app.js` med rubrik och vart knappen leder
+tillbaka. Bygget hittar behållaren av sig självt.
+
+Renderaren klarar rubriker, stycken, punktlistor, **fet**, *kursiv* och länkar — skriv
+inte annat i filerna utan att utöka den, och skriv aldrig `</script`. Ett prov ser till att
+ingen markdown läcker ut som asterisker på skärmen.
 
 ## Prov
 

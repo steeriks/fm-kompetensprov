@@ -907,15 +907,18 @@ test('knapparna säger vad som ska göras, inte bara "nästa"', () => {
   }
 });
 
-test('startsidans knappar heter vad de gör, på en enda rad', () => {
-  const rad = doc.querySelector('#bottenrad .knapprad');
-  const namn = [...rad.querySelectorAll('button')].map((b) => b.textContent.trim());
-  assert.deepEqual(namn,
-    ['Anvisningar för genomförande', 'Lägg till skyttar', 'Appinställningar']);
-  assert.equal(doc.querySelectorAll('#bottenrad .knapprad').length, 1,
-    'de tre ska dela en rad — tre egna rader äter en fjärdedel av skärmen');
-  assert.ok([...rad.querySelectorAll('button')].every((b) => b.className.includes('smal')),
-    'och bära den smala stilen som gör att de får plats');
+test('startsidans knappar heter vad de gör, två och två', () => {
+  const namn = [...doc.querySelectorAll('#bottenrad .knapprad button')]
+    .map((b) => b.textContent.trim());
+  assert.deepEqual(namn, [
+    'Så använder du appen', 'Anvisningar för genomförande',
+    'Lägg till skyttar', 'Appinställningar',
+  ]);
+  assert.equal(doc.querySelectorAll('#bottenrad .knapprad').length, 2,
+    'fyra på en rad blir oläsligt, fyra egna rader äter halva skärmen');
+  assert.ok([...doc.querySelectorAll('#bottenrad .knapprad button')]
+    .every((b) => b.className.includes('smal')),
+    'alla ska bära den smala stilen som gör att de får plats');
 });
 
 test('sidans nedre marginal följer bottenradens höjd', () => {
@@ -1008,4 +1011,47 @@ test('tillbaka till listan landar i det läge som har något kvar att göra', ()
   klicka('Anvisning för genomförande');
   klicka('Tillbaka till listan');
   assert.match(lage(), /^POÄNG \(3\)/);
+});
+
+test('användarinstruktionen nås från startsidan och beskriver arbetsgången', () => {
+  klicka('Så använder du appen');
+  const text = doc.querySelector('#app').textContent.replace(/\s+/g, ' ');
+
+  assert.match(text, /Lägg till skyttar/, 'förberedelsen');
+  assert.match(text, /i skjutordning/, 'omgången läggs upp');
+  assert.match(text, /555.*5,55/, 'hur tiden knappas');
+  assert.match(text, /Spara & nästa skytt/);
+  assert.match(text, /Spara & börja med poängen/);
+  assert.match(text, /Registrera & nästa skytt/);
+  assert.match(text, /vapenhantering/i);
+  assert.match(text, /Klar med ordningen/, 'ändringar under omgången');
+  assert.match(text, /\+ Nytt försök/);
+  assert.match(text, /Dela resultat/, 'delningen');
+  assert.match(text, /PDF/);
+  assert.match(text, /Spara kopia/, 'säkerhetskopian');
+  assert.ok(doc.querySelectorAll('#app .dokument h2').length >= 5, 'flera avsnitt');
+  assert.ok(!text.includes('*'), 'ingen markdown ska läcka ut som asterisker');
+  assert.ok(doc.querySelector('#app .dokument i'), 'kursiv stil ska renderas');
+  assert.ok(doc.querySelector('#app .dokument b'), 'fet stil ska renderas');
+
+  klicka('Tillbaka till startsidan');
+  assert.match(doc.querySelector('#app').textContent, /Omgångar/);
+});
+
+test('hjälpen och användarinstruktionen är två olika texter', () => {
+  klicka('Så använder du appen');
+  const instruktion = doc.querySelector('#app').textContent;
+  assert.match(doc.querySelector('#rubriktext').textContent, /Så använder du appen/);
+
+  klicka('Tillbaka till startsidan');
+  klicka('Appinställningar');
+  klicka('Installation, data och licens');
+  const hjalp = doc.querySelector('#app').textContent;
+  assert.match(doc.querySelector('#rubriktext').textContent, /Om appen/);
+  assert.notEqual(instruktion, hjalp);
+  assert.match(hjalp, /MIT-licens/);
+  assert.ok(!instruktion.includes('MIT-licens'), 'instruktionen ska hålla sig till bruket');
+
+  klicka('Tillbaka till inställningar');
+  assert.match(doc.querySelector('#app').textContent, /Säkerhetskopia/);
 });

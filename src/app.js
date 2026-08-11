@@ -128,7 +128,10 @@ function ritaStart() {
   bottenrad.innerHTML = `
     <button class="knapp primar" data-vy="ny">+ Ny omgång</button>
     <div class="knapprad">
+      <button class="knapp liten smal" data-dok="anvandning">Så använder du appen</button>
       <button class="knapp liten smal" data-vy="anvisning">Anvisningar för genomförande</button>
+    </div>
+    <div class="knapprad">
       <button class="knapp liten smal" data-vy="register">Lägg till skyttar</button>
       <button class="knapp liten smal" data-vy="installningar">Appinställningar</button>
     </div>`;
@@ -593,8 +596,11 @@ function nySkytt() {
 // fyra avsnitt vore att bryta löftet om en app utan beroenden.
 
 function markdown(text) {
+  // Ordningen är inte godtycklig: **fet** måste konsumeras före *kursiv*,
+  // annars äter kursiven det första asteriskparet.
   const inline = (rad) => esc(rad)
     .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
+    .replace(/\*([^*]+)\*/g, '<i>$1</i>')
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g,
       '<a href="$2" target="_blank" rel="noopener">$1</a>');
 
@@ -609,16 +615,30 @@ function markdown(text) {
   }).join('');
 }
 
-function ritaHjalp() {
-  sattRubrik('Om appen');
-  underrubrik.textContent = 'Installation, dina uppgifter, buggar och licens';
+const DOKUMENT = {
+  anvandning: {
+    rubrik: 'Så använder du appen',
+    under: 'Arbetsgång, ändringar, delning och kopior',
+    ater: { vy: 'start', text: 'Tillbaka till startsidan' },
+  },
+  hjalp: {
+    rubrik: 'Om appen',
+    under: 'Installation, dina uppgifter, buggar och licens',
+    ater: { vy: 'installningar', text: 'Tillbaka till inställningar' },
+  },
+};
+
+function ritaDokument() {
+  const dok = DOKUMENT[vy.dok] || DOKUMENT.anvandning;
+  sattRubrik(dok.rubrik);
+  underrubrik.textContent = dok.under;
   hemKnapp.hidden = false;
-  const kalla = document.getElementById('hjalptext');
+  const kalla = document.getElementById(`dok-${vy.dok}`);
   const text = (kalla && kalla.textContent.trim())
-    || 'Hjälptexten bakas in av bygg.py — kör `python3 bygg.py` och ladda om.';
+    || 'Texten bakas in av bygg.py — kör `python3 bygg.py` och ladda om.';
   app.innerHTML = `<div class="dokument">${markdown(text)}</div>`;
   bottenrad.innerHTML =
-    '<button class="knapp liten" data-vy="installningar">Tillbaka till inställningar</button>';
+    `<button class="knapp liten" data-vy="${dok.ater.vy}">${esc(dok.ater.text)}</button>`;
 }
 
 // ------------------------------------------------------------- inställningar
@@ -654,7 +674,7 @@ function ritaInstallningar() {
     </div>
     <h2>Om appen</h2>
     <div class="knapprad">
-      <button class="knapp liten" data-vy="hjalp">Installation, data och licens</button>
+      <button class="knapp liten" data-dok="hjalp">Installation, data och licens</button>
     </div>
 
     <h2>Nollställ</h2>
@@ -718,7 +738,7 @@ function rita() {
   else if (vy.namn === 'export') ritaExportval();
   else if (vy.namn === 'anvisning') ritaAnvisning();
   else if (vy.namn === 'lagg-till') ritaLaggTill();
-  else if (vy.namn === 'hjalp') ritaHjalp();
+  else if (vy.namn === 'dok') ritaDokument();
   window.scrollTo(0, 0);
   mätBottenrad();
 }
@@ -805,14 +825,14 @@ document.addEventListener('click', async (ev) => {
     '[data-spara-tid], [data-till-poang], [data-till-tid], [data-registrera], [data-export], ' +
     '[data-format], [data-historik], [data-nytt-forsok], [data-radera-person], [data-kopia], ' +
     '[data-radera-allt], [data-radera-alla-skyttar], [data-skriv-ut], [data-anvisning], ' +
-    '[data-lagg-till], [data-lagg-in], [data-flyttlage], .zonknapp');
+    '[data-lagg-till], [data-lagg-in], [data-flyttlage], [data-dok], .zonknapp');
   if (!t) return;
   const d = t.dataset;
 
   // --- navigering ---
   if (d.vy === 'ny') return gaTill('ny', { valda: [] });
   if (d.vy === 'register') return gaTill('register');
-  if (d.vy === 'hjalp') return gaTill('hjalp');
+  if (d.dok) return gaTill('dok', { dok: d.dok });
   if (d.vy === 'start') return gaTill('start', {}, true);
   if (d.vy === 'anvisning') {
     // Öppnas anvisningen från en omgång ska den visa det prov som skjuts.
