@@ -29,6 +29,13 @@ Avhuggningen "de N bästa" står ändå kvar i `bedom()`. Den är inte längre e
 ett skydd: en säkerhetskopia från en äldre version kan bära fler träffar än taket, och då
 ska poängen ändå bli rätt i stället för för hög.
 
+## Tiden knappas rakt av
+
+`tolkadTid()` i `app.js` läser knappsatsens buffert. Utan komma är de två sista siffrorna
+hundradelar (555 → 5,55), med komma gäller kommat. Skälet är att man läser av timern och
+knappar det man ser, utan att leta efter kommatecknet med handskar på. Bufferten sparas
+som den knappats — tolkningen sker vid visning och vid sparande, aldrig i lagret.
+
 ## Två svep, inte ett formulär
 
 Hela gränssnittet är byggt kring att provet genomförs i två vändor: alla tiderna först,

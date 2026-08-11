@@ -15,7 +15,9 @@ instruktören skjuter en åt gången:
    Numret de får är samma nummer som skyttens tavla på banan, och följer med hela vägen
    ut i exporten.
 2. **TID-läget:** knappa in tiden för en skytt, tryck *Spara & nästa skytt*, och appen
-   hoppar direkt till nästa i ordningen. Hela linjen i ett svep.
+   hoppar direkt till nästa i ordningen. Hela linjen i ett svep. Siffrorna knappas rakt
+   av som de står på timern — **555** blir 5,55 och **6667** blir 66,67 — men komma går
+   också att använda.
 3. Gå fram till tavlorna och byt till **POÄNG-läget**. *Nästa som saknar poäng* börjar om
    från första skytten.
 4. **Knappa in träffarna** — en tryckning per träff på respektive zon. Poängen står under

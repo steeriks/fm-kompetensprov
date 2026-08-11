@@ -1307,7 +1307,30 @@ const hemKnapp = document.getElementById('hem');
 // Vy, och vad vyn handlar om. Ingen router — appen är en enda skärm i taget
 // och webbläsarens bakåtknapp hanteras med history.state.
 let vy = { namn: 'start' };
-let utkastTid = '';       // sifferknappsatsens buffert
+let utkastTid = '';       // sifferknappsatsens buffert, som den knappats in
+
+/**
+ * Tolkar knappsatsens buffert som en tid i sekunder.
+ *
+ * Utan komma är de två sista siffrorna hundradelar: 555 blir 5,55 och 6667
+ * blir 66,67. Det är så en skjuttimer läses av — man knappar in siffrorna man
+ * ser, utan att leta efter kommatecknet med handskar på. Skriver man ett komma
+ * gäller det i stället, för den som hellre gör så.
+ */
+function tolkadTid(text) {
+  if (!text) return null;
+  if (text.includes(',')) return taltolk(text);
+  const n = taltolk(text);
+  return n === null ? null : n / 100;
+}
+
+/** Vad som står i den stora siffervisningen medan man knappar. */
+function visadTid(text) {
+  if (!text) return '';
+  if (text.includes(',')) return text;        // visa som det skrivs
+  const v = tolkadTid(text);
+  return v === null ? text : komma(v);
+}
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -1536,8 +1559,9 @@ function ritaTid() {
   hemKnapp.hidden = false;
 
   app.innerHTML = `
-    <div class="tidvisning ${utkastTid ? '' : 'tom'}">${esc(utkastTid || '0,00')}<span class="enhet"> s</span></div>
-    <p class="dampad liten" style="text-align:center">Tiden mäts mellan startsignal och sista skott.</p>
+    <div class="tidvisning ${utkastTid ? '' : 'tom'}">${esc(visadTid(utkastTid) || '0,00')}<span class="enhet"> s</span></div>
+    <p class="dampad liten" style="text-align:center">Tiden mäts mellan startsignal och sista skott.<br>
+    Knappa siffrorna rakt av — <b>555</b> blir 5,55 och <b>6667</b> blir 66,67. Komma går också bra.</p>
     <div class="knappsats">
       ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => `<button data-siffra="${n}">${n}</button>`).join('')}
       <button data-siffra=",">,</button>
@@ -1555,9 +1579,9 @@ function ritaTid() {
 function sparaTid() {
   const o = lager.omgang(vy.omgangId);
   const r = lager.pagaende(o.id, vy.personId);
-  const tal = taltolk(utkastTid);
+  const tal = tolkadTid(utkastTid);
   if (utkastTid && (tal === null || tal <= 0)) {
-    flash('Tiden ser inte ut som ett tal.');
+    flash(tal === 0 ? 'Tiden måste vara större än noll.' : 'Tiden ser inte ut som ett tal.');
     return false;
   }
   lager.andraResultat(r.id, { tid: tal });
@@ -1793,7 +1817,7 @@ function ritaInstallningar() {
       Krav enligt respektive delmoment — pistol PK 2,0, automatkarbin PK 1,0.
       Allt du knappar in stannar i telefonen tills du delar det själv.</p>
     <input type="file" id="kopiafil" accept="application/json,.json" hidden>`;
-  bottenrad.innerHTML = '<button class="knapp liten" data-skriv-ut="1">Skriv ut / spara som PDF</button>';
+  bottenrad.innerHTML = '';
 }
 
 // ---------------------------------------------------------------- exporten
@@ -1972,7 +1996,14 @@ document.addEventListener('click', async (ev) => {
   // --- sifferknappsatsen ---
   if (d.siffra) {
     vibrera(12);
-    if (d.siffra === ',' && utkastTid.includes(',')) return;
+    if (d.siffra === ',') {
+      if (utkastTid.includes(',')) return;
+      // Komma utan siffror framför blir "0," — annars står det bara ett komma.
+      utkastTid = (utkastTid || '0') + ',';
+      return rita();
+    }
+    // Två decimaler räcker; en skjuttimer visar inte fler.
+    if (utkastTid.includes(',') && utkastTid.split(',')[1].length >= 2) return;
     if (utkastTid.replace(',', '').length >= 6) return;
     utkastTid += d.siffra;
     return rita();

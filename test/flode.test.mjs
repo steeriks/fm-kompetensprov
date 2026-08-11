@@ -604,3 +604,67 @@ test('bekräftelsen syns kvar efter omritningen', () => {
   assert.match(doc.querySelector('#underrubrik').textContent, /krav PK/,
     'och vi ska stå på vallistan igen');
 });
+
+test('tiden knappas rakt av — de två sista siffrorna är hundradelar', () => {
+  klicka('+ Ny omgång');
+  bockaIAlla();
+  klicka('Starta omgången');
+  klicka('Nästa som saknar tid');
+  const visas = () => doc.querySelector('.tidvisning').textContent.replace(/\s+/g, ' ').trim();
+
+  knappaTid('5');
+  assert.equal(visas(), '0,05 s', 'första siffran är hundradelar');
+  knappaTid('5');
+  assert.equal(visas(), '0,55 s');
+  knappaTid('5');
+  assert.equal(visas(), '5,55 s', '555 blir 5,55');
+  klicka('Spara & nästa skytt');
+  assert.equal(lagret().resultat[0].tid, 5.55);
+
+  knappaTid('6667');
+  assert.equal(visas(), '66,67 s', '6667 blir 66,67');
+  klicka('Spara & nästa skytt');
+  assert.equal(lagret().resultat[1].tid, 66.67);
+});
+
+test('komma går fortfarande att använda, och tar högst två decimaler', () => {
+  klicka('+ Ny omgång');
+  rader()[0].click();
+  klicka('Starta omgången');
+  klicka('Nästa som saknar tid');
+  const visas = () => doc.querySelector('.tidvisning').textContent.replace(/\s+/g, ' ').trim();
+
+  knappaTid('12,5');
+  assert.equal(visas(), '12,5 s', 'skrivs som det knappas när kommat är med');
+  knappaTid('0');
+  assert.equal(visas(), '12,50 s');
+  knappaTid('9');
+  assert.equal(visas(), '12,50 s', 'en tredje decimal ska studsa');
+  klicka('Spara och tillbaka');
+  assert.equal(lagret().resultat[0].tid, 12.5);
+});
+
+test('backsteg fungerar i båda lägena', () => {
+  klicka('+ Ny omgång');
+  rader()[0].click();
+  klicka('Starta omgången');
+  klicka('Nästa som saknar tid');
+  const visas = () => doc.querySelector('.tidvisning').textContent.replace(/\s+/g, ' ').trim();
+  knappaTid('1234');
+  assert.equal(visas(), '12,34 s');
+  klicka('⌫', doc.querySelector('.knappsats'));
+  assert.equal(visas(), '1,23 s', 'siffrorna skjuts tillbaka ett steg');
+  klicka('⌫', doc.querySelector('.knappsats'));
+  klicka('⌫', doc.querySelector('.knappsats'));
+  klicka('⌫', doc.querySelector('.knappsats'));
+  assert.equal(visas(), '0,00 s', 'tomt fält visar nollan dämpad');
+});
+
+test('inställningarna har ingen utskriftsknapp', () => {
+  klicka('Inställningar');
+  const knappar = [...doc.querySelectorAll('#bottenrad button, #app button')]
+    .map((b) => b.textContent.trim());
+  assert.ok(!knappar.some((t) => /skriv ut/i.test(t)),
+    'utskrift hör hemma på exportskärmen, inte här: ' + knappar.join(', '));
+  assert.ok(knappar.some((t) => /Spara kopia/.test(t)), 'säkerhetskopian ska finnas kvar');
+});
