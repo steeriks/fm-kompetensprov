@@ -14,23 +14,24 @@ instruktören skjuter en åt gången:
 1. **Lägg upp en omgång** — prov, datum, plats, och bocka i deltagarna i skjutordning.
    Numret de får är samma nummer som skyttens tavla på banan, och följer med hela vägen
    ut i exporten.
-2. **TID-läget:** knappa in tiden för en skytt, tryck *Spara & nästa skytt*, och appen
+2. **TID-läget:** *Registrera tid för första skytt* öppnar tavla 1; därefter heter knappen
+   *Nästa som saknar tid*. Knappa in tiden för en skytt, tryck *Spara & nästa skytt*, och appen
    hoppar direkt till nästa i ordningen. Hela linjen i ett svep. Siffrorna knappas rakt
    av som de står på timern — **555** blir 5,55 och **6667** blir 66,67 — men komma går
    också att använda.
    Under knappen står vem som är näste man, med tavelnummer. När sista skytten fått sin
    tid byter knappen till *Spara & börja med poängen*.
-3. Gå fram till tavlorna. Appen står redan på första tavlan i **POÄNG-läget**; annars
-   tar *Nästa som saknar poäng* dig dit.
+3. Gå fram till tavlorna. Appen står redan på första tavlan i **POÄNG-läget**; annars tar
+   *Registrera poäng för första skytt* — eller *Nästa som saknar poäng* — dig dit.
 4. **Knappa in träffarna** — en tryckning per träff på respektive zon. Poängen står under
    varje knapp och kvoten räknas medan du knappar. Håll in en knapp för att nolla den.
 5. **Registrera & nästa skytt** låser försöket och går vidare; vem det blir står under
    knappen. På sista skytten heter den *Registrera sista resultatet*, och när den tryckts
    summeras omgången: *"Omgången klar — 2 av 3 godkända."* Kvoten och godkänt/underkänt
    syns på varje skytts rad i listan.
-6. **Dela** ger hela omgången som text, PDF, Excel eller CSV, redo att mejla.
+6. **Dela resultat** ger hela omgången som text, PDF, Excel eller CSV, redo att mejla.
 
-**Anvisningen** finns alltid till hands — på startsidan och som knapp mitt i en omgång, där
+**Anvisning för genomförande** finns alltid till hands — på startsidan och som knapp mitt i en omgång, där
 den öppnas på det prov som skjuts. Den innehåller avstånd, mål, ställning, träffkrav,
 genomförandet steg för steg med instruktörens repliker, reglerna för tid och bättring,
 bedömningskraven och zontabellen.

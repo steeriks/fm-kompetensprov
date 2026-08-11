@@ -1578,16 +1578,27 @@ function ritaOmgang() {
       '<button class="knapp primar" data-flyttlage="av">Klar med ordningen</button>';
     return;
   }
+  // Första trycket i en ny omgång ska säga vad man ska göra, inte "nästa" —
+  // det finns ingen föregående ännu.
+  const alla = lager.resultat(o.id);
+  const forsta = lage === 'tid'
+    ? !alla.some((r) => r.tid !== null)
+    : !alla.some((r) => r.registrerad);
+  const huvudtext = lage === 'tid'
+    ? (forsta ? 'Registrera tid för första skytt' : 'Nästa som saknar tid')
+    : (forsta ? 'Registrera poäng för första skytt' : 'Nästa som saknar poäng');
+
   bottenrad.innerHTML = `
     <div class="lagesvaljare">
       <button data-lage="tid" aria-pressed="${lage === 'tid'}">TID${utanTid ? ` (${utanTid})` : ''}</button>
       <button data-lage="poang" aria-pressed="${lage === 'poang'}">POÄNG${utanPoang ? ` (${utanPoang})` : ''}</button>
     </div>
-    <button class="knapp primar" data-nasta="${lage}">
-      ${lage === 'tid' ? 'Nästa som saknar tid' : 'Nästa som saknar poäng'}</button>
+    <button class="knapp primar" data-nasta="${lage}">${huvudtext}</button>
     <div class="knapprad">
-      <button class="knapp liten" data-vy="anvisning">Anvisning</button>
-      <button class="knapp liten" data-export="1">Dela</button>
+      <button class="knapp liten" data-vy="anvisning">Anvisning för genomförande</button>
+    </div>
+    <div class="knapprad">
+      <button class="knapp liten" data-export="1">Dela resultat</button>
     </div>`;
 }
 

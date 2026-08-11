@@ -57,6 +57,13 @@ function hem() {
   doc.querySelector('#hem').click();
 }
 
+/** Vallistans huvudknapp — "Registrera … för första skytt" i början av en
+ *  omgång, "Nästa som saknar …" därefter. Proven bryr sig om vad den GÖR;
+ *  orden provas för sig. */
+function nastaIListan() {
+  doc.querySelector('#bottenrad .knapp.primar').click();
+}
+
 function rader() {
   return [...doc.querySelectorAll('#app .skyttrad')];
 }
@@ -117,7 +124,7 @@ test('tidssvepet går genom hela linjen utan omvägar', () => {
   klicka('Starta omgången');
   assert.equal(rader().length, 3, 'vallistan visar alla tre');
 
-  klicka('Nästa som saknar tid');
+  nastaIListan();
   const forsta = doc.querySelector('#rubrik').textContent;
   knappaTid('11,20');
   assert.match(doc.querySelector('.tidvisning').textContent, /11,20/);
@@ -145,13 +152,13 @@ test('poängsvepet börjar om från första skytten och räknar kvoten', () => {
   klicka('Starta omgången');
   // Tider på alla tre
   for (const tid of ['11,20', '9,80', '14,05']) {
-    klicka('Nästa som saknar tid');
+    nastaIListan();
     knappaTid(tid);
     klicka('Spara och tillbaka');
   }
 
   klicka('POÄNG');
-  klicka('Nästa som saknar poäng');
+  nastaIListan();
   const forstaIPoang = doc.querySelector('#rubrik').textContent;
   assert.match(doc.querySelector('#underrubrik').textContent, /Poäng · försök 1/);
 
@@ -178,7 +185,7 @@ test('för få träffar i en målyta underkänns oavsett fart', () => {
   klicka('+ Ny omgång');
   rader()[0].click();
   klicka('Starta omgången');
-  klicka('Nästa som saknar tid');
+  nastaIListan();
   knappaTid('5,00');
   klicka('Poäng för');            // knappen bär skyttens förnamn
 
@@ -193,7 +200,7 @@ test('långt tryck nollar en zon', async () => {
   klicka('+ Ny omgång');
   rader()[0].click();
   klicka('Starta omgången');
-  klicka('Nästa som saknar tid');
+  nastaIListan();
   knappaTid('5,00');
   klicka('Poäng för');
 
@@ -209,7 +216,7 @@ test('andra försöket lägger sig bredvid det första, inte ovanpå', () => {
   klicka('+ Ny omgång');
   rader()[0].click();
   klicka('Starta omgången');
-  klicka('Nästa som saknar tid');
+  nastaIListan();
   knappaTid('20,00');
   klicka('Poäng för');
   knappaZon('C', 4);
@@ -235,7 +242,7 @@ test('vapenhantering underkänner även en perfekt serie', () => {
   klicka('+ Ny omgång');
   rader()[0].click();
   klicka('Starta omgången');
-  klicka('Nästa som saknar tid');
+  nastaIListan();
   knappaTid('8,00');
   klicka('Poäng för');
   knappaZon('B', 4);
@@ -255,7 +262,7 @@ test('automatkarbin har en enda målyta med nio träff', () => {
   rader()[0].click();
   klicka('Starta omgången');
   assert.match(doc.querySelector('#underrubrik').textContent, /Delmoment 12.*krav PK 1,00/);
-  klicka('Nästa som saknar tid');
+  nastaIListan();
   knappaTid('24,50');
   klicka('Poäng för');
   assert.equal(doc.querySelectorAll('.zongrupp').length, 1, 'ak har bara en målyta');
@@ -269,7 +276,7 @@ test('att radera en skytt tar med sig resultaten', () => {
   klicka('+ Ny omgång');
   rader()[0].click();
   klicka('Starta omgången');
-  klicka('Nästa som saknar tid');
+  nastaIListan();
   knappaTid('10,00');
   klicka('Spara och tillbaka');
   assert.equal(lagret().resultat.length, 1);
@@ -286,7 +293,7 @@ test('hemikonen går hem från vilken vy som helst, och sparar tiden på vägen'
   klicka('+ Ny omgång');
   rader()[0].click();
   klicka('Starta omgången');
-  klicka('Nästa som saknar tid');
+  nastaIListan();
   assert.match(doc.querySelector('#underrubrik').textContent, /Tid · försök 1/);
   knappaTid('7,50');
 
@@ -310,7 +317,7 @@ test('fler träffar än de som räknas går inte att knappa in', () => {
   klicka('+ Ny omgång');
   rader()[0].click();
   klicka('Starta omgången');
-  klicka('Nästa som saknar tid');
+  nastaIListan();
   knappaTid('10,00');
   klicka('Poäng för');
 
@@ -335,7 +342,7 @@ test('en träff kan bytas ut: nolla zonen först', async () => {
   klicka('+ Ny omgång');
   rader()[0].click();
   klicka('Starta omgången');
-  klicka('Nästa som saknar tid');
+  nastaIListan();
   knappaTid('10,00');
   klicka('Poäng för');
 
@@ -354,7 +361,7 @@ test('automatkarbin tar emot nio träffar, inte fler', () => {
   doc.querySelector('#gren').value = 'ak';
   rader()[0].click();
   klicka('Starta omgången');
-  klicka('Nästa som saknar tid');
+  nastaIListan();
   knappaTid('30,00');
   klicka('Poäng för');
 
@@ -370,7 +377,7 @@ test('utfallet skrivs i klartext bredvid kvoten', () => {
   klicka('+ Ny omgång');
   rader()[0].click();
   klicka('Starta omgången');
-  klicka('Nästa som saknar tid');
+  nastaIListan();
   knappaTid('10,00');
   klicka('Poäng för');
 
@@ -479,7 +486,7 @@ test('radera alla skyttar frågar först och tar med sig resultaten', () => {
   klicka('+ Ny omgång');
   bockaIAlla();
   klicka('Starta omgången');
-  klicka('Nästa som saknar tid');
+  nastaIListan();
   knappaTid('10,00');
   klicka('Spara och tillbaka');
   hem();
@@ -632,7 +639,7 @@ test('tiden knappas rakt av — de två sista siffrorna är hundradelar', () => 
   klicka('+ Ny omgång');
   bockaIAlla();
   klicka('Starta omgången');
-  klicka('Nästa som saknar tid');
+  nastaIListan();
   const visas = () => doc.querySelector('.tidvisning').textContent.replace(/\s+/g, ' ').trim();
 
   knappaTid('5');
@@ -654,7 +661,7 @@ test('komma går fortfarande att använda, och tar högst två decimaler', () =>
   klicka('+ Ny omgång');
   rader()[0].click();
   klicka('Starta omgången');
-  klicka('Nästa som saknar tid');
+  nastaIListan();
   const visas = () => doc.querySelector('.tidvisning').textContent.replace(/\s+/g, ' ').trim();
 
   knappaTid('12,5');
@@ -671,7 +678,7 @@ test('backsteg fungerar i båda lägena', () => {
   klicka('+ Ny omgång');
   rader()[0].click();
   klicka('Starta omgången');
-  klicka('Nästa som saknar tid');
+  nastaIListan();
   const visas = () => doc.querySelector('.tidvisning').textContent.replace(/\s+/g, ' ').trim();
   knappaTid('1234');
   assert.equal(visas(), '12,34 s');
@@ -696,7 +703,7 @@ test('knappsatsen byggs inte om vid varje siffra', () => {
   klicka('+ Ny omgång');
   rader()[0].click();
   klicka('Starta omgången');
-  klicka('Nästa som saknar tid');
+  nastaIListan();
   const knappsats = doc.querySelector('.knappsats');
   const femman = [...knappsats.querySelectorAll('button')].find((b) => b.textContent === '5');
 
@@ -713,7 +720,7 @@ test('tidvyn säger vem som står på tur — och byter till poäng när linjen 
   klicka('Starta omgången');
   const ordning = rader().map((r) => r.textContent.replace(/\s+/g, ' ').trim().slice(0, 8));
 
-  klicka('Nästa som saknar tid');
+  nastaIListan();
   const nasta = () => doc.querySelector('.nastaskytt').textContent.replace(/\s+/g, ' ').trim();
   assert.match(nasta(), /^Nästa: 2\./, 'näste man ska stå under knappen');
   assert.ok(!nasta().includes('poäng'));
@@ -752,7 +759,7 @@ test('poängvyn säger vem som står på tur, och summerar när laget är klart'
   bockaIAlla();                        // Berg (1), Craf (2), Ek (3)
   klicka('Starta omgången');
   // Tidssvepet lämnar själv över till poängen efter sista skytten
-  klicka('Nästa som saknar tid');
+  nastaIListan();
   for (const tid of ['1100', '1200', '1300']) {
     knappaTid(tid);
     klicka('Spara &');
@@ -838,7 +845,7 @@ test('en färdig skytt får inget nytt försök av ett tryck på raden', () => {
   klicka('+ Ny omgång');
   rader()[0].click();
   klicka('Starta omgången');
-  klicka('Nästa som saknar tid');
+  nastaIListan();
   knappaTid('1000');
   klicka('Poäng för');
   knappaZon('B', 4);
@@ -858,7 +865,7 @@ test('en färdig skytt får inget nytt försök av ett tryck på raden', () => {
 
   // "Nästa som saknar tid" ska inte heller hitta på något
   klicka('TID');
-  klicka('Nästa som saknar tid');
+  nastaIListan();
   assert.equal(lagret().resultat.length, 1);
   assert.match(doc.body.textContent, /Alla har en tid/);
 
@@ -866,4 +873,34 @@ test('en färdig skytt får inget nytt försök av ett tryck på raden', () => {
   klicka('+ Nytt försök');
   assert.equal(lagret().resultat.length, 2);
   assert.match(doc.querySelector('#underrubrik').textContent, /Tid · försök 2/);
+});
+
+test('knapparna säger vad som ska göras, inte bara "nästa"', () => {
+  klicka('+ Ny omgång');
+  bockaIAlla();
+  klicka('Starta omgången');
+  const primar = () => doc.querySelector('#bottenrad .knapp.primar').textContent.trim();
+  const smaknappar = () => [...doc.querySelectorAll('#bottenrad .knapp.liten')]
+    .map((b) => b.textContent.trim());
+
+  assert.equal(primar(), 'Registrera tid för första skytt',
+    'en ny omgång har ingen "föregående" att vara nästa efter');
+  assert.deepEqual(smaknappar(), ['Anvisning för genomförande', 'Dela resultat']);
+
+  nastaIListan();
+  knappaTid('1100');
+  klicka('Spara och tillbaka');
+  assert.equal(primar(), 'Nästa som saknar tid', 'därefter är det nästa som gäller');
+
+  // Poängläget följer samma logik
+  klicka('POÄNG');
+  assert.equal(primar(), 'Registrera poäng för första skytt');
+  nastaIListan();
+  knappaZon('B', 4);
+  knappaZon('A', 2);
+  klicka('Registrera');
+  assert.match(doc.querySelector('#underrubrik').textContent, /krav PK|Poäng · försök/);
+  if (!doc.querySelector('#bottenrad .knapp.primar').textContent.includes('Registrera &')) {
+    assert.equal(primar(), 'Nästa som saknar poäng');
+  }
 });
