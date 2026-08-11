@@ -74,7 +74,7 @@ visa sig spröd.
 ## Prov
 
 ```bash
-npm test            # 33 prov: regelmotor, export, hela flödet
+npm test            # 39 prov: regelmotor, export, hela flödet
 python3 bygg.py     # måste köras innan flödesproven — de kör mot dist/
 ```
 
