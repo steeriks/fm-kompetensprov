@@ -1,81 +1,128 @@
 # Playbook — FM kompetensprov
 
-Handbok för den som ska ändra i appen. README beskriver hur den *används*; här står
-varför den ser ut som den gör och var fällorna ligger.
+Handbok för den som ska ändra i appen. README beskriver hur den *används*; här står varför
+den ser ut som den gör och var fällorna ligger.
 
 ## Grundvalen
 
 **Appen är en fil.** `src/` är uppdelad för att gå att läsa och testa, men det som
-distribueras är `dist/index.html` med allt inbakat — CSS, JavaScript och favikonen. Samma
-fil serveras av GitHub Pages och kan mejlas som bilaga. `bygg.py` vägrar bygga om något
-externt smugit sig in (`src=`/`href=` mot `http`), för appen ska fungera på en skjutbana
-utan täckning.
+distribueras är `dist/index.html` med allt inbakat — CSS, JavaScript, favikon och
+hjälptexten. Samma fil serveras av GitHub Pages och kan mejlas som bilaga. `bygg.py` vägrar
+bygga om något externt smugit sig in (`src=`/`href=` mot `http`), för appen ska fungera på
+en skjutbana utan täckning.
 
 **Reglerna är data, inte kod.** `PROV` i `src/regler.js` beskriver varje delmoment:
-målytor, hur många träffar som räknas i varje målyta, kravet på poängkvot, hur många
-försök som är tillåtna — och `anvisning` med avstånd, ställning, genomförande och
-mätregler i klartext. `bedom()` känner inte till något prov, och `ritaAnvisning()` känner
-inte till något innehåll; båda läser tabellen. Ett nytt delmoment läggs till genom att
-fylla på `PROV`, inte genom att skriva om vare sig räkningen eller vyn. Texten som är
-gemensam för delmomenten står i `BEDOMNING`.
+målytor, hur många träffar som räknas i varje målyta, kravet på poängkvot, hur många försök
+som är tillåtna — och `anvisning` med avstånd, ställning, genomförande och mätregler i
+klartext. `bedom()` känner inte till något prov, och `ritaAnvisning()` känner inte till
+något innehåll; båda läser tabellen. Ett nytt delmoment läggs till genom att fylla på
+`PROV`, inte genom att skriva om vare sig räkningen eller vyn. Det som är gemensamt för
+delmomenten står i `BEDOMNING`.
 
 **Målytan har ett tak, inte ett urval.** Både pistol och Ak tillåter bättringsskott efter
 omladdning, men bara de räknande träffarna förs in: nio på Ak, fyra plus två på pistol.
-`arFull()` i `regler.js` avgör när en målyta är full, och knapptrycket studsar med en
-förklaring i stället för att räkna upp. Ska en träff bytas mot en bättre nollas zonen
-med ett långt tryck först.
+`arFull()` avgör när en målyta är full, och knapptrycket studsar med en förklaring i
+stället för att räkna upp. Ska en träff bytas mot en bättre nollas zonen med ett långt
+tryck först.
 
-Avhuggningen "de N bästa" står ändå kvar i `bedom()`. Den är inte längre ett urval utan
-ett skydd: en säkerhetskopia från en äldre version kan bära fler träffar än taket, och då
-ska poängen ändå bli rätt i stället för för hög.
+Avhuggningen "de N bästa" står ändå kvar i `bedom()`. Den är inte längre ett urval utan ett
+skydd: en säkerhetskopia från en äldre version kan bära fler träffar än taket, och då ska
+poängen bli rätt i stället för för hög.
 
-## Tiden knappas rakt av
-
-`tolkadTid()` i `app.js` läser knappsatsens buffert. Utan komma är de två sista siffrorna
-hundradelar (555 → 5,55), med komma gäller kommat. Skälet är att man läser av timern och
-knappar det man ser, utan att leta efter kommatecknet med handskar på. Bufferten sparas
-som den knappats — tolkningen sker vid visning och vid sparande, aldrig i lagret.
+**Numret sitter på tavlan, inte på personen.** Skyttens nummer är hens plats i
+`omgang.deltagare` — flyttas hen numreras alla om. Numret följer med till rubriken, till
+listan och till exportens `Nr`-kolumn, så att protokollet går att matcha mot banan.
 
 ## Två svep, inte ett formulär
 
 Hela gränssnittet är byggt kring att provet genomförs i två vändor: alla tiderna först,
-alla poängen sedan. Det är därför vallistan har en **lägesväljare** i stället för ett
-formulär per skytt, och därför `nastaSkytt()` finns — den letar upp nästa som saknar det
-som läget handlar om, och varvar om från början när den nått slutet.
+alla poängen sedan. Därför har vallistan en **lägesväljare** i stället för ett formulär per
+skytt, och därför finns `nastaSkytt()` — den letar upp nästa som saknar det som läget
+handlar om, och varvar om från början när den nått slutet.
 
-**Försök skapas bara med flit.** `oppnaSkytt()` skapar ett första försök åt den som
-aldrig skjutit, men aldrig ett omtag: är skytten färdig säger appen ifrån i stället. Vem
-som väntar på vad avgörs på ETT ställe, `behoverLage()`, som både lägesväljarens räknare
-och `nastaSkytt()` läser — annars börjar de två påstå olika saker, och svepet drar in
-färdiga skyttar och hittar på försök åt dem.
+`nastaAnnan()` finns ovanpå den: när frågan är "vem står på tur EFTER mig" måste man själv
+uteslutas, annars pekar knappen på skytten man redan står hos — hen saknar ju fortfarande
+det man är där för att fylla i.
+
+**Försök skapas bara med flit.** `oppnaSkytt()` skapar ett första försök åt den som aldrig
+skjutit, men aldrig ett omtag: är skytten färdig säger appen ifrån. Vem som väntar på vad
+avgörs på ETT ställe, `behoverLage()`, som både lägesväljarens räknare och `nastaSkytt()`
+läser — annars börjar de två påstå olika saker, och svepet drar in färdiga skyttar och
+hittar på försök åt dem.
 
 `lagring.pagaende()` är gångjärnet: den ger skyttens *öppna* försök, det som ännu inte
-registrerats. Tidssvepet skapar det, poängsvepet hittar tillbaka till samma post
-timmar senare. Först `registrera()` låser posten, och då startar nästa tryck ett nytt
-försök i stället.
+registrerats. Tidssvepet skapar det, poängsvepet hittar tillbaka till samma post timmar
+senare. Först `registrera()` låser posten.
+
+**Knapparna säger vad som ska göras.** I en ny omgång finns ingen föregående skytt att vara
+"nästa" efter, så huvudknappen heter *Registrera tid för första skytt* tills första tiden är
+inne. Under den står vem som står på tur, och när linjen är klar lämnar knappen över till
+poängsteget av sig själv.
+
+## Tiden knappas rakt av
+
+`tolkadTid()` läser knappsatsens buffert. Utan komma är de två sista siffrorna hundradelar
+(555 → 5,55), med komma gäller kommat. Skälet är att man läser av timern och knappar det
+man ser, utan att leta efter kommatecknet med handskar på. Bufferten sparas som den
+knappats — tolkningen sker vid visning och vid sparande, aldrig i lagret.
+
+Knappsatsen ritas **inte** om per siffra; bara `.tidvisning` skrivs om. Att bygga upp
+knapparna på nytt mitt under fingret ger flimmer och byter ut knappen mellan nedtryck och
+släpp.
+
+## Vyerna
+
+Ingen router — `vy` är ett objekt med ett namn och det vyn handlar om, och `rita()` väljer
+funktion. `gaTill(namn, extra, ersatt)` med `ersatt = true` byter ut historikposten i
+stället för att stapla, så att telefonens bakåtgest inte vandrar baklänges genom hela
+skjutlaget.
+
+| Vy | Funktion | Vad den gör |
+|---|---|---|
+| `start` | `ritaStart` | Omgångarna. Svep vänster raderar. |
+| `ny` | `ritaNy` | Prov, datum, plats, ibockning i skjutordning. |
+| `omgang` | `ritaOmgang` | Vallistan med lägesväljare — arbetsvyn. |
+| `tid` | `ritaTid` | Sifferknappsats. |
+| `poang` | `ritaPoang` | Zonknappar, summering, utfall. |
+| `lagg-till` | `ritaLaggTill` | Fyller på en pågående omgång. |
+| `anvisning` | `ritaAnvisning` | Regelverkets anvisning per prov. |
+| `export` | `ritaExportval` | Fyra format plus förhandsgranskning. |
+| `register` | `ritaRegister` | Skytteregistret. |
+| `installningar` | `ritaInstallningar` | Säkerhetskopia, nollställning, hjälp. |
+| `hjalp` | `ritaHjalp` | `src/hjalp.md`, renderad. |
+
+**Flyttläge** är ett tillstånd på vallistan (`vy.flyttlage`), inte en egen vy: ett långt
+tryck slår på det, varje rad får ett handtag (☰) och draget börjar när man tar i handtaget.
+Att hålla in och dra i samma rörelse var för hal gest i fält — det var första försöket, och
+det fick bytas ut.
+
+**Hemknappen** går alltid till startsidan och sparar en påbörjad tid på vägen. Vägen
+tillbaka till vallistan finns som egen knapp i nederkant på de vyer som ligger inuti en
+omgång; att navigera "uppåt" via historiken blev aldrig förutsägbart.
+
+**Bottenradens höjd mäts** efter varje omritning och skrivs till `--bottenhojd`, som
+sidans nedre marginal läser. Raden är olika hög i olika vyer, och en gissad marginal göms
+antingen bakom knapparna eller slösar skärm.
 
 ## Fällor som redan kostat tid
 
-- **Långtryck markerar text om man inte stoppar det.** Skytterader och zonknappar hålls
-  in med flit, och iOS svarar då med markering och kopieringsmeny mitt i draget. Både
+- **Långtryck markerar text om man inte stoppar det.** Skytterader och zonknappar hålls in
+  med flit, och iOS svarar med markering och kopieringsmeny mitt i draget. Både
   `user-select: none` och `-webkit-touch-callout: none` behövs; dragets start släpper
   dessutom en markering som redan hunnit uppstå.
 - **`rita()` fick inte städa bort flash-meddelanden.** Nästan varje bekräftelse följs av en
   omritning, så meddelandet rensades av just den omritning det skulle överleva och syntes
   aldrig. Flashen tar bort sig själv efter sina sekunder i stället.
-
-- **`structuredClone` finns inte i äldre iOS-Safari.** Den användes först för att skapa
-  ett tomt lager och gjorde att `las()` kastade — vilket testerna maskerade genom att
-  cachen då aldrig fylldes. Bygg tomma objekt med en funktion i stället.
-- **Historiken blir djup om varje skärm pushas.** Att gå vidare till nästa skytt och att
-  återvända till listan *ersätter* posten (`gaTill(…, true)`). Pilen i huvudet navigerar
-  dessutom uttryckligen (`OVANFOR`) i stället för att lita på stacken, så den hamnar rätt
-  oavsett hur man tagit sig dit.
-- **Listan ritas om vid varje tryck.** Element som hämtats före ett klick är döda efter
-  det. Gäller både kod och tester — hämta om.
-- **`localStorage` läses en gång och hålls i minnet.** Ett test som lägger in data efter
-  att appen startat ser den inte. Testerna sår därför via `beforeParse` i jsdom, innan
-  skripten kör.
+- **`structuredClone` finns inte i äldre iOS-Safari.** Den användes först för att skapa ett
+  tomt lager och gjorde att `las()` kastade — vilket testerna maskerade genom att cachen då
+  aldrig fylldes. Bygg tomma objekt med en funktion i stället.
+- **Listan ritas om vid varje tryck.** Element som hämtats före ett klick är döda efter det.
+  Gäller både kod och tester — hämta om.
+- **`localStorage` läses en gång och hålls i minnet.** Ett test som lägger in data efter att
+  appen startat ser den inte. Testerna sår därför via `beforeParse` i jsdom, innan skripten
+  kör.
+- **Proven ska trycka på knappar, inte på deras text.** Ett namnbyte välte tjugo prov som
+  handlade om annat. Huvudknappen hämtas som element; orden provas för sig.
 
 ## Exporten
 
@@ -83,29 +130,37 @@ Fyra format ur samma underlag (`underlag()` i `src/export.js`), inga bibliotek:
 
 - **Text** för mailet, **CSV** med BOM och semikolon så att svensk Excel öppnar den rätt.
 - **XLSX** är en ZIP med XML. Posterna skrivs **okomprimerade (STORED)** — giltigt enligt
-  formatet, och därmed behövs ingen deflate. CRC32 räknas i `crc32()`. `styles.xml` måste
-  ha både `cellXfs` och `cellStyles`, annars klagar läsare på att standardstilen saknas.
+  formatet, och därmed behövs ingen deflate. CRC32 räknas i `crc32()`. `styles.xml` måste ha
+  både `cellXfs` och `cellStyles`, annars klagar läsare på att standardstilen saknas.
 - **PDF** byggs för hand: inbyggd Helvetica, `WinAnsiEncoding`, och byteoffsets i
   xref-tabellen. Texten kodas som WinAnsi-byte, inte UTF-8 — å ä ö ligger under 256, men
-  tankstreck och avbrottstecken måste översättas uttryckligen (se `SARSKILDA`), annars
-  blir de frågetecken. Kolumnbredderna kontrolleras mot sidbredden vid bygget; summerar
-  de för högt kastar `somPdf()` hellre än att skriva utanför pappret.
+  tankstreck och avbrottstecken måste översättas uttryckligen (se `SARSKILDA`), annars blir
+  de frågetecken. Kolumnbredderna kontrolleras mot sidbredden; summerar de för högt kastar
+  `somPdf()` hellre än att skriva utanför pappret.
 
-Utskriftsstilmallen i `style.css` är kvar med flit: `window.print()` ger "Spara som PDF"
-på iOS och papper på banan, och är reserven om den handskrivna PDF:en någon gång skulle
-visa sig spröd.
+Utskriftsstilmallen i `style.css` är kvar med flit: `window.print()` ger "Spara som PDF" på
+iOS och papper på banan, och är reserven om den handskrivna PDF:en någon gång skulle visa
+sig spröd. Knappen finns på exportskärmen — inte under inställningar, där det inte finns
+något resultat att skriva ut.
+
+## Hjälptexten
+
+`src/hjalp.md` är en riktig markdown-fil, men bakas in i sidan av `bygg.py` i en
+`<script type="text/markdown">`. Att hämta den vid körning hade brutit löftet om noll
+externa anrop. Renderaren i `app.js` klarar rubriker, stycken, punktlistor, fet stil och
+länkar — skriv inte annat i filen utan att utöka den, och skriv aldrig `</script`.
 
 ## Prov
 
 ```bash
-npm test            # 39 prov: regelmotor, export, hela flödet
-python3 bygg.py     # måste köras innan flödesproven — de kör mot dist/
+python3 bygg.py     # måste köras först — flödesproven kör mot dist/
+npm test            # 64 prov: regelmotor, export, hela flödet
 ```
 
-Flödesproven kör **den byggda filen** i jsdom, alltså samma artefakt som telefonen får.
-De går igenom en hel omgång: tider på tre skyttar, poäng på samma tre, andra försök,
-vapenhanteringsspärren, långt tryck som nollar, och att radera en skytt tar med sig
-resultaten.
+Flödesproven kör **den byggda filen** i jsdom, alltså samma artefakt som telefonen får. De
+går igenom hela arbetsgången: tider på tre skyttar, poäng på samma tre, andra försök,
+vapenhanteringsspärren, taket på antalet träffar, långt tryck som nollar, flyttläget,
+raderingarna och att en färdig skytt inte får försök påhittade åt sig.
 
 Exportproven skriver riktiga filer till en temporär katalog. XLSX kontrolleras genom att
 öppnas med openpyxl (`~/.venvs/sra-ratta/bin/python`), PDF genom att renderas med
@@ -118,14 +173,21 @@ radbrytning och om något är svårt att träffa med tummen i mörker måste ses
 
 ```bash
 python3 bygg.py
-./publicera.sh          # kopierar dist/ till det publika repot och pushar
+./publicera.sh -m "vad du gjorde"      # kopierar dist/ till det publika arkivet
+cp dist/index.html ~/Desktop/"FM kompetensprov.html"   # den mejlbara filen
 ```
 
 Källan ligger privat i `steeriks/fm-kompetensprov`. Det som Pages serverar ligger i det
-publika `steeriks/kompetensprov` — GitHub Pages kräver publikt repo på gratisplanen.
-Appen innehåller inga hemligheter, och inga resultat lämnar telefonen, så det som blir
-publikt är enbart programmet självt.
+publika `steeriks/kompetensprov` — GitHub Pages kräver publikt arkiv på gratisplanen. Appen
+innehåller inga hemligheter och inga resultat lämnar telefonen, så det som blir publikt är
+enbart programmet självt. `LICENSE` följer med dit.
 
-`bygg.py` sätter `CACHE` i `dist/sw.js` till appens fingeravtryck, så en publicering
-slår igenom av sig själv. Rör inte värdet i `src/sw.js` — det skrivs över vid varje
-bygge.
+`bygg.py` sätter `CACHE` i `dist/sw.js` till appens fingeravtryck, så en publicering slår
+igenom av sig själv. Rör inte värdet i `src/sw.js` — det skrivs över vid varje bygge.
+
+GitHub Pages ligger ofta en halv minut efter pushen. Jämför checksummor innan du drar
+slutsatser om att en ändring inte kom med:
+
+```bash
+shasum dist/index.html <(curl -s https://steeriks.github.io/kompetensprov/)
+```
