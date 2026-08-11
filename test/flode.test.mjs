@@ -134,6 +134,43 @@ test('en omgång läggs upp med valda deltagare i skjutordning', () => {
   assert.equal(d.omgangar[0].gren, 'pist');
 });
 
+test('pilarna vid namnet stegar en tavla åt vardera hållet', () => {
+  klicka('+ Ny omgång');
+  bockaIAlla();
+  klicka('Starta omgången');
+  nastaIListan();
+
+  const bak = () => doc.querySelector('#stegabak');
+  const fram = () => doc.querySelector('#stegafram');
+  const tavla = () => doc.querySelector('#rubrik .nr').textContent;
+
+  assert.equal(tavla(), '1.', 'tidfönstret öppnar på första tavlan');
+  assert.equal(bak().hidden, false, 'pilarna hör hemma i tidfönstret');
+  assert.ok(bak().disabled, 'bakåt från första tavlan finns ingenstans att gå');
+  assert.ok(!fram().disabled);
+
+  // Framåt, knappa in en tid, och tillbaka igen — tiden ska ha följt med
+  fram().click();
+  assert.equal(tavla(), '2.');
+  knappaTid('9,80');
+  bak().click();
+  assert.equal(tavla(), '1.', 'stegningen går tillbaka en tavla');
+  assert.equal(lagret().resultat.find((r) => r.tid === 9.8).tid, 9.8,
+    'den påbörjade tiden sparas på vägen, som när hemknappen trycks');
+  assert.equal(doc.querySelector('.tidvisning').textContent.trim(), '0,00 s',
+    'och tavla 1 står kvar utan tid');
+
+  // Hela vägen ut till sista tavlan, där framåtpilen slocknar
+  fram().click();
+  fram().click();
+  assert.equal(tavla(), '3.');
+  assert.ok(fram().disabled, 'sista tavlan har ingen nästa');
+  assert.ok(!bak().disabled);
+
+  hem();
+  assert.equal(bak().hidden, true, 'pilarna syns inte utanför tidfönstret');
+});
+
 test('tidssvepet går genom hela linjen utan omvägar', () => {
   klicka('+ Ny omgång');
   bockaIAlla();

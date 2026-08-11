@@ -98,7 +98,7 @@ skjutlaget.
 | `start` | `ritaStart` | Omgångarna. Långt tryck lägger fram soptunnan som raderar; raden säger med `data-hall-radera="typ:id"` vad den är. |
 | `ny` | `ritaNy` | Prov, datum, plats, ibockning i skjutordning. |
 | `omgang` | `ritaOmgang` | Vallistan med lägesväljare — arbetsvyn. |
-| `tid` | `ritaTid` | Sifferknappsats. |
+| `tid` | `ritaTid` | Sifferknappsats. Pilarna i rubriken stegar en tavla åt vardera hållet. |
 | `poang` | `ritaPoang` | Zonknappar, summering, utfall. |
 | `lagg-till` | `ritaLaggTill` | Fyller på en pågående omgång. |
 | `anvisning` | `ritaAnvisning` | Regelverkets anvisning per prov. |
@@ -126,6 +126,11 @@ antingen bakom knapparna eller slösar skärm.
   med flit, och iOS svarar med markering och kopieringsmeny mitt i draget. Både
   `user-select: none` och `-webkit-touch-callout: none` behövs; dragets start släpper
   dessutom en markering som redan hunnit uppstå.
+- **`hidden` förlorar mot varje egen `display`-regel.** Webbläsarens inbyggda
+  `[hidden] { display: none }` ligger i UA-lagret, och en klassregel med `display: flex`
+  i det här arket vinner över den. Hemknappen och stegningspilarna sätter `display: flex`
+  och göms med `hidden` — därför finns `[hidden] { display: none !important }` överst i
+  `style.css`. Utan den står de kvar synliga i varje vy som gömt dem.
 - **`rita()` fick inte städa bort flash-meddelanden.** Nästan varje bekräftelse följs av en
   omritning, så meddelandet rensades av just den omritning det skulle överleva och syntes
   aldrig. Flashen tar bort sig själv efter sina sekunder i stället.
@@ -178,7 +183,7 @@ ingen markdown läcker ut som asterisker på skärmen.
 
 ```bash
 python3 bygg.py     # måste köras först — flödesproven kör mot dist/
-npm test            # 68 prov: regelmotor, export, hela flödet
+npm test            # 74 prov: regelmotor, export, hela flödet
 ```
 
 Flödesproven kör **den byggda filen** i jsdom, alltså samma artefakt som telefonen får. De

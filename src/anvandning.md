@@ -27,6 +27,7 @@ Vid osäker eller felaktig vapenhantering: kryssa rutan på poängskärmen, så 
 - **Fylla på:** *+ Lägg till skytt* under listan — ur registret eller en helt ny. Hen hamnar på nästa lediga tavla.
 - **Byta plats:** håll in en rad tills handtagen (**☰**) visas, dra skytten dit hen ska, och tryck *Klar med ordningen*. Numret följer tavlan, inte personen.
 - **Rätta en träff:** håll in zonknappen för att nolla den, och knappa in rätt.
+- **Byta skytt i tidfönstret:** pilarna på var sida om namnet stegar en tavla fram eller tillbaka, om något gått snett på linjen. Den påbörjade tiden sparas på vägen, och pilen slocknar när linjen är slut åt det hållet.
 - **Nytt försök:** *+ Nytt försök* på skyttens rad. Provet får skjutas tre gånger; ett omtag startas alltid med flit.
 - **⌂** längst upp till vänster går alltid hem. En påbörjad tid sparas på vägen.
 

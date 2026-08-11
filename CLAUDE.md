@@ -26,7 +26,7 @@ before touching anything.
 
 ```bash
 python3 bygg.py     # bundles src/ into one self-contained file
-npm test            # 71 tests: rules, export, full flow
+npm test            # 74 tests: rules, export, full flow
 ```
 
 Editing `src/` and running `npm test` tests the *previous* build, which passes happily and tells

@@ -21,6 +21,12 @@
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
+/* `hidden` måste bita hårdare än våra egna display-regler. Webbläsarens
+   inbyggda [hidden] { display: none } ligger i UA-lagret och förlorar mot
+   varje display i det här arket — hemknappen och stegningspilarna sätter
+   display: flex och hade annars stått kvar synliga i vyer som gömt dem. */
+[hidden] { display: none !important; }
+
 body {
   margin: 0;
   background: var(--bg);
@@ -54,6 +60,20 @@ header h1 .nr { color: var(--accent); }
 }
 .hem svg { width: 27px; height: 27px; fill: currentColor; display: block; }
 .hem:active { transform: scale(0.9); color: var(--accent); }
+
+/* Stegningspilarna flankerar namnet i tidfönstret. Samma träffyta som huset:
+   44 px, oavsett hur liten pilen ritas. Den som pekar förbi linjens ände
+   slocknar — en död knapp som syns är bättre än ett meddelande att läsa. */
+.stega {
+  flex: 0 0 auto; width: 44px; height: 44px; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: 0; color: var(--accent);
+  cursor: pointer; touch-action: manipulation;
+}
+.stega svg { width: 26px; height: 26px; fill: currentColor; display: block; }
+.stega:active { transform: scale(0.9); }
+.stega:disabled { color: var(--linje); cursor: default; }
+.stega:disabled:active { transform: none; }
 
 /* Nedre marginalen följer bottenradens verkliga höjd (sätts av mätBottenrad).
    Reservvärdet gäller innan första mätningen och i lägen utan JS-mätning. */

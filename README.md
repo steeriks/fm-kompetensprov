@@ -58,6 +58,10 @@ och zontabellen.
   hamnar på tredje raden får nummer 3.
 - **Omtag:** provet får skjutas tre gånger. Ett nytt försök startas alltid med flit, med
   *+ Nytt försök* på raden; ett tryck på en färdig skytt gör ingenting.
+- **Stega mellan skyttarna:** i TID-läget står en pil på var sida om namnet. De går en
+  tavla fram eller tillbaka i skjutordningen — vägen tillbaka när fel skytt öppnats eller
+  en tid ska rättas. Tiden du hunnit knappa sparas på vägen, och pilen slocknar vid
+  linjens ände i stället för att gå runt.
 - **⌂** längst upp till vänster går alltid hem, och sparar en påbörjad tid på vägen.
 - **Listan står alltid där det finns något att göra.** Kommer du tillbaka från anvisningen
   eller exporten hamnar du i det läge vars knapp bär en siffra — och när alla fått tid
@@ -128,7 +132,7 @@ Inga beroenden i appen — ren HTML, CSS och JavaScript, ingen CDN, inget ramver
 npm install       # bara jsdom, och bara för testerna
 npm run serve     # http://localhost:8390 mot src/
 npm run bygg      # bakar ihop src/ till dist/index.html
-npm test          # 68 prov: regelmotor, export och hela flödet i jsdom
+npm test          # 74 prov: regelmotor, export och hela flödet i jsdom
 ```
 
 Testerna kör mot `dist/`, så **bygg innan du provar**.

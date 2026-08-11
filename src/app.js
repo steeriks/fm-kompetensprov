@@ -18,6 +18,7 @@ const bottenrad = document.getElementById('bottenrad');
 const rubrikText = document.getElementById('rubriktext');
 const underrubrik = document.getElementById('underrubrik');
 const hemKnapp = document.getElementById('hem');
+const stegaKnappar = [document.getElementById('stegabak'), document.getElementById('stegafram')];
 
 // Vy, och vad vyn handlar om. Ingen router — appen är en enda skärm i taget
 // och webbläsarens bakåtknapp hanteras med history.state.
@@ -327,6 +328,32 @@ function nastaEfterTid(omgang, personId) {
   return null;
 }
 
+/**
+ * Går skytten att öppna i tidfönstret? Samma villkor som `oppnaSkytt` ställer:
+ * en färdig skytt behöver "+ Nytt försök" först och ska inte gå att stega in
+ * i, för då skulle ett omtag startas av ett pilklick.
+ */
+function garAttOppna(omgang, personId) {
+  const alla = lager.resultatFor(omgang.id, personId);
+  return !alla.length || alla.some((r) => !r.registrerad);
+}
+
+/**
+ * Skytten en stegning bort i skjutordningen, eller null vid linjens slut.
+ *
+ * Stegningen går INTE runt. Fastnar man i kanten ska pilen slockna, inte
+ * kasta en till andra änden av linjen — i mörker är ett hopp från tavla 1
+ * till tavla 8 omöjligt att skilja från ett feltryck.
+ */
+function stegadSkytt(omgang, personId, riktning) {
+  const nu = omgang.deltagare.indexOf(personId);
+  if (nu < 0) return null;
+  for (let i = nu + riktning; i >= 0 && i < omgang.deltagare.length; i += riktning) {
+    if (garAttOppna(omgang, omgang.deltagare[i])) return omgang.deltagare[i];
+  }
+  return null;
+}
+
 /** "3. Ek, Anna" — numret är tavlan, som överallt annars. */
 function skyttEtikett(omgang, personId) {
   const p = lager.person(personId);
@@ -346,6 +373,12 @@ function ritaTid() {
   sattRubrik(p.namn, o.deltagare.indexOf(p.id) + 1);
   underrubrik.textContent = `Tid · försök ${r.forsok} · ${PROV[o.gren].namn}`;
   hemKnapp.hidden = false;
+  // Pilarna står bara här, och den som pekar ut i tomma intet slocknar i
+  // stället för att svara med ett meddelande man ändå inte läser i mörker.
+  for (const knapp of stegaKnappar) {
+    knapp.hidden = false;
+    knapp.disabled = !stegadSkytt(o, p.id, Number(knapp.dataset.stega));
+  }
 
   app.innerHTML = `
     <div class="tidvisning ${utkastTid ? '' : 'tom'}"
@@ -793,6 +826,9 @@ function rita() {
   // "omgången raderad" — följs omedelbart av en omritning, och en flash som
   // rensades av sin egen omritning hann aldrig synas. Den tar bort sig själv
   // efter sina sekunder, och en ny ersätter alltid den gamla.
+  // Pilarna hör till tidfönstret; varje annan vy ska slippa dem utan att
+  // behöva veta om att de finns.
+  for (const knapp of stegaKnappar) knapp.hidden = true;
   if (vy.namn === 'start') ritaStart();
   else if (vy.namn === 'ny') ritaNy();
   else if (vy.namn === 'omgang') ritaOmgang();
@@ -888,6 +924,7 @@ document.addEventListener('click', async (ev) => {
   const t = ev.target.closest('[data-vy], [data-oppna], [data-vaxla], [data-ny-skytt], ' +
     '[data-starta], [data-skytt], [data-lage], [data-nasta], [data-siffra], [data-radera], ' +
     '[data-spara-tid], [data-till-poang], [data-till-tid], [data-registrera], [data-export], ' +
+    '[data-stega], ' +
     '[data-format], [data-historik], [data-nytt-forsok], [data-soptunna], [data-kopia], ' +
     '[data-radera-allt], [data-radera-alla-skyttar], [data-skriv-ut], [data-anvisning], ' +
     '[data-lagg-till], [data-lagg-in], [data-flyttlage], [data-dok], .zonknapp');
@@ -1056,6 +1093,17 @@ document.addEventListener('click', async (ev) => {
       }
     }
     return gaTill('omgang', { omgangId: o.id, lage: lampligtLage(o, 'tid') }, true);
+  }
+  // Pilarna vid namnet: en tavla fram eller tillbaka i skjutordningen. Den
+  // påbörjade tiden sparas på vägen, precis som när hemknappen trycks — annars
+  // straffas den som stegar tillbaka för att rätta något med att tappa det hen
+  // just knappat in.
+  if (d.stega) {
+    if (!sparaTid()) return;
+    const o = lager.omgang(vy.omgangId);
+    const id = stegadSkytt(o, vy.personId, Number(d.stega));
+    if (!id) return flash('Ingen mer skytt åt det hållet.');
+    return oppnaSkytt(o, id, 'tid');
   }
   if (d.tillPoang) {
     if (!sparaTid()) return;

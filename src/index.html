@@ -23,10 +23,26 @@
       <path d="M12 3 2.5 11.2h2.6V21h5.1v-5.9h3.6V21h5.1v-9.8h2.6z"/>
     </svg>
   </button>
+  <!-- Stegning mellan skyttarna, en pil på var sida om namnet. Bara
+       tidfönstret visar dem: går något snett på linjen ska man kunna gå
+       tillbaka en tavla utan att först leta sig ut till vallistan. Samma
+       ritade form som huset — piltecken tecknas olika på olika telefoner. -->
+  <button class="stega" id="stegabak" hidden data-stega="-1"
+          aria-label="Föregående skytt" title="Föregående skytt">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M15.4 4.6 8 12l7.4 7.4 2.1-2.1L12.2 12l5.3-5.3z"/>
+    </svg>
+  </button>
   <h1 id="rubrik">
     <span id="rubriktext">FM kompetensprov</span>
     <span class="under" id="underrubrik">Pistol och automatkarbin</span>
   </h1>
+  <button class="stega" id="stegafram" hidden data-stega="1"
+          aria-label="Nästa skytt" title="Nästa skytt">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M8.6 4.6 16 12l-7.4 7.4-2.1-2.1L11.8 12 6.5 6.7z"/>
+    </svg>
+  </button>
 </header>
 <main id="app"></main>
 <!-- Texterna bor som .md-filer i src/ och bakas in hit av bygg.py, som läser
