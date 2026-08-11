@@ -7,7 +7,7 @@
 #   ./publicera.sh -m "text"    med eget commit-meddelande
 set -euo pipefail
 
-PUBLIKT="${PUBLIKT_REPO:-$HOME/Documents/fm-kompetensprov-publik}"
+PUBLIKT="${PUBLIKT_REPO:-$HOME/src/fm-kompetensprov-publik}"
 FJARR="git@github.com:steeriks/fm-kompetensprov.git"
 HAR="$(cd "$(dirname "$0")" && pwd)"
 meddelande="Uppdatera appen"
