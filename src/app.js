@@ -986,6 +986,10 @@ document.addEventListener('pointerdown', (ev) => {
   drag = { ...start, aktiv: false, timer: setTimeout(() => {
     drag.aktiv = true;
     rad.classList.add('lyft');
+    // Hann en markering uppstå innan CSS-regeln bet — släpp den, annars
+    // ligger iOS markeringshandtag kvar och stör draget.
+    const markering = window.getSelection && window.getSelection();
+    if (markering && markering.removeAllRanges) markering.removeAllRanges();
     vibrera(40);
   }, 500) };
 });

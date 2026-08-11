@@ -790,3 +790,30 @@ test('rubriken bär skyttens nummer och namn i tid- och poängvyn', () => {
     'listan har provets namn som rubrik, utan nummer');
   assert.equal(doc.querySelector('#rubriktext .nr'), null);
 });
+
+test('ett långt tryck markerar inte texten', async () => {
+  klicka('+ Ny omgång');
+  bockaIAlla();
+  klicka('Starta omgången');
+
+  // Regeln som hindrar markeringen från att ens uppstå
+  const css = fs.readFileSync(FIL, 'utf8');
+  const regel = css.slice(css.indexOf('.skyttrad {'), css.indexOf('.skyttrad.klar'));
+  assert.match(regel, /-webkit-user-select: none/);
+  assert.match(regel, /-webkit-touch-callout: none/);
+  // Zonknappen hålls också in — och sifferknapparna trycks snabbt i följd
+  for (const väljare of ['.zonknapp {', '.knappsats button {']) {
+    const block = css.slice(css.indexOf(väljare), css.indexOf('}', css.indexOf(väljare)));
+    assert.match(block, /-webkit-touch-callout: none/, väljare + ' saknar spärren');
+  }
+
+  // Och bältet: en markering som ändå hunnit uppstå släpps när draget börjar
+  let slapptes = false;
+  win.getSelection = () => ({ removeAllRanges: () => { slapptes = true; } });
+  const rad = rader()[0];
+  rad.dispatchEvent(new win.MouseEvent('pointerdown', { bubbles: true, clientX: 50, clientY: 10 }));
+  await new Promise((r) => setTimeout(r, 600));
+  assert.ok(rad.classList.contains('lyft'), 'raden ska vara lyft');
+  assert.ok(slapptes, 'markeringen ska släppas när raden lyfts');
+  rad.dispatchEvent(new win.MouseEvent('pointerup', { bubbles: true, clientX: 50, clientY: 10 }));
+});

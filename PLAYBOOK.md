@@ -50,6 +50,10 @@ försök i stället.
 
 ## Fällor som redan kostat tid
 
+- **Långtryck markerar text om man inte stoppar det.** Skytterader och zonknappar hålls
+  in med flit, och iOS svarar då med markering och kopieringsmeny mitt i draget. Både
+  `user-select: none` och `-webkit-touch-callout: none` behövs; dragets start släpper
+  dessutom en markering som redan hunnit uppstå.
 - **`rita()` fick inte städa bort flash-meddelanden.** Nästan varje bekräftelse följs av en
   omritning, så meddelandet rensades av just den omritning det skulle överleva och syntes
   aldrig. Flashen tar bort sig själv efter sina sekunder i stället.

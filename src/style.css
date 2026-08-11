@@ -106,6 +106,9 @@ label.falt input, label.falt select {
   border-radius: var(--radie); margin-bottom: 0.5rem;
   padding: 0.6rem 0.7rem; min-height: 64px; width: 100%;
   color: inherit; text-align: left; cursor: pointer;
+  /* Ett långt tryck ska lyfta raden för att flytta skytten — inte markera
+     namnet och visa iOS kopieringsmeny mitt i draget. */
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
 }
 .skyttrad.klar { border-color: #2f4a2c; }
 .skyttrad .namn { font-weight: 600; }
@@ -168,6 +171,7 @@ label.falt input, label.falt select {
   background: var(--kort-ljus); color: var(--ink);
   border: 1px solid var(--linje); border-radius: var(--radie); cursor: pointer;
   touch-action: manipulation;
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
 }
 .knappsats button:active { background: var(--accent); color: var(--accent-ink); }
 
@@ -186,7 +190,9 @@ label.falt input, label.falt select {
   gap: 0.15rem; min-height: 82px; padding: 0.5rem 0.2rem;
   background: var(--kort-ljus); color: var(--ink);
   border: 1px solid var(--linje); border-radius: var(--radie);
-  cursor: pointer; touch-action: manipulation; user-select: none; -webkit-user-select: none;
+  cursor: pointer; touch-action: manipulation;
+  /* Zonknappen hålls in för att nollas — samma spärr som på skytteraderna. */
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
 }
 .zonknapp .bokstav { font-size: 1.5rem; font-weight: 700; line-height: 1; }
 .zonknapp .antal { font-size: 1.25rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
