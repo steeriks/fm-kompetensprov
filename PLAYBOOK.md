@@ -102,5 +102,6 @@ publika `steeriks/kompetensprov` — GitHub Pages kräver publikt repo på grati
 Appen innehåller inga hemligheter, och inga resultat lämnar telefonen, så det som blir
 publikt är enbart programmet självt.
 
-Höj `CACHE`-versionen i `src/sw.js` när något ändrats som måste slå igenom direkt;
-servicearbetaren hämtar annars gärna den gamla filen ur cachen.
+`bygg.py` sätter `CACHE` i `dist/sw.js` till appens fingeravtryck, så en publicering
+slår igenom av sig själv. Rör inte värdet i `src/sw.js` — det skrivs över vid varje
+bygge.

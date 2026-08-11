@@ -199,6 +199,9 @@ label.falt input, label.falt select {
 .summering .pk { font-size: 1.6rem; font-weight: 700; }
 .summering .pk.g { color: var(--godkand); }
 .summering .pk.u { color: var(--underkand); }
+.summering .utfall { font-weight: 700; letter-spacing: 0.02em; }
+.summering .utfall.g { color: var(--godkand); }
+.summering .utfall.u { color: var(--underkand); }
 .brister { color: var(--underkand); font-size: 0.85rem; margin: 0.2rem 0 0.6rem; }
 
 /* ---------------------------------------------------------------- dialog */

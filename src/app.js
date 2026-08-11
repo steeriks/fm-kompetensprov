@@ -108,8 +108,10 @@ function ritaNy() {
         <input type="date" id="datum" value="${new Date().toISOString().slice(0, 10)}">
       </label>
     </div>
-    <label class="falt">Plats<input type="text" id="plats" placeholder="t.ex. Hätilä skjutbana"></label>
-    <label class="falt">Instruktör<input type="text" id="instruktor" placeholder="ditt namn"></label>
+    <!-- Inga platshållartexter och ingen autoifyllning: i mörker går grå
+         exempeltext inte att skilja från något som redan står i rutan. -->
+    <label class="falt">Plats<input type="text" id="plats" autocomplete="off"></label>
+    <label class="falt">Instruktör<input type="text" id="instruktor" autocomplete="off"></label>
 
     <h2>Deltagare i skjutordning</h2>
     ${personer.length ? personer.map((p) => `
@@ -293,7 +295,7 @@ function ritaPoang() {
     ${grupper}
     <div class="summering">
       <span>Tid <b>${r.tid === null ? '–' : komma(r.tid) + ' s'}</b> · <span id="poangsumma">0 p</span></span>
-      <span class="pk" id="pkvarde">–</span>
+      <span><span class="pk" id="pkvarde">–</span> <span class="utfall" id="utfall"></span></span>
     </div>
     <p class="brister" id="brister"></p>
     <label class="falt" style="display:flex;align-items:center;gap:0.6rem">
@@ -328,10 +330,21 @@ function uppdateraPoang() {
     ruta.classList.toggle('full', full);
   }
   app.querySelector('#poangsumma').textContent = `${b.poang} p`;
+  // Ingen bedömning innan det finns något att bedöma: en tom serie med tid
+  // inlagd skulle annars mötas av ett rött "Underkänd" redan innan första
+  // träffen knappats in.
+  const nagotInmatat = b.poang > 0 || r.vapenhanteringUnderkand;
+  const visa = b.pk !== null && nagotInmatat;
   const pk = app.querySelector('#pkvarde');
-  pk.textContent = b.pk === null ? '–' : komma(b.pk);
-  pk.className = 'pk ' + (b.pk === null ? '' : (b.godkand ? 'g' : 'u'));
-  app.querySelector('#brister').textContent = b.godkand ? '' : b.brister.join(' · ');
+  pk.textContent = visa ? komma(b.pk) : '–';
+  pk.className = 'pk ' + (visa ? (b.godkand ? 'g' : 'u') : '');
+  // Utfallet i klartext bredvid kvoten — grönt godkänt, rött underkänt. Färg
+  // ensam duger inte som besked, och siffran säger inget om träffkraven eller
+  // vapenhanteringen.
+  const utfall = app.querySelector('#utfall');
+  utfall.textContent = visa ? (b.godkand ? 'Godkänd' : 'Underkänd') : '';
+  utfall.className = 'utfall ' + (visa ? (b.godkand ? 'g' : 'u') : '');
+  app.querySelector('#brister').textContent = (b.godkand || !nagotInmatat) ? '' : b.brister.join(' · ');
 }
 
 function sattZon(knapp, antal) {

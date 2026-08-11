@@ -12,6 +12,7 @@ Modulerna slås ihop i beroendeordning och import/export-raderna plockas bort.
 skrivas som vanlig modulkod utan att bygget behöver en bundler.
 """
 import base64
+import hashlib
 import re
 import shutil
 from pathlib import Path
@@ -89,6 +90,19 @@ def main():
     (DIST / 'index.html').write_text(html, encoding='utf-8')
     for namn in MEDFOLJANDE:
         shutil.copy2(SRC / namn, DIST / namn)
+
+    # Cachenamnet följer appens innehåll. Utan det ligger den gamla filen kvar
+    # i telefonen efter en publicering, och ändringen syns inte förrän appen
+    # avinstallerats — vilket är precis den sortens fel som tar en kväll att
+    # förstå.
+    fingeravtryck = hashlib.sha1(html.encode()).hexdigest()[:12]
+    sw = (DIST / 'sw.js')
+    sw.write_text(
+        re.sub(r"const CACHE = '[^']*';",
+               f"const CACHE = 'fm-kompetensprov-{fingeravtryck}';",
+               sw.read_text(encoding='utf-8')),
+        encoding='utf-8',
+    )
 
     # En kontroll som är värd sitt underhåll: filen får inte hämta något
     # utifrån, för då fungerar den inte på en skjutbana utan täckning.

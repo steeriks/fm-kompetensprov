@@ -350,3 +350,42 @@ test('automatkarbin tar emot nio träffar, inte fler', () => {
   assert.equal(doc.querySelector('#poangsumma').textContent, '32 p', 'den tionde ska studsa');
   assert.match(doc.body.textContent, /9 träffar inlagda/);
 });
+
+test('utfallet skrivs i klartext bredvid kvoten', () => {
+  klicka('+ Ny omgång');
+  rader()[0].click();
+  klicka('Starta omgången');
+  klicka('Nästa som saknar tid');
+  knappaTid('10,00');
+  klicka('Poäng för');
+
+  const utfall = () => doc.querySelector('#utfall');
+  assert.equal(utfall().textContent, '', 'utan träffar finns inget att säga ännu');
+
+  knappaZon('B', 4);
+  knappaZon('H', 2);                     // 16 + 2 = 18 p på 10 s → 1,80
+  assert.equal(doc.querySelector('#pkvarde').textContent, '1,80');
+  assert.equal(utfall().textContent, 'Underkänd');
+  assert.ok(utfall().classList.contains('u'), 'underkänt ska vara rött');
+
+  // Nolla huvudet och sätt två A i stället: 16 + 10 = 26 p → 2,60
+  const h = knappaZon('H', 0);
+  h.dispatchEvent(new win.Event('pointerdown', { bubbles: true }));
+  return new Promise((klar) => setTimeout(() => {
+    knappaZon('A', 2);
+    assert.equal(doc.querySelector('#pkvarde').textContent, '2,60');
+    assert.equal(utfall().textContent, 'Godkänd');
+    assert.ok(utfall().classList.contains('g'), 'godkänt ska vara grönt');
+    klar();
+  }, 700));
+});
+
+test('platsfältet är tomt utan spår av tidigare text', () => {
+  klicka('+ Ny omgång');
+  const plats = doc.querySelector('#plats');
+  assert.equal(plats.value, '', 'inget värde');
+  assert.equal(plats.getAttribute('placeholder'), null,
+    'ingen grå exempeltext — den ser ifylld ut i mörker');
+  assert.equal(plats.getAttribute('autocomplete'), 'off',
+    'webbläsaren ska inte heller fylla i åt oss');
+});
