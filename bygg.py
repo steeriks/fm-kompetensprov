@@ -67,6 +67,17 @@ def bygg_html(js):
     html = (SRC / 'index.html').read_text(encoding='utf-8')
     css = (SRC / 'style.css').read_text(encoding='utf-8')
     ikon = base64.b64encode((SRC / 'ikon-180.png').read_bytes()).decode()
+    hjalp = (SRC / 'hjalp.md').read_text(encoding='utf-8')
+
+    # Hjälptexten skrivs in i sin script-tagg. </script> i texten skulle stänga
+    # taggen i förtid — det finns inget sådant i dag, men det ska säga ifrån
+    # om någon skriver det i markdown-filen.
+    if '</script' in hjalp:
+        raise SystemExit('hjalp.md innehåller </script och kan inte bäddas in')
+    html = html.replace(
+        '<script type="text/markdown" id="hjalptext"></script>',
+        f'<script type="text/markdown" id="hjalptext">\n{hjalp}</script>',
+    )
 
     html = html.replace(
         '<link rel="stylesheet" href="style.css">',

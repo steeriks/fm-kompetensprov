@@ -300,3 +300,20 @@ label.falt input, label.falt select {
   font-size: 1.4rem; line-height: 1; color: var(--accent);
   touch-action: none; cursor: grab;
 }
+
+/* Sammanfattningsrutan är en knapp när det finns omgångar att gå till, och
+   ser då ut som en rad man kan trycka på — annars en vanlig ruta. */
+.kortknapp {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.8rem;
+  width: 100%; text-align: left; color: inherit; cursor: pointer;
+}
+.kortknapp .pil { color: var(--accent); font-size: 1.4rem; line-height: 1; }
+.kortknapp:active { transform: scale(0.99); }
+
+/* Inbakad hjälptext */
+.dokument h2 { color: var(--ink); font-size: 1.05rem; margin: 1.4rem 0 0.5rem; }
+.dokument h2:first-child { margin-top: 0.2rem; }
+.dokument p { margin: 0 0 0.7rem; }
+.dokument .punkter { margin: 0 0 0.9rem; padding-left: 1.2rem; }
+.dokument .punkter li { margin-bottom: 0.35rem; }
+.dokument a { color: var(--accent); overflow-wrap: anywhere; }

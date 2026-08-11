@@ -316,6 +316,23 @@ label.falt input, label.falt select {
   touch-action: none; cursor: grab;
 }
 
+/* Sammanfattningsrutan är en knapp när det finns omgångar att gå till, och
+   ser då ut som en rad man kan trycka på — annars en vanlig ruta. */
+.kortknapp {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.8rem;
+  width: 100%; text-align: left; color: inherit; cursor: pointer;
+}
+.kortknapp .pil { color: var(--accent); font-size: 1.4rem; line-height: 1; }
+.kortknapp:active { transform: scale(0.99); }
+
+/* Inbakad hjälptext */
+.dokument h2 { color: var(--ink); font-size: 1.05rem; margin: 1.4rem 0 0.5rem; }
+.dokument h2:first-child { margin-top: 0.2rem; }
+.dokument p { margin: 0 0 0.7rem; }
+.dokument .punkter { margin: 0 0 0.9rem; padding-left: 1.2rem; }
+.dokument .punkter li { margin-bottom: 0.35rem; }
+.dokument a { color: var(--accent); overflow-wrap: anywhere; }
+
 </style>
 </head>
 <body>
@@ -333,6 +350,54 @@ label.falt input, label.falt select {
   </h1>
 </header>
 <main id="app"></main>
+<!-- Hjälptexten bor i src/hjalp.md och bakas in hit av bygg.py. Att hämta
+     filen vid körning hade brutit löftet om en app utan externa anrop. -->
+<script type="text/markdown" id="hjalptext">
+## Installera på hemskärmen
+
+Installerad startar appen som vilken app som helst och **fungerar utan täckning** — vilket är hela poängen på en skjutbana. Resultaten ligger kvar mellan gångerna.
+
+**iPhone och iPad**
+
+- Öppna appen i **Safari**. Andra webbläsare kan inte installera på iOS.
+- Tryck på delningsknappen i nederkant.
+- Välj **Lägg till på hemskärmen**, och sedan **Lägg till**.
+
+**Android**
+
+- Öppna appen i **Chrome**.
+- Tryck på menyn med de tre prickarna.
+- Välj **Installera app** eller **Lägg till på startskärmen**.
+
+Öppnar du i stället appen som en fristående HTML-fil ur ett mail fungerar den för ett enstaka tillfälle, men lagringen är opålitlig — Android kan neka den helt. Ska resultaten sparas: installera från länken.
+
+## Var dina uppgifter finns
+
+Allt du knappar in — namn, förband, tider och resultat — sparas **bara i den här telefonen**, i webbläsarens lagring. Ingenting skickas någonstans. Det finns ingen server, inget konto och ingen som kan se dina listor.
+
+Följden är att **du själv ansvarar för uppgifterna**:
+
+- Skyttarnas namn ligger kvar i telefonen tills du raderar dem.
+- Lånar du ut eller lämnar ifrån dig telefonen: radera först.
+- Under Appinställningar finns **Radera allt innehåll**, och enskilda skyttar och omgångar raderas var för sig.
+- Avinstallerar du appen försvinner allt — ta en säkerhetskopia först om du vill spara.
+
+Delar du ett resultat via mail eller fil lämnar uppgifterna telefonen i det ögonblicket, och då gäller vanliga regler för hur en sådan lista får hanteras.
+
+## Buggar och önskemål
+
+Fungerar något inte, eller saknas något? Skriv ett ärende:
+
+[github.com/steeriks/kompetensprov/issues](https://github.com/steeriks/kompetensprov/issues)
+
+Skriv gärna vilken telefon och webbläsare det gäller, vad du gjorde, och vad som hände i stället för det du väntade dig.
+
+## Licens och ansvar
+
+Appen är **fri att använda**, kopiera och ändra under MIT-licens.
+
+Den är ett hjälpmedel, inte ett officiellt system: den är inte utgiven av Försvarsmakten, och kraven som räknas kommer ur handböckerna för respektive delmoment. **Kontrollera alltid mot gällande utgåva** — det är instruktören som ansvarar för bedömningen, inte appen.
+</script>
 <div class="bottenrad" id="bottenrad"></div>
 <script>
 // ---- regler.js ---------------------------------------------------------
@@ -1914,6 +1979,42 @@ function nySkytt() {
   return p;
 }
 
+// -------------------------------------------------------------------- hjälp
+//
+// Texten bor i src/hjalp.md och bakas in i sidan av bygg.py. Renderaren nedan
+// klarar det markdown-filen använder och inget mer: rubriker, stycken,
+// punktlistor, fet stil och länkar. Att dra in ett markdown-bibliotek för
+// fyra avsnitt vore att bryta löftet om en app utan beroenden.
+
+function markdown(text) {
+  const inline = (rad) => esc(rad)
+    .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g,
+      '<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+  return text.trim().split(/\n\s*\n/).map((block) => {
+    const rader = block.split('\n').map((r) => r.trim()).filter(Boolean);
+    if (rader[0].startsWith('## ')) return `<h2>${inline(rader[0].slice(3))}</h2>`;
+    if (rader.every((r) => r.startsWith('- '))) {
+      return `<ul class="punkter">${rader.map((r) =>
+        `<li>${inline(r.slice(2))}</li>`).join('')}</ul>`;
+    }
+    return `<p>${inline(rader.join(' '))}</p>`;
+  }).join('');
+}
+
+function ritaHjalp() {
+  sattRubrik('Om appen');
+  underrubrik.textContent = 'Installation, dina uppgifter, buggar och licens';
+  hemKnapp.hidden = false;
+  const kalla = document.getElementById('hjalptext');
+  const text = (kalla && kalla.textContent.trim())
+    || 'Hjälptexten bakas in av bygg.py — kör `python3 bygg.py` och ladda om.';
+  app.innerHTML = `<div class="dokument">${markdown(text)}</div>`;
+  bottenrad.innerHTML =
+    '<button class="knapp liten" data-vy="installningar">Tillbaka till inställningar</button>';
+}
+
 // ------------------------------------------------------------- inställningar
 
 function ritaInstallningar() {
@@ -1927,11 +2028,17 @@ function ritaInstallningar() {
       Det du knappar in ligger kvar så länge sidan är öppen, men försvinner när
       den stängs. Använd den installerade versionen om resultaten ska sparas.
     </div>`}
-    <div class="kort">
-      <b>I appen just nu</b><br>
-      <span class="dampad liten">${d.personer.length} skyttar · ${d.omgangar.length} omgångar
-      · ${d.resultat.filter((r) => r.registrerad).length} registrerade försök</span>
-    </div>
+    ${d.omgangar.length
+      ? `<button class="kort kortknapp" data-vy="start">
+           <span><b>I appen just nu</b><br>
+           <span class="dampad liten">${d.personer.length} skyttar · ${d.omgangar.length} omgångar
+           · ${d.resultat.filter((r) => r.registrerad).length} registrerade försök</span></span>
+           <span class="pil" aria-hidden="true">›</span>
+         </button>`
+      : `<div class="kort">
+           <b>I appen just nu</b><br>
+           <span class="dampad liten">${d.personer.length} skyttar · inga omgångar ännu</span>
+         </div>`}
     <h2>Säkerhetskopia</h2>
     <p class="dampad liten">En fil med allt. Läs in den på en annan telefon, eller
     som återställning. Inläsning lägger till — den skriver aldrig över det som finns.</p>
@@ -1939,6 +2046,11 @@ function ritaInstallningar() {
       <button class="knapp liten" data-kopia="ut">Spara kopia</button>
       <button class="knapp liten" data-kopia="in">Läs in kopia</button>
     </div>
+    <h2>Om appen</h2>
+    <div class="knapprad">
+      <button class="knapp liten" data-vy="hjalp">Installation, data och licens</button>
+    </div>
+
     <h2>Nollställ</h2>
     <div class="knapprad"><button class="knapp fara" data-radera-allt="1">Radera allt innehåll</button></div>
     <p class="dampad liten" style="margin-top:2rem">
@@ -2000,6 +2112,7 @@ function rita() {
   else if (vy.namn === 'export') ritaExportval();
   else if (vy.namn === 'anvisning') ritaAnvisning();
   else if (vy.namn === 'lagg-till') ritaLaggTill();
+  else if (vy.namn === 'hjalp') ritaHjalp();
   window.scrollTo(0, 0);
   mätBottenrad();
 }
@@ -2077,6 +2190,8 @@ document.addEventListener('click', async (ev) => {
   // --- navigering ---
   if (d.vy === 'ny') return gaTill('ny', { valda: [] });
   if (d.vy === 'register') return gaTill('register');
+  if (d.vy === 'hjalp') return gaTill('hjalp');
+  if (d.vy === 'start') return gaTill('start', {}, true);
   if (d.vy === 'anvisning') {
     // Öppnas anvisningen från en omgång ska den visa det prov som skjuts.
     const o = vy.omgangId ? lager.omgang(vy.omgangId) : null;

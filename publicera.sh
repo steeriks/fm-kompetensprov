@@ -23,6 +23,7 @@ fi
 cd "$PUBLIKT"
 git pull -q --ff-only origin main 2>/dev/null || true
 cp "$HAR"/dist/* .
+cp "$HAR/LICENSE" .          # licensen ska följa med det som faktiskt sprids
 # .nojekyll: utan den hoppar Pages över filer som börjar med understreck.
 touch .nojekyll
 git add -A

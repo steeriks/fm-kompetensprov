@@ -101,6 +101,23 @@ täckning, och lagringen är beständig.
 > Den vägen är bra för att visa appen eller köra ett enstaka tillfälle. Ska resultaten
 > sparas: använd den installerade versionen.
 
+## Hjälp, data och licens
+
+Under *Appinställningar → Installation, data och licens* ligger en text som förklarar hur
+appen installeras på hemskärmen (iOS och Android), var uppgifterna finns och vem som
+ansvarar för dem, hur buggar rapporteras, och under vilken licens appen får användas.
+
+Texten bor i [`src/hjalp.md`](src/hjalp.md) och bakas in i den byggda filen av `bygg.py` —
+att hämta den vid körning hade brutit löftet om en app utan externa anrop. Renderaren i
+`app.js` klarar rubriker, stycken, punktlistor, fet stil och länkar; skriv inte annat i
+filen utan att utöka den.
+
+**Allt sparas lokalt i telefonen.** Ingen server, inget konto, ingen som kan se listorna —
+och därmed är det användaren som ansvarar för att radera uppgifterna när de inte behövs.
+
+Appen är fri att använda under [MIT-licens](LICENSE). Den är inte utgiven av
+Försvarsmakten; kraven kommer ur handböckerna och ska kontrolleras mot gällande utgåva.
+
 ## Utveckling
 
 Ingen byggkedja, inga beroenden i appen — bara ren HTML, CSS och JavaScript.
@@ -121,6 +138,7 @@ npm run bygg      # bakar ihop src/ till dist/index.html
 | `src/app.js` | Vyer och flöde. |
 | `bygg.py` | Slår ihop modulerna till `dist/index.html`. |
 | `gen_ikon.py` | Genererar ikonerna, ren stdlib. |
+| `src/hjalp.md` | Hjälptexten, inbakad i bygget. |
 
 `dist/index.html` är både det som publiceras och det som kan mejlas — samma fil, så det
 aldrig råder tvivel om vilken version någon kör. `publicera.sh` kopierar `dist/` till det

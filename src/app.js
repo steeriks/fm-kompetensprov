@@ -585,6 +585,42 @@ function nySkytt() {
   return p;
 }
 
+// -------------------------------------------------------------------- hjälp
+//
+// Texten bor i src/hjalp.md och bakas in i sidan av bygg.py. Renderaren nedan
+// klarar det markdown-filen använder och inget mer: rubriker, stycken,
+// punktlistor, fet stil och länkar. Att dra in ett markdown-bibliotek för
+// fyra avsnitt vore att bryta löftet om en app utan beroenden.
+
+function markdown(text) {
+  const inline = (rad) => esc(rad)
+    .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g,
+      '<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+  return text.trim().split(/\n\s*\n/).map((block) => {
+    const rader = block.split('\n').map((r) => r.trim()).filter(Boolean);
+    if (rader[0].startsWith('## ')) return `<h2>${inline(rader[0].slice(3))}</h2>`;
+    if (rader.every((r) => r.startsWith('- '))) {
+      return `<ul class="punkter">${rader.map((r) =>
+        `<li>${inline(r.slice(2))}</li>`).join('')}</ul>`;
+    }
+    return `<p>${inline(rader.join(' '))}</p>`;
+  }).join('');
+}
+
+function ritaHjalp() {
+  sattRubrik('Om appen');
+  underrubrik.textContent = 'Installation, dina uppgifter, buggar och licens';
+  hemKnapp.hidden = false;
+  const kalla = document.getElementById('hjalptext');
+  const text = (kalla && kalla.textContent.trim())
+    || 'Hjälptexten bakas in av bygg.py — kör `python3 bygg.py` och ladda om.';
+  app.innerHTML = `<div class="dokument">${markdown(text)}</div>`;
+  bottenrad.innerHTML =
+    '<button class="knapp liten" data-vy="installningar">Tillbaka till inställningar</button>';
+}
+
 // ------------------------------------------------------------- inställningar
 
 function ritaInstallningar() {
@@ -598,11 +634,17 @@ function ritaInstallningar() {
       Det du knappar in ligger kvar så länge sidan är öppen, men försvinner när
       den stängs. Använd den installerade versionen om resultaten ska sparas.
     </div>`}
-    <div class="kort">
-      <b>I appen just nu</b><br>
-      <span class="dampad liten">${d.personer.length} skyttar · ${d.omgangar.length} omgångar
-      · ${d.resultat.filter((r) => r.registrerad).length} registrerade försök</span>
-    </div>
+    ${d.omgangar.length
+      ? `<button class="kort kortknapp" data-vy="start">
+           <span><b>I appen just nu</b><br>
+           <span class="dampad liten">${d.personer.length} skyttar · ${d.omgangar.length} omgångar
+           · ${d.resultat.filter((r) => r.registrerad).length} registrerade försök</span></span>
+           <span class="pil" aria-hidden="true">›</span>
+         </button>`
+      : `<div class="kort">
+           <b>I appen just nu</b><br>
+           <span class="dampad liten">${d.personer.length} skyttar · inga omgångar ännu</span>
+         </div>`}
     <h2>Säkerhetskopia</h2>
     <p class="dampad liten">En fil med allt. Läs in den på en annan telefon, eller
     som återställning. Inläsning lägger till — den skriver aldrig över det som finns.</p>
@@ -610,6 +652,11 @@ function ritaInstallningar() {
       <button class="knapp liten" data-kopia="ut">Spara kopia</button>
       <button class="knapp liten" data-kopia="in">Läs in kopia</button>
     </div>
+    <h2>Om appen</h2>
+    <div class="knapprad">
+      <button class="knapp liten" data-vy="hjalp">Installation, data och licens</button>
+    </div>
+
     <h2>Nollställ</h2>
     <div class="knapprad"><button class="knapp fara" data-radera-allt="1">Radera allt innehåll</button></div>
     <p class="dampad liten" style="margin-top:2rem">
@@ -671,6 +718,7 @@ function rita() {
   else if (vy.namn === 'export') ritaExportval();
   else if (vy.namn === 'anvisning') ritaAnvisning();
   else if (vy.namn === 'lagg-till') ritaLaggTill();
+  else if (vy.namn === 'hjalp') ritaHjalp();
   window.scrollTo(0, 0);
   mätBottenrad();
 }
@@ -748,6 +796,8 @@ document.addEventListener('click', async (ev) => {
   // --- navigering ---
   if (d.vy === 'ny') return gaTill('ny', { valda: [] });
   if (d.vy === 'register') return gaTill('register');
+  if (d.vy === 'hjalp') return gaTill('hjalp');
+  if (d.vy === 'start') return gaTill('start', {}, true);
   if (d.vy === 'anvisning') {
     // Öppnas anvisningen från en omgång ska den visa det prov som skjuts.
     const o = vy.omgangId ? lager.omgang(vy.omgangId) : null;

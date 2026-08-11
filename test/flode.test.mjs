@@ -925,3 +925,45 @@ test('sidans nedre marginal följer bottenradens höjd', () => {
   assert.equal(doc.documentElement.style.getPropertyValue('--bottenhojd'), '',
     'utan verklig mätning ska ingen nolla skrivas in');
 });
+
+test('sammanfattningsrutan går att trycka på först när det finns omgångar', () => {
+  klicka('Appinställningar');
+  const ruta = () => doc.querySelector('#app .kort');
+  assert.equal(ruta().tagName, 'DIV', 'utan omgångar ska den inte se klickbar ut');
+  assert.match(ruta().textContent, /inga omgångar ännu/);
+
+  hem();
+  klicka('+ Ny omgång');
+  rader()[0].click();
+  klicka('Starta omgången');
+  hem();
+  klicka('Appinställningar');
+  assert.equal(ruta().tagName, 'BUTTON', 'med omgångar ska den bli en knapp');
+  ruta().click();
+  assert.match(doc.querySelector('#app').textContent, /Omgångar/,
+    'och leda till listan över omgångar');
+});
+
+test('hjälpen finns i appen, med installation, data, buggar och licens', () => {
+  klicka('Appinställningar');
+  klicka('Installation, data och licens');
+  const text = doc.querySelector('#app').textContent.replace(/\s+/g, ' ');
+
+  assert.match(text, /Safari/, 'iOS-vägen');
+  assert.match(text, /Lägg till på hemskärmen/);
+  assert.match(text, /Chrome/, 'Android-vägen');
+  assert.match(text, /Installera app/);
+  assert.match(text, /sparas bara i den här telefonen/i, 'ansvarsfriskrivningen');
+  assert.match(text, /du själv ansvarar för uppgifterna/i);
+  assert.match(text, /Radera allt innehåll/);
+  assert.match(text, /MIT-licens/);
+  assert.match(text, /inte utgiven av Försvarsmakten/);
+
+  const lank = doc.querySelector('#app a');
+  assert.match(lank.getAttribute('href'), /github\.com\/steeriks\/kompetensprov\/issues/);
+  assert.equal(lank.getAttribute('rel'), 'noopener');
+  assert.ok(doc.querySelectorAll('#app .dokument h2').length >= 4, 'fyra avsnitt');
+
+  klicka('Tillbaka till inställningar');
+  assert.match(doc.querySelector('#app').textContent, /Säkerhetskopia/);
+});
