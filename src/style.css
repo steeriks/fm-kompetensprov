@@ -184,6 +184,12 @@ label.falt input, label.falt select {
 .zonknapp.har .antal { color: var(--accent); }
 .zonknapp:active { transform: scale(0.96); }
 
+/* Full målyta: knappar utan träffar dämpas, för de tar inte emot fler.
+   De som HAR träffar behåller sin färg — de går fortfarande att hålla in
+   för att nolla, vilket är vägen att byta ut en träff mot en bättre. */
+.zongrupp.full .zonknapp { opacity: 0.4; }
+.zongrupp.full .zonknapp.har { opacity: 1; }
+
 .summering {
   display: flex; justify-content: space-between; align-items: baseline;
   gap: 0.6rem; padding: 0.7rem 0.8rem; margin: 0.4rem 0 0.6rem;

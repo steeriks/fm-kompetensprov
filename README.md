@@ -36,7 +36,13 @@ Målet är **Helfigur 2020**: A 5, B 4, C 3, D 3, X 2, H 1 poäng.
 | Poängkvot | minst 1,0 | minst 2,0 |
 
 Poängkvoten är räknade poäng delat med tiden mellan startsignal och sista skott.
-Bättringsskott hanteras av sig själva: appen tar de bästa träffarna i varje målyta.
+
+**Appen tar emot exakt så många träffar som räknas** — nio på automatkarbin, fyra plus
+två på pistol. Har skytten skjutit bättringsskott är det de *räknande* träffarna du
+knappar in, alltså de bästa. När en målyta är full dämpas dess knappar och fler tryck
+studsar. Vill du byta ut en träff mot en bättre: håll in knappen för att nolla zonen
+först.
+
 Osäker eller felaktig vapenhantering underkänner provet, och kryssrutan för det finns
 på poängskärmen.
 

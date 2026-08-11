@@ -16,10 +16,15 @@ målytor, hur många träffar som räknas i varje målyta, kravet på poängkvot
 försök som är tillåtna. `bedom()` känner inte till något prov — den läser tabellen. Ett
 nytt delmoment läggs till genom att fylla på `PROV`, inte genom att skriva om räkningen.
 
-**"De N bästa träffarna" är hela bättringsregeln.** Både pistol och Ak tillåter
-bättringsskott efter omladdning. Appen sorterar träffarnas poängvärden fallande och tar
-de N översta i varje målyta. Därför behöver instruktören aldrig hålla reda på vilka skott
-som var bättringar — det räcker att knappa in var träffarna sitter.
+**Målytan har ett tak, inte ett urval.** Både pistol och Ak tillåter bättringsskott efter
+omladdning, men bara de räknande träffarna förs in: nio på Ak, fyra plus två på pistol.
+`arFull()` i `regler.js` avgör när en målyta är full, och knapptrycket studsar med en
+förklaring i stället för att räkna upp. Ska en träff bytas mot en bättre nollas zonen
+med ett långt tryck först.
+
+Avhuggningen "de N bästa" står ändå kvar i `bedom()`. Den är inte längre ett urval utan
+ett skydd: en säkerhetskopia från en äldre version kan bära fler träffar än taket, och då
+ska poängen ändå bli rätt i stället för för hög.
 
 ## Två svep, inte ett formulär
 

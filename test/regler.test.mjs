@@ -156,3 +156,22 @@ test('provtabellen har kraven ur reglerna', () => {
   assert.equal(PROV.ak.grupper[0].antal, 9);
   assert.deepEqual(PROV.pist.grupper.map((g) => g.antal), [4, 2]);
 });
+
+// --- taket på antalet träffar --------------------------------------------
+
+test('målytan är full när den har sina räknande träffar', async () => {
+  const { arFull, gruppFor, antalIGrupp } = await import('../src/regler.js');
+  // Pistol: fyra i kroppen, två i huvudet
+  assert.equal(arFull('pist', 'B', { B: 3 }), false);
+  assert.equal(arFull('pist', 'B', { B: 4 }), true);
+  assert.equal(arFull('pist', 'C', { B: 2, C: 2 }), true, 'ytan räknas ihop, inte per zon');
+  assert.equal(arFull('pist', 'A', { B: 4 }), false, 'huvudet är en egen målyta');
+  assert.equal(arFull('pist', 'A', { A: 1, H: 1 }), true);
+  // Automatkarbin: nio i en enda målyta
+  assert.equal(arFull('ak', 'C', { C: 8 }), false);
+  assert.equal(arFull('ak', 'C', { B: 5, C: 4 }), true);
+
+  assert.equal(gruppFor('pist', 'X').id, 'xbcd');
+  assert.equal(gruppFor('pist', 'H').id, 'ah');
+  assert.equal(antalIGrupp(gruppFor('ak', 'A'), { A: 2, D: 3 }), 5);
+});

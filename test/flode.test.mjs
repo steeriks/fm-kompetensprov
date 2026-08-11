@@ -290,3 +290,63 @@ test('pilen går till vallistan från en skytt, och till start från listan', ()
   assert.match(doc.querySelector('#app').textContent, /Omgångar/,
     'från vallistan ska pilen gå till startsidan');
 });
+
+test('fler träffar än de som räknas går inte att knappa in', () => {
+  klicka('+ Ny omgång');
+  rader()[0].click();
+  klicka('Starta omgången');
+  klicka('Nästa som saknar tid');
+  knappaTid('10,00');
+  klicka('Poäng för');
+
+  knappaZon('B', 4);                      // kroppen full
+  knappaZon('C', 3);                      // ska studsa
+  assert.match(doc.body.textContent, /XBCD har sina 4 träffar/,
+    'appen ska säga varför trycket inte tog');
+  assert.equal(doc.querySelector('#poangsumma').textContent, '16 p',
+    'inga fler kroppsträffar får läggas in');
+  assert.ok(doc.querySelector('[data-grupp="xbcd"]').classList.contains('full'));
+
+  knappaZon('A', 2);                      // huvudet är en egen yta
+  assert.equal(doc.querySelector('#poangsumma').textContent, '26 p');
+  knappaZon('H', 1);
+  assert.equal(doc.querySelector('#poangsumma').textContent, '26 p', 'även AH har sitt tak');
+
+  const d = lagret().resultat[0];
+  assert.deepEqual(d.traffar, { B: 4, A: 2 }, 'bara de räknande träffarna lagras');
+});
+
+test('en träff kan bytas ut: nolla zonen först', async () => {
+  klicka('+ Ny omgång');
+  rader()[0].click();
+  klicka('Starta omgången');
+  klicka('Nästa som saknar tid');
+  knappaTid('10,00');
+  klicka('Poäng för');
+
+  knappaZon('D', 4);                      // fyra svaga kroppsträffar
+  assert.equal(doc.querySelector('#poangsumma').textContent, '12 p');
+  const d = knappaZon('D', 0);
+  d.dispatchEvent(new win.Event('pointerdown', { bubbles: true }));
+  await new Promise((r) => setTimeout(r, 700));
+  assert.equal(doc.querySelector('#poangsumma').textContent, '0 p');
+  knappaZon('B', 4);                      // och fyra bättre i stället
+  assert.equal(doc.querySelector('#poangsumma').textContent, '16 p');
+});
+
+test('automatkarbin tar emot nio träffar, inte fler', () => {
+  klicka('+ Ny omgång');
+  doc.querySelector('#gren').value = 'ak';
+  rader()[0].click();
+  klicka('Starta omgången');
+  klicka('Nästa som saknar tid');
+  knappaTid('30,00');
+  klicka('Poäng för');
+
+  knappaZon('B', 5);
+  knappaZon('C', 4);                      // nu nio
+  assert.equal(doc.querySelector('#poangsumma').textContent, '32 p');
+  knappaZon('A', 1);
+  assert.equal(doc.querySelector('#poangsumma').textContent, '32 p', 'den tionde ska studsa');
+  assert.match(doc.body.textContent, /9 träffar inlagda/);
+});

@@ -6,7 +6,7 @@
 // vallistan två lägen i stället för ett formulär per skytt — och därför finns
 // "Nästa som saknar …", som är hela svepet i en knapp.
 
-import { PROV, ZONPOANG, bedom, komma, taltolk } from './regler.js';
+import { PROV, ZONPOANG, bedom, komma, taltolk, gruppFor, antalIGrupp, arFull } from './regler.js';
 import * as lager from './lagring.js';
 import { underlag, somText, somCsv, somXlsx, somPdf, dela } from './export.js';
 
@@ -318,10 +318,14 @@ function uppdateraPoang() {
   const b = bedom(o.gren, r.traffar, r.tid, r.vapenhanteringUnderkand);
 
   for (const g of PROV[o.gren].grupper) {
-    const del = app.querySelector(`[data-grupp="${g.id}"] .raknare`);
-    const grupp = b.grupper.find((x) => x.id === g.id);
-    del.textContent = `${grupp.antal} av ${g.antal}${grupp.over ? ` (+${grupp.over} bättring)` : ''}`;
-    del.classList.toggle('klar', grupp.antal >= g.antal);
+    const ruta = app.querySelector(`[data-grupp="${g.id}"]`);
+    const antal = antalIGrupp(g, r.traffar);
+    const full = antal >= g.antal;
+    const del = ruta.querySelector('.raknare');
+    del.textContent = `${antal} av ${g.antal}${full ? ' — full' : ''}`;
+    del.classList.toggle('klar', full);
+    // Full målyta märks ut: knapparna dämpas så att det syns utan att läsa.
+    ruta.classList.toggle('full', full);
   }
   app.querySelector('#poangsumma').textContent = `${b.poang} p`;
   const pk = app.querySelector('#pkvarde');
@@ -574,6 +578,17 @@ document.addEventListener('click', async (ev) => {
   // --- zonknappar ---
   if (t.classList.contains('zonknapp')) {
     if (t.dataset.hollsIn === '1') { delete t.dataset.hollsIn; return; }
+    const o = lager.omgang(vy.omgangId);
+    const r = lager.pagaende(o.id, vy.personId);
+    // Målytan tar bara emot så många träffar som räknas. Knappa in de bästa;
+    // vill du byta ut en, håll in knappen och nolla den först.
+    if (arFull(o.gren, t.dataset.zon, r.traffar)) {
+      const g = gruppFor(o.gren, t.dataset.zon);
+      vibrera(80);
+      return flash(PROV[o.gren].grupper.length > 1
+        ? `${g.namn} har sina ${g.antal} träffar. Håll in en knapp för att ändra.`
+        : `${g.antal} träffar inlagda. Håll in en knapp för att ändra.`);
+    }
     vibrera(15);
     const nu = Number(t.querySelector('.antal').textContent) || 0;
     return sattZon(t, nu + 1);
