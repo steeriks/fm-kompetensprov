@@ -51,8 +51,14 @@ header {
   padding: calc(0.6rem + env(safe-area-inset-top)) 0.9rem 0.6rem;
   background: #101310; border-bottom: 1px solid var(--linje);
 }
-header h1 { font-size: 1.05rem; margin: 0; font-weight: 600; letter-spacing: 0.01em; }
+header h1 {
+  font-size: 1.15rem; margin: 0; font-weight: 700; letter-spacing: 0.01em;
+  min-width: 0; overflow-wrap: anywhere;      /* långa namn ska brytas, inte tränga ut */
+}
 header .under { display: block; font-size: 0.8rem; color: var(--dampad); font-weight: 400; }
+/* Tavelnumret i rubriken får samma färg som i listan, så att blicken hittar
+   det utan att läsa. */
+header h1 .nr { color: var(--accent); }
 /* Hemknappen: bara huset, ingen ram. Träffytan är kvar på 44 px även om
    själva ikonen är mindre — det är fingret som ska ha plats, inte ramen. */
 .hem {
@@ -296,7 +302,10 @@ label.falt input, label.falt select {
       <path d="M12 3 2.5 11.2h2.6V21h5.1v-5.9h3.6V21h5.1v-9.8h2.6z"/>
     </svg>
   </button>
-  <h1 id="rubrik">FM kompetensprov<span class="under" id="underrubrik">Pistol och automatkarbin</span></h1>
+  <h1 id="rubrik">
+    <span id="rubriktext">FM kompetensprov</span>
+    <span class="under" id="underrubrik">Pistol och automatkarbin</span>
+  </h1>
 </header>
 <main id="app"></main>
 <div class="bottenrad" id="bottenrad"></div>
@@ -1310,7 +1319,7 @@ async function dela(filnamn, innehall, format, text = '') {
 
 const app = document.getElementById('app');
 const bottenrad = document.getElementById('bottenrad');
-const rubrik = document.getElementById('rubrik');
+const rubrikText = document.getElementById('rubriktext');
 const underrubrik = document.getElementById('underrubrik');
 const hemKnapp = document.getElementById('hem');
 
@@ -1355,6 +1364,15 @@ function visadTid(text) {
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+/**
+ * Sätter rubriken. Med ett nummer skrivs det som en egen färgad del framför
+ * namnet — står man med en skytt ska tavelnumret gå att läsa på avstånd, i
+ * samma färg som i vallistan, utan att man behöver leta i undertexten.
+ */
+function sattRubrik(text, nr = null) {
+  rubrikText.innerHTML = (nr ? `<span class="nr">${esc(nr)}.</span> ` : '') + esc(text);
+}
+
 function vibrera(ms = 20) {
   if (navigator.vibrate) navigator.vibrate(ms);
 }
@@ -1392,7 +1410,7 @@ window.addEventListener('popstate', (e) => {
 
 function ritaStart() {
   const omgangar = lager.omgangar();
-  rubrik.firstChild.textContent = 'FM kompetensprov';
+  sattRubrik('FM kompetensprov');
   underrubrik.textContent = 'Pistol och automatkarbin';
   hemKnapp.hidden = true;
 
@@ -1423,7 +1441,7 @@ function ritaStart() {
 // ------------------------------------------------------------- ny omgång
 
 function ritaNy() {
-  rubrik.firstChild.textContent = 'Ny omgång';
+  sattRubrik('Ny omgång');
   underrubrik.textContent = 'Välj prov och deltagare';
   hemKnapp.hidden = false;
 
@@ -1485,7 +1503,7 @@ function ritaOmgang() {
   if (!o) return gaTill('start');
   const prov = PROV[o.gren];
   const lage = vy.lage || 'tid';
-  rubrik.firstChild.textContent = `${prov.namn} ${o.datum}`;
+  sattRubrik(`${prov.namn} ${o.datum}`);
   underrubrik.textContent = `${prov.delmoment} · krav PK ${komma(prov.pkKrav)}`;
   hemKnapp.hidden = false;
 
@@ -1610,7 +1628,7 @@ function ritaTid() {
   if (!o || !p) return gaTill('start');
   const r = lager.pagaende(o.id, p.id);
   if (!utkastTid && r.tid !== null) utkastTid = komma(r.tid);
-  rubrik.firstChild.textContent = p.namn;
+  sattRubrik(p.namn, o.deltagare.indexOf(p.id) + 1);
   underrubrik.textContent = `Tid · försök ${r.forsok} · ${PROV[o.gren].namn}`;
   hemKnapp.hidden = false;
 
@@ -1660,7 +1678,7 @@ function ritaPoang() {
   if (!o || !p) return gaTill('start');
   const prov = PROV[o.gren];
   const r = lager.pagaende(o.id, p.id);
-  rubrik.firstChild.textContent = p.namn;
+  sattRubrik(p.namn, o.deltagare.indexOf(p.id) + 1);
   underrubrik.textContent = `Poäng · försök ${r.forsok} · ${prov.namn}`;
   hemKnapp.hidden = false;
 
@@ -1759,7 +1777,7 @@ function sattZon(knapp, antal) {
 function ritaLaggTill() {
   const o = lager.omgang(vy.omgangId);
   if (!o) return gaTill('start');
-  rubrik.firstChild.textContent = 'Lägg till skytt';
+  sattRubrik('Lägg till skytt');
   underrubrik.textContent = `${PROV[o.gren].namn} ${o.datum} · blir tavla ${o.deltagare.length + 1}`;
   hemKnapp.hidden = false;
 
@@ -1785,7 +1803,7 @@ function ritaAnvisning() {
   const gren = vy.gren || 'pist';
   const prov = PROV[gren];
   const a = prov.anvisning;
-  rubrik.firstChild.textContent = 'Anvisning';
+  sattRubrik('Anvisning');
   underrubrik.textContent = `${prov.namn} · ${prov.delmoment}`;
   hemKnapp.hidden = false;
 
@@ -1829,7 +1847,7 @@ function ritaAnvisning() {
 // ------------------------------------------------------------- skytteregister
 
 function ritaRegister() {
-  rubrik.firstChild.textContent = 'Skyttar';
+  sattRubrik('Skyttar');
   underrubrik.textContent = 'Registret ligger kvar mellan omgångar';
   hemKnapp.hidden = false;
   const personer = lager.personer();
@@ -1858,7 +1876,7 @@ function nySkytt() {
 // ------------------------------------------------------------- inställningar
 
 function ritaInstallningar() {
-  rubrik.firstChild.textContent = 'Inställningar';
+  sattRubrik('Inställningar');
   underrubrik.textContent = 'Säkerhetskopia och nollställning';
   hemKnapp.hidden = false;
   const d = lager.las();
@@ -1905,7 +1923,7 @@ async function exportera(format) {
 function ritaExportval() {
   const o = lager.omgang(vy.omgangId);
   const u = underlag(o, lager.las().personer, lager.resultat(o.id));
-  rubrik.firstChild.textContent = 'Dela resultatet';
+  sattRubrik('Dela resultatet');
   underrubrik.textContent = `${u.godkanda} av ${u.antalSkyttar} godkända`;
   hemKnapp.hidden = false;
   app.innerHTML = `

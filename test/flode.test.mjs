@@ -763,3 +763,30 @@ test('poängvyn säger vem som står på tur, och summerar när laget är klart'
   assert.match(doc.querySelector('.flash').textContent, /Omgången klar — 2 av 3 godkända/);
   assert.equal(lagret().resultat.filter((r) => r.registrerad).length, 3);
 });
+
+test('rubriken bär skyttens nummer och namn i tid- och poängvyn', () => {
+  klicka('+ Ny omgång');
+  bockaIAlla();
+  klicka('Starta omgången');
+  const listan = rader().map((r) => r.textContent.replace(/\s+/g, ' ').trim());
+
+  // Andra skytten i ordningen
+  rader()[1].click();
+  const rubrik = () => doc.querySelector('#rubriktext').textContent.replace(/\s+/g, ' ').trim();
+  assert.match(rubrik(), /^2\. /, 'tavelnumret ska stå först i rubriken');
+  assert.ok(listan[1].startsWith(rubrik()), 'och stämma med raden i listan: ' + listan[1]);
+  assert.equal(doc.querySelector('#rubriktext .nr').textContent, '2.',
+    'numret är en egen del, så det kan färgsättas');
+
+  // Samma sak på poängvyn
+  knappaTid('900');
+  klicka('Poäng för');
+  assert.match(doc.querySelector('#underrubrik').textContent, /Poäng · försök 1/);
+  assert.match(rubrik(), /^2\. /);
+
+  // Flyttas skytten byter rubriken nummer med tavlan
+  klicka('Tillbaka till listan');
+  assert.match(doc.querySelector('#rubriktext').textContent, /Pistol/,
+    'listan har provets namn som rubrik, utan nummer');
+  assert.equal(doc.querySelector('#rubriktext .nr'), null);
+});

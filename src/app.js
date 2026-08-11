@@ -15,7 +15,7 @@ import { underlag, somText, somCsv, somXlsx, somPdf, dela } from './export.js';
 
 const app = document.getElementById('app');
 const bottenrad = document.getElementById('bottenrad');
-const rubrik = document.getElementById('rubrik');
+const rubrikText = document.getElementById('rubriktext');
 const underrubrik = document.getElementById('underrubrik');
 const hemKnapp = document.getElementById('hem');
 
@@ -60,6 +60,15 @@ function visadTid(text) {
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+/**
+ * Sätter rubriken. Med ett nummer skrivs det som en egen färgad del framför
+ * namnet — står man med en skytt ska tavelnumret gå att läsa på avstånd, i
+ * samma färg som i vallistan, utan att man behöver leta i undertexten.
+ */
+function sattRubrik(text, nr = null) {
+  rubrikText.innerHTML = (nr ? `<span class="nr">${esc(nr)}.</span> ` : '') + esc(text);
+}
+
 function vibrera(ms = 20) {
   if (navigator.vibrate) navigator.vibrate(ms);
 }
@@ -97,7 +106,7 @@ window.addEventListener('popstate', (e) => {
 
 function ritaStart() {
   const omgangar = lager.omgangar();
-  rubrik.firstChild.textContent = 'FM kompetensprov';
+  sattRubrik('FM kompetensprov');
   underrubrik.textContent = 'Pistol och automatkarbin';
   hemKnapp.hidden = true;
 
@@ -128,7 +137,7 @@ function ritaStart() {
 // ------------------------------------------------------------- ny omgång
 
 function ritaNy() {
-  rubrik.firstChild.textContent = 'Ny omgång';
+  sattRubrik('Ny omgång');
   underrubrik.textContent = 'Välj prov och deltagare';
   hemKnapp.hidden = false;
 
@@ -190,7 +199,7 @@ function ritaOmgang() {
   if (!o) return gaTill('start');
   const prov = PROV[o.gren];
   const lage = vy.lage || 'tid';
-  rubrik.firstChild.textContent = `${prov.namn} ${o.datum}`;
+  sattRubrik(`${prov.namn} ${o.datum}`);
   underrubrik.textContent = `${prov.delmoment} · krav PK ${komma(prov.pkKrav)}`;
   hemKnapp.hidden = false;
 
@@ -315,7 +324,7 @@ function ritaTid() {
   if (!o || !p) return gaTill('start');
   const r = lager.pagaende(o.id, p.id);
   if (!utkastTid && r.tid !== null) utkastTid = komma(r.tid);
-  rubrik.firstChild.textContent = p.namn;
+  sattRubrik(p.namn, o.deltagare.indexOf(p.id) + 1);
   underrubrik.textContent = `Tid · försök ${r.forsok} · ${PROV[o.gren].namn}`;
   hemKnapp.hidden = false;
 
@@ -365,7 +374,7 @@ function ritaPoang() {
   if (!o || !p) return gaTill('start');
   const prov = PROV[o.gren];
   const r = lager.pagaende(o.id, p.id);
-  rubrik.firstChild.textContent = p.namn;
+  sattRubrik(p.namn, o.deltagare.indexOf(p.id) + 1);
   underrubrik.textContent = `Poäng · försök ${r.forsok} · ${prov.namn}`;
   hemKnapp.hidden = false;
 
@@ -464,7 +473,7 @@ function sattZon(knapp, antal) {
 function ritaLaggTill() {
   const o = lager.omgang(vy.omgangId);
   if (!o) return gaTill('start');
-  rubrik.firstChild.textContent = 'Lägg till skytt';
+  sattRubrik('Lägg till skytt');
   underrubrik.textContent = `${PROV[o.gren].namn} ${o.datum} · blir tavla ${o.deltagare.length + 1}`;
   hemKnapp.hidden = false;
 
@@ -490,7 +499,7 @@ function ritaAnvisning() {
   const gren = vy.gren || 'pist';
   const prov = PROV[gren];
   const a = prov.anvisning;
-  rubrik.firstChild.textContent = 'Anvisning';
+  sattRubrik('Anvisning');
   underrubrik.textContent = `${prov.namn} · ${prov.delmoment}`;
   hemKnapp.hidden = false;
 
@@ -534,7 +543,7 @@ function ritaAnvisning() {
 // ------------------------------------------------------------- skytteregister
 
 function ritaRegister() {
-  rubrik.firstChild.textContent = 'Skyttar';
+  sattRubrik('Skyttar');
   underrubrik.textContent = 'Registret ligger kvar mellan omgångar';
   hemKnapp.hidden = false;
   const personer = lager.personer();
@@ -563,7 +572,7 @@ function nySkytt() {
 // ------------------------------------------------------------- inställningar
 
 function ritaInstallningar() {
-  rubrik.firstChild.textContent = 'Inställningar';
+  sattRubrik('Inställningar');
   underrubrik.textContent = 'Säkerhetskopia och nollställning';
   hemKnapp.hidden = false;
   const d = lager.las();
@@ -610,7 +619,7 @@ async function exportera(format) {
 function ritaExportval() {
   const o = lager.omgang(vy.omgangId);
   const u = underlag(o, lager.las().personer, lager.resultat(o.id));
-  rubrik.firstChild.textContent = 'Dela resultatet';
+  sattRubrik('Dela resultatet');
   underrubrik.textContent = `${u.godkanda} av ${u.antalSkyttar} godkända`;
   hemKnapp.hidden = false;
   app.innerHTML = `

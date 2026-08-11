@@ -36,8 +36,14 @@ header {
   padding: calc(0.6rem + env(safe-area-inset-top)) 0.9rem 0.6rem;
   background: #101310; border-bottom: 1px solid var(--linje);
 }
-header h1 { font-size: 1.05rem; margin: 0; font-weight: 600; letter-spacing: 0.01em; }
+header h1 {
+  font-size: 1.15rem; margin: 0; font-weight: 700; letter-spacing: 0.01em;
+  min-width: 0; overflow-wrap: anywhere;      /* långa namn ska brytas, inte tränga ut */
+}
 header .under { display: block; font-size: 0.8rem; color: var(--dampad); font-weight: 400; }
+/* Tavelnumret i rubriken får samma färg som i listan, så att blicken hittar
+   det utan att läsa. */
+header h1 .nr { color: var(--accent); }
 /* Hemknappen: bara huset, ingen ram. Träffytan är kvar på 44 px även om
    själva ikonen är mindre — det är fingret som ska ha plats, inte ramen. */
 .hem {
