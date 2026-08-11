@@ -20,9 +20,10 @@ och poängen förs in. Två svep genom samma lista.
    skjutordning. Numret de får är skyttens **tavelnummer** på banan och följer med hela
    vägen ut i exporten.
 2. **TID-läget.** *Registrera tid för första skytt* öppnar tavla 1; därefter heter knappen
-   *Nästa som saknar tid*. Siffrorna knappas rakt av som de står på timern — **555** blir
-   5,55 och **6667** blir 66,67 — och komma går också att använda. *Spara & nästa skytt*
-   hoppar direkt vidare, och vem som står på tur står under knappen.
+   *Nästa som saknar tid*, och växeln visar inom parentes hur många som väntar. Siffrorna
+   knappas rakt av som de står på timern — **555** blir 5,55 och **6667** blir 66,67 — och
+   komma går också att använda. *Spara & nästa skytt* hoppar direkt vidare, och vem som
+   står på tur står under knappen.
 3. **Gå fram till tavlorna.** När sista tiden är inne heter knappen *Spara & börja med
    poängen* och lämnar över till tavla 1 i **POÄNG-läget**.
 4. **Knappa in träffarna** — en tryckning per träff på respektive zon. Poängen står under
@@ -113,7 +114,7 @@ Inga beroenden i appen — ren HTML, CSS och JavaScript, ingen CDN, inget ramver
 npm install       # bara jsdom, och bara för testerna
 npm run serve     # http://localhost:8390 mot src/
 npm run bygg      # bakar ihop src/ till dist/index.html
-npm test          # 64 prov: regelmotor, export och hela flödet i jsdom
+npm test          # 68 prov: regelmotor, export och hela flödet i jsdom
 ```
 
 Testerna kör mot `dist/`, så **bygg innan du provar**.

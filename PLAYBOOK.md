@@ -168,7 +168,7 @@ ingen markdown läcker ut som asterisker på skärmen.
 
 ```bash
 python3 bygg.py     # måste köras först — flödesproven kör mot dist/
-npm test            # 64 prov: regelmotor, export, hela flödet
+npm test            # 68 prov: regelmotor, export, hela flödet
 ```
 
 Flödesproven kör **den byggda filen** i jsdom, alltså samma artefakt som telefonen får. De

@@ -2,6 +2,8 @@
 
 Lägg upp skyttarna en gång under **Lägg till skyttar** — namn och förband. Registret ligger kvar mellan tillfällen, så samma grupp kan skjuta både pistol och automatkarbin utan att skrivas in två gånger.
 
+Överst i skyttelistan finns en genväg till *+ Ny omgång*, när registret är påfyllt och ni är redo att börja.
+
 ## Så går en omgång till
 
 Appen följer hur provet genomförs: alla tiderna först, poängen när gruppen gått fram.
@@ -10,7 +12,9 @@ Appen följer hur provet genomförs: alla tiderna först, poängen när gruppen 
 - **2. Ta tiderna.** *Registrera tid för första skytt* öppnar tavla 1. Knappa tiden rakt av som den står på timern — **555** blir 5,55 — och tryck *Spara & nästa skytt*. Under knappen står vem som är näste man.
 - **3. Gå fram till tavlorna.** När sista tiden är inne heter knappen *Spara & börja med poängen*, och appen står på tavla 1 i poängläget.
 - **4. För in träffarna.** En tryckning per träff på respektive zon. Målytan tar bara emot de träffar som räknas, så det är de **bästa** träffarna du knappar in. Poängkvoten och utfallet — **Godkänd** eller **Underkänd** — räknas medan du knappar.
-- **5. Registrera.** *Registrera & nästa skytt* låser försöket och går vidare. Efter sista skytten summeras omgången.
+- **5. Registrera.** *Registrera & nästa skytt* låser försöket och går vidare. Efter sista skytten summeras omgången: *"Omgången klar — 2 av 3 godkända."*
+
+Växeln **TID | POÄNG** visar inom parentes hur många som väntar i respektive läge, och listan står alltid i det läge som har något kvar att göra. Du behöver alltså inte hålla reda på var i omgången ni är — och en avstickare till anvisningen eller delningen tappar inte bort dig.
 
 Vid osäker eller felaktig vapenhantering: kryssa rutan på poängskärmen, så blir försöket underkänt oavsett resultat.
 
