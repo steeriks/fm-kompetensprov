@@ -457,7 +457,7 @@ test('anvisningen nås mitt i en omgång och visar rätt prov', () => {
   rader()[0].click();
   klicka('Starta omgången');
 
-  klicka('Anvisning');
+  klicka('Anvisning för genomförande');
   assert.match(doc.querySelector('#underrubrik').textContent, /Automatkarbin/,
     'anvisningen ska öppnas på det prov som skjuts');
   klicka('Tillbaka till listan');
@@ -1094,4 +1094,31 @@ test('förbehållet om att appen inte är officiell står på alla ställen', ()
   klicka('Appinställningar');
   klicka('Installation, data och licens');
   assert.ok(sagerDet(doc.querySelector('#app').textContent), 'hjälptexten');
+});
+
+test('anvisningssidan heter Anvisningar och har vägen hem på båda proven', () => {
+  klicka('Anvisningar för genomförande');
+  const rubrik = () => doc.querySelector('#rubriktext').textContent.trim();
+  const knappar = () => [...doc.querySelectorAll('#bottenrad button')].map((b) => b.textContent.trim());
+
+  assert.equal(rubrik(), 'Anvisningar');
+  assert.ok(knappar().includes('Tillbaka till startsidan'), 'pistolsidan: ' + knappar());
+  assert.equal(doc.querySelector('#hem').hidden, false, 'ikonen i huvudet finns också');
+
+  klicka('AUTOMATKARBIN');
+  assert.equal(rubrik(), 'Anvisningar');
+  assert.ok(knappar().includes('Tillbaka till startsidan'), 'ak-sidan: ' + knappar());
+
+  klicka('Tillbaka till startsidan');
+  assert.match(doc.querySelector('#app').textContent, /Omgångar/);
+});
+
+test('anvisningen mitt i en omgång erbjuder båda vägarna ut', () => {
+  klicka('+ Ny omgång');
+  rader()[0].click();
+  klicka('Starta omgången');
+  klicka('Anvisning för genomförande');
+  const knappar = [...doc.querySelectorAll('#bottenrad button')].map((b) => b.textContent.trim());
+  assert.ok(knappar.includes('Tillbaka till listan'), knappar.join(', '));
+  assert.ok(knappar.includes('Tillbaka till startsidan'), knappar.join(', '));
 });

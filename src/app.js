@@ -518,7 +518,7 @@ function ritaAnvisning() {
   const gren = vy.gren || 'pist';
   const prov = PROV[gren];
   const a = prov.anvisning;
-  sattRubrik('Anvisning');
+  sattRubrik('Anvisningar');
   underrubrik.textContent = `${prov.namn} · ${prov.delmoment}`;
   hemKnapp.hidden = false;
 
@@ -553,13 +553,18 @@ function ritaAnvisning() {
       tiden. Kravet är ${komma(prov.pkKrav)} för ${esc(prov.namn.toLowerCase())}.</p>
     </div>`;
 
+  // Vägen ut ska finnas i nederkant på båda provens sidor, inte bara som den
+  // lilla ikonen i huvudet — hit kommer man ofta mitt i något annat.
   bottenrad.innerHTML = `
     <div class="lagesvaljare">
       <button data-anvisning="pist" aria-pressed="${gren === 'pist'}">PISTOL</button>
       <button data-anvisning="ak" aria-pressed="${gren === 'ak'}">AUTOMATKARBIN</button>
     </div>
-    ${vy.omgangId ? '<div class="knapprad"><button class="knapp liten" '
-      + 'data-vy="omgang-ater">Tillbaka till listan</button></div>' : ''}`;
+    <div class="knapprad">
+      ${vy.omgangId
+        ? '<button class="knapp liten" data-vy="omgang-ater">Tillbaka till listan</button>' : ''}
+      <button class="knapp liten" data-vy="start">Tillbaka till startsidan</button>
+    </div>`;
 }
 
 // ------------------------------------------------------------- skytteregister
