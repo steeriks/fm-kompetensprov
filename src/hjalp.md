@@ -26,7 +26,7 @@ Hur appen används steg för steg står under **Så använder du appen** på sta
 
 ## Var dina uppgifter finns
 
-Allt du knappar in — namn, förband, tider och resultat — sparas **bara i den här telefonen**, i webbläsarens lagring. Ingenting skickas någonstans. Det finns ingen server, inget konto och ingen som kan se dina listor.
+Allt du knappar in — namn, förband, Fmid/Anstnr, tider och resultat — sparas **bara i den här telefonen**, i webbläsarens lagring. Ingenting skickas någonstans. Det finns ingen server, inget konto och ingen som kan se dina listor.
 
 Följden är att **du själv ansvarar för uppgifterna**:
 

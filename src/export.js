@@ -16,7 +16,9 @@ export function underlag(omgang, personer, resultat) {
   const kolumner = [
     // Numret är skyttens plats i skjutordningen — och därmed tavelnumret på
     // banan. Det är det man matchar mot när protokollet läses efteråt.
-    'Nr', 'Namn', 'Förband', 'Försök', 'Tid (s)',
+    // Fmid/Anstnr står före namnet: det är den identitet ett förband matchar
+    // protokollet mot, och den är tom för den som inte fyllt i något.
+    'Nr', 'Fmid/Anstnr', 'Namn', 'Förband', 'Försök', 'Tid (s)',
     ...zoner.map((z) => `${z} (${{ A: 5, B: 4, C: 3, D: 3, X: 2, H: 1 }[z]}p)`),
     'Poäng', 'PK', 'Utfall', 'Anmärkning',
   ];
@@ -30,7 +32,8 @@ export function underlag(omgang, personer, resultat) {
     if (!forsok.length) {
       rader.push({
         person: p, nr, forsok: null,
-        celler: [nr, p.namn, p.forband, '', '', ...zoner.map(() => ''), '', '', 'Ej skjuten', ''],
+        celler: [nr, p.fmid || '', p.namn, p.forband, '', '',
+          ...zoner.map(() => ''), '', '', 'Ej skjuten', ''],
       });
       continue;
     }
@@ -43,7 +46,7 @@ export function underlag(omgang, personer, resultat) {
       rader.push({
         person: p, nr, forsok: r, bedomning: b,
         celler: [
-          nr, p.namn, p.forband, r.forsok, r.tid === null ? '' : komma(r.tid),
+          nr, p.fmid || '', p.namn, p.forband, r.forsok, r.tid === null ? '' : komma(r.tid),
           ...zoner.map((z) => r.traffar[z] || 0),
           b.poang, b.pk === null ? '' : komma(b.pk),
           b.godkand ? 'Godkänd' : 'Underkänd',
@@ -93,7 +96,7 @@ export function somText(u) {
   for (const rad of u.rader) {
     if (rad.person.id !== nuvarande) {
       nuvarande = rad.person.id;
-      rader.push(`${rad.nr}. ${rad.person.namn}`
+      rader.push(`${rad.nr}. ${rad.person.fmid ? rad.person.fmid + ' · ' : ''}${rad.person.namn}`
         + `${rad.person.forband ? ' (' + rad.person.forband + ')' : ''}`);
     }
     if (!rad.forsok) {
@@ -360,17 +363,22 @@ function kapa(text, storlek, maxbredd) {
 export function somPdf(u) {
   // Kolumnbredderna måste summera till sidbredden minus båda marginalerna
   // (595 − 72 = 523 pt), annars hamnar sista kolumnen utanför pappret.
+  // Fmid/Anstnr fick sina 64 pt ur anmärkningen, förbandet och två pt per
+  // zonkolumn — de rymmer en siffra och behövde aldrig sina 18. Bredden är
+  // tilltagen så att även ett fullt personnummer ryms: ett id som kapas med
+  // "…" är värdelöst i just den kolumn som ska peka ut en människa.
   const kol = [
     { rubrik: 'Nr', bredd: 16 },
+    { rubrik: 'Fmid/Anstnr', bredd: 64 },
     { rubrik: 'Namn', bredd: 84 },
-    { rubrik: 'Förband', bredd: 56 },
+    { rubrik: 'Förband', bredd: 46 },
     { rubrik: 'F', bredd: 12 },
     { rubrik: 'Tid', bredd: 30 },
-    ...ZONORDNING.map((z) => ({ rubrik: z, bredd: 18 })),
+    ...ZONORDNING.map((z) => ({ rubrik: z, bredd: 16 })),
     { rubrik: 'Poäng', bredd: 30 },
     { rubrik: 'PK', bredd: 28 },
     { rubrik: 'Utfall', bredd: 46 },
-    { rubrik: 'Anmärkning', bredd: 113 },
+    { rubrik: 'Anmärkning', bredd: 71 },
   ];
   const summa = kol.reduce((n, k) => n + k.bredd, 0);
   if (summa > SIDBREDD - 2 * MARGINAL) {

@@ -110,6 +110,29 @@ label.falt input, label.falt select {
   border-radius: var(--radie); padding: 0.7rem 0.8rem; min-height: 50px;
 }
 
+/* Grått "valfritt" i de fält som får lämnas tomma — dämpat, så att ett ifyllt
+   värde och en tom ruta går att skilja åt med en blick. */
+label.falt input::placeholder { color: var(--dampad); opacity: 1; }
+
+/* Namnet är det enda som måste fyllas i, och säger ifrån på plats. */
+label.falt input.saknas { border-color: var(--underkand); }
+
+/* Rutan för en ny skytt ligger ovanpå den vy man står i, så att den som
+   bockar i deltagare inte tappar sin halvfyllda omgång. Överkanten är ledig:
+   telefonens tangentbord tar underkanten så fort namnfältet får fokus. */
+.modal {
+  position: fixed; inset: 0; z-index: 60;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 2rem 1rem calc(1rem + env(safe-area-inset-bottom));
+  background: rgba(0, 0, 0, 0.66); overflow-y: auto;
+}
+.modalkort {
+  width: 100%; max-width: 26rem; margin: 0;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+}
+.modalkort h2 { margin-top: 0.2rem; }
+.modalkort .knapprad { margin-bottom: 0; }
+
 /* --------------------------------------------------------------- kort */
 
 .kort {
@@ -372,7 +395,7 @@ Appen är ett **stöd för instruktören** vid genomförandet av kompetensproven
 
 ## Innan ni börjar
 
-Lägg upp skyttarna en gång under **Lägg till & hantera skyttar** — namn och förband. Registret ligger kvar mellan tillfällen, så samma grupp kan skjuta både pistol och automatkarbin utan att skrivas in två gånger.
+Lägg upp skyttarna en gång under **Lägg till & hantera skyttar** — namn, och därtill förband och Fmid/Anstnr om du vill ha med dem. De två sista är valfria och står grå tills något skrivs in; Fmid/Anstnr hamnar före namnet i exporten. Registret ligger kvar mellan tillfällen, så samma grupp kan skjuta både pistol och automatkarbin utan att skrivas in två gånger.
 
 Överst i skyttelistan finns en genväg till *+ Ny omgång*, när registret är påfyllt och ni är redo att börja.
 
@@ -408,7 +431,7 @@ Tryck *Dela resultat* i omgången och välj form:
 - **PDF** — protokoll att skriva ut eller bifoga.
 - **Excel** eller **CSV** — för vidare bearbetning.
 
-Telefonen öppnar sin vanliga delningsruta, så resultatet kan mejlas, skickas som meddelande eller sparas i Filer. Listan innehåller tavelnummer, namn, förband, försök, tid, träffar per zon, poäng, poängkvot och utfall — plus en summering av hur många som blev godkända.
+Telefonen öppnar sin vanliga delningsruta, så resultatet kan mejlas, skickas som meddelande eller sparas i Filer. Listan innehåller tavelnummer, Fmid/Anstnr, namn, förband, försök, tid, träffar per zon, poäng, poängkvot och utfall — plus en summering av hur många som blev godkända.
 
 En skytt räknas som godkänd i sammanställningen om **något** av försöken var godkänt.
 
@@ -451,7 +474,7 @@ Hur appen används steg för steg står under **Så använder du appen** på sta
 
 ## Var dina uppgifter finns
 
-Allt du knappar in — namn, förband, tider och resultat — sparas **bara i den här telefonen**, i webbläsarens lagring. Ingenting skickas någonstans. Det finns ingen server, inget konto och ingen som kan se dina listor.
+Allt du knappar in — namn, förband, Fmid/Anstnr, tider och resultat — sparas **bara i den här telefonen**, i webbläsarens lagring. Ingenting skickas någonstans. Det finns ingen server, inget konto och ingen som kan se dina listor.
 
 Följden är att **du själv ansvarar för uppgifterna**:
 
@@ -773,11 +796,15 @@ function person(id) {
   return las().personer.find((p) => p.id === id) || null;
 }
 
-function laggTillPerson(namn, forband = '') {
+// Fmid/Anstnr är frivilligt: en hemvärnsgrupp har det sällan till hands på
+// banan, medan ett förband som lämnar protokollet vidare vill ha det med.
+// Poster från tidigare versioner saknar fältet — läs det alltid som `|| ''`.
+function laggTillPerson(namn, forband = '', fmid = '') {
   const p = {
     id: nyttId(),
     namn: String(namn).trim(),
     forband: String(forband).trim(),
+    fmid: String(fmid).trim(),
     skapad: new Date().toISOString(),
   };
   las().personer.push(p);
@@ -785,11 +812,12 @@ function laggTillPerson(namn, forband = '') {
   return p;
 }
 
-function andraPerson(id, namn, forband) {
+function andraPerson(id, namn, forband, fmid = '') {
   const p = person(id);
   if (!p) return null;
   p.namn = String(namn).trim();
   p.forband = String(forband).trim();
+  p.fmid = String(fmid).trim();
   spara();
   return p;
 }
@@ -963,7 +991,9 @@ function underlag(omgang, personer, resultat) {
   const kolumner = [
     // Numret är skyttens plats i skjutordningen — och därmed tavelnumret på
     // banan. Det är det man matchar mot när protokollet läses efteråt.
-    'Nr', 'Namn', 'Förband', 'Försök', 'Tid (s)',
+    // Fmid/Anstnr står före namnet: det är den identitet ett förband matchar
+    // protokollet mot, och den är tom för den som inte fyllt i något.
+    'Nr', 'Fmid/Anstnr', 'Namn', 'Förband', 'Försök', 'Tid (s)',
     ...zoner.map((z) => `${z} (${{ A: 5, B: 4, C: 3, D: 3, X: 2, H: 1 }[z]}p)`),
     'Poäng', 'PK', 'Utfall', 'Anmärkning',
   ];
@@ -977,7 +1007,8 @@ function underlag(omgang, personer, resultat) {
     if (!forsok.length) {
       rader.push({
         person: p, nr, forsok: null,
-        celler: [nr, p.namn, p.forband, '', '', ...zoner.map(() => ''), '', '', 'Ej skjuten', ''],
+        celler: [nr, p.fmid || '', p.namn, p.forband, '', '',
+          ...zoner.map(() => ''), '', '', 'Ej skjuten', ''],
       });
       continue;
     }
@@ -990,7 +1021,7 @@ function underlag(omgang, personer, resultat) {
       rader.push({
         person: p, nr, forsok: r, bedomning: b,
         celler: [
-          nr, p.namn, p.forband, r.forsok, r.tid === null ? '' : komma(r.tid),
+          nr, p.fmid || '', p.namn, p.forband, r.forsok, r.tid === null ? '' : komma(r.tid),
           ...zoner.map((z) => r.traffar[z] || 0),
           b.poang, b.pk === null ? '' : komma(b.pk),
           b.godkand ? 'Godkänd' : 'Underkänd',
@@ -1040,7 +1071,7 @@ function somText(u) {
   for (const rad of u.rader) {
     if (rad.person.id !== nuvarande) {
       nuvarande = rad.person.id;
-      rader.push(`${rad.nr}. ${rad.person.namn}`
+      rader.push(`${rad.nr}. ${rad.person.fmid ? rad.person.fmid + ' · ' : ''}${rad.person.namn}`
         + `${rad.person.forband ? ' (' + rad.person.forband + ')' : ''}`);
     }
     if (!rad.forsok) {
@@ -1307,17 +1338,22 @@ function kapa(text, storlek, maxbredd) {
 function somPdf(u) {
   // Kolumnbredderna måste summera till sidbredden minus båda marginalerna
   // (595 − 72 = 523 pt), annars hamnar sista kolumnen utanför pappret.
+  // Fmid/Anstnr fick sina 64 pt ur anmärkningen, förbandet och två pt per
+  // zonkolumn — de rymmer en siffra och behövde aldrig sina 18. Bredden är
+  // tilltagen så att även ett fullt personnummer ryms: ett id som kapas med
+  // "…" är värdelöst i just den kolumn som ska peka ut en människa.
   const kol = [
     { rubrik: 'Nr', bredd: 16 },
+    { rubrik: 'Fmid/Anstnr', bredd: 64 },
     { rubrik: 'Namn', bredd: 84 },
-    { rubrik: 'Förband', bredd: 56 },
+    { rubrik: 'Förband', bredd: 46 },
     { rubrik: 'F', bredd: 12 },
     { rubrik: 'Tid', bredd: 30 },
-    ...ZONORDNING.map((z) => ({ rubrik: z, bredd: 18 })),
+    ...ZONORDNING.map((z) => ({ rubrik: z, bredd: 16 })),
     { rubrik: 'Poäng', bredd: 30 },
     { rubrik: 'PK', bredd: 28 },
     { rubrik: 'Utfall', bredd: 46 },
-    { rubrik: 'Anmärkning', bredd: 113 },
+    { rubrik: 'Anmärkning', bredd: 71 },
   ];
   const summa = kol.reduce((n, k) => n + k.bredd, 0);
   if (summa > SIDBREDD - 2 * MARGINAL) {
@@ -2056,7 +2092,7 @@ function ritaRegister() {
     // en lista man skrollar med tummen.
     + (personer.length ? personer.map((p) => `
     <div class="kort personrad" data-hall-radera="person:${p.id}">
-      <div><b>${esc(p.namn)}</b><br><span class="dampad liten">${esc(p.forband || 'utan förband')}</span></div>
+      <div><b>${esc(p.namn)}</b><br><span class="dampad liten">${esc(p.forband || 'utan förband')}${p.fmid ? ' · ' + esc(p.fmid) : ''}</span></div>
     </div>`).join('')
       + '<p class="dampad liten">Håll in en skytt för att få fram soptunnan som raderar hen.</p>'
       : '<p class="tom">Inga skyttar ännu.</p>');
@@ -2066,13 +2102,63 @@ function ritaRegister() {
       + 'data-radera-alla-skyttar="1">Radera alla</button></div>' : ''}`;
 }
 
+/**
+ * Rutan för en ny skytt. Var först en kedja av prompt(): en fråga i taget, och
+ * ingen möjlighet att visa att två av tre fält får lämnas tomma. Nu står alla
+ * framme på en gång, med grått "valfritt" i de frivilliga.
+ *
+ * Löftet löses ut av Spara eller Avbryt, så att de tre ställen som lägger upp
+ * en skytt — registret, ny omgång och mitt i en pågående — kan invänta svaret
+ * på samma sätt som de inväntade prompten.
+ */
 function nySkytt() {
-  const namn = prompt('Namn på skytten:');
-  if (!namn || !namn.trim()) return null;
-  const forband = prompt('Förband eller pluton (kan lämnas tomt):') || '';
-  const p = lager.laggTillPerson(namn, forband);
-  flash(`${p.namn} tillagd.`);
-  return p;
+  return new Promise((klar) => {
+    const ruta = document.createElement('div');
+    ruta.className = 'modal';
+    ruta.innerHTML = `<form class="kort modalkort" novalidate>
+      <h2>Ny skytt</h2>
+      <label class="falt">Namn
+        <input id="nyttNamn" autocomplete="off" autocapitalize="words"></label>
+      <label class="falt">Förband
+        <input id="nyttForband" autocomplete="off" placeholder="valfritt"></label>
+      <label class="falt">Fmid/Anstnr
+        <input id="nyttFmid" autocomplete="off" placeholder="valfritt"></label>
+      <div class="knapprad">
+        <button type="button" class="knapp liten" data-avbryt="1">Avbryt</button>
+        <button type="submit" class="knapp liten primar">Spara</button>
+      </div>
+    </form>`;
+    document.body.appendChild(ruta);
+    const namnfalt = ruta.querySelector('#nyttNamn');
+    namnfalt.focus();
+
+    const stang = (p) => { ruta.remove(); klar(p); };
+    ruta.querySelector('[data-avbryt]').addEventListener('click', () => stang(null));
+    ruta.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') stang(null); });
+    // Ett tryck utanför kortet stänger, men bara om det började där — annars
+    // ryker rutan när ett markeringsdrag i ett fält råkar sluta utanför.
+    ruta.addEventListener('pointerdown', (ev) => {
+      if (ev.target === ruta) ruta.dataset.utanfor = '1';
+    });
+    ruta.addEventListener('click', (ev) => {
+      if (ev.target === ruta && ruta.dataset.utanfor) stang(null);
+    });
+    ruta.querySelector('form').addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      const namn = namnfalt.value.trim();
+      if (!namn) {
+        // Utan namn finns ingen skytt att spara. Fältet får säga ifrån där
+        // ögat redan är i stället för att en ruta till läggs ovanpå.
+        namnfalt.classList.add('saknas');
+        namnfalt.focus();
+        return;
+      }
+      const p = lager.laggTillPerson(namn,
+        ruta.querySelector('#nyttForband').value, ruta.querySelector('#nyttFmid').value);
+      flash(`${p.namn} tillagd.`);
+      stang(p);
+    });
+  });
 }
 
 // -------------------------------------------------------------------- hjälp
@@ -2380,7 +2466,7 @@ document.addEventListener('click', async (ev) => {
     return rita();
   }
   if (d.nySkytt) {
-    const p = nySkytt();
+    const p = await nySkytt();
     if (!p) return;
     if (vy.namn === 'ny') {
       spegla();

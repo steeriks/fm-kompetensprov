@@ -584,7 +584,7 @@ function ritaRegister() {
     // en lista man skrollar med tummen.
     + (personer.length ? personer.map((p) => `
     <div class="kort personrad" data-hall-radera="person:${p.id}">
-      <div><b>${esc(p.namn)}</b><br><span class="dampad liten">${esc(p.forband || 'utan förband')}</span></div>
+      <div><b>${esc(p.namn)}</b><br><span class="dampad liten">${esc(p.forband || 'utan förband')}${p.fmid ? ' · ' + esc(p.fmid) : ''}</span></div>
     </div>`).join('')
       + '<p class="dampad liten">Håll in en skytt för att få fram soptunnan som raderar hen.</p>'
       : '<p class="tom">Inga skyttar ännu.</p>');
@@ -594,13 +594,63 @@ function ritaRegister() {
       + 'data-radera-alla-skyttar="1">Radera alla</button></div>' : ''}`;
 }
 
+/**
+ * Rutan för en ny skytt. Var först en kedja av prompt(): en fråga i taget, och
+ * ingen möjlighet att visa att två av tre fält får lämnas tomma. Nu står alla
+ * framme på en gång, med grått "valfritt" i de frivilliga.
+ *
+ * Löftet löses ut av Spara eller Avbryt, så att de tre ställen som lägger upp
+ * en skytt — registret, ny omgång och mitt i en pågående — kan invänta svaret
+ * på samma sätt som de inväntade prompten.
+ */
 function nySkytt() {
-  const namn = prompt('Namn på skytten:');
-  if (!namn || !namn.trim()) return null;
-  const forband = prompt('Förband eller pluton (kan lämnas tomt):') || '';
-  const p = lager.laggTillPerson(namn, forband);
-  flash(`${p.namn} tillagd.`);
-  return p;
+  return new Promise((klar) => {
+    const ruta = document.createElement('div');
+    ruta.className = 'modal';
+    ruta.innerHTML = `<form class="kort modalkort" novalidate>
+      <h2>Ny skytt</h2>
+      <label class="falt">Namn
+        <input id="nyttNamn" autocomplete="off" autocapitalize="words"></label>
+      <label class="falt">Förband
+        <input id="nyttForband" autocomplete="off" placeholder="valfritt"></label>
+      <label class="falt">Fmid/Anstnr
+        <input id="nyttFmid" autocomplete="off" placeholder="valfritt"></label>
+      <div class="knapprad">
+        <button type="button" class="knapp liten" data-avbryt="1">Avbryt</button>
+        <button type="submit" class="knapp liten primar">Spara</button>
+      </div>
+    </form>`;
+    document.body.appendChild(ruta);
+    const namnfalt = ruta.querySelector('#nyttNamn');
+    namnfalt.focus();
+
+    const stang = (p) => { ruta.remove(); klar(p); };
+    ruta.querySelector('[data-avbryt]').addEventListener('click', () => stang(null));
+    ruta.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') stang(null); });
+    // Ett tryck utanför kortet stänger, men bara om det började där — annars
+    // ryker rutan när ett markeringsdrag i ett fält råkar sluta utanför.
+    ruta.addEventListener('pointerdown', (ev) => {
+      if (ev.target === ruta) ruta.dataset.utanfor = '1';
+    });
+    ruta.addEventListener('click', (ev) => {
+      if (ev.target === ruta && ruta.dataset.utanfor) stang(null);
+    });
+    ruta.querySelector('form').addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      const namn = namnfalt.value.trim();
+      if (!namn) {
+        // Utan namn finns ingen skytt att spara. Fältet får säga ifrån där
+        // ögat redan är i stället för att en ruta till läggs ovanpå.
+        namnfalt.classList.add('saknas');
+        namnfalt.focus();
+        return;
+      }
+      const p = lager.laggTillPerson(namn,
+        ruta.querySelector('#nyttForband').value, ruta.querySelector('#nyttFmid').value);
+      flash(`${p.namn} tillagd.`);
+      stang(p);
+    });
+  });
 }
 
 // -------------------------------------------------------------------- hjälp
@@ -908,7 +958,7 @@ document.addEventListener('click', async (ev) => {
     return rita();
   }
   if (d.nySkytt) {
-    const p = nySkytt();
+    const p = await nySkytt();
     if (!p) return;
     if (vy.namn === 'ny') {
       spegla();

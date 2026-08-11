@@ -63,6 +63,12 @@ och zontabellen.
   eller exporten hamnar du i det läge vars knapp bär en siffra — och när alla fått tid
   byter den till POÄNG av sig själv.
 
+### Skytteregistret
+
+*+ Ny skytt* öppnar en ruta med tre fält: **namn**, **förband** och **Fmid/Anstnr**. Bara
+namnet måste fyllas i — de andra två står grå med *valfritt* tills något skrivs in.
+Fmid/Anstnr följer med till exporten och står där **före namnet**, i alla fyra formaten.
+
 ### Radera
 
 Skyttelistan har en genväg till *+ Ny omgång* överst — dit man ändå ska när registret är

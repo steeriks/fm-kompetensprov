@@ -2,7 +2,7 @@ Appen är ett **stöd för instruktören** vid genomförandet av kompetensproven
 
 ## Innan ni börjar
 
-Lägg upp skyttarna en gång under **Lägg till & hantera skyttar** — namn och förband. Registret ligger kvar mellan tillfällen, så samma grupp kan skjuta både pistol och automatkarbin utan att skrivas in två gånger.
+Lägg upp skyttarna en gång under **Lägg till & hantera skyttar** — namn, och därtill förband och Fmid/Anstnr om du vill ha med dem. De två sista är valfria och står grå tills något skrivs in; Fmid/Anstnr hamnar före namnet i exporten. Registret ligger kvar mellan tillfällen, så samma grupp kan skjuta både pistol och automatkarbin utan att skrivas in två gånger.
 
 Överst i skyttelistan finns en genväg till *+ Ny omgång*, när registret är påfyllt och ni är redo att börja.
 
@@ -38,7 +38,7 @@ Tryck *Dela resultat* i omgången och välj form:
 - **PDF** — protokoll att skriva ut eller bifoga.
 - **Excel** eller **CSV** — för vidare bearbetning.
 
-Telefonen öppnar sin vanliga delningsruta, så resultatet kan mejlas, skickas som meddelande eller sparas i Filer. Listan innehåller tavelnummer, namn, förband, försök, tid, träffar per zon, poäng, poängkvot och utfall — plus en summering av hur många som blev godkända.
+Telefonen öppnar sin vanliga delningsruta, så resultatet kan mejlas, skickas som meddelande eller sparas i Filer. Listan innehåller tavelnummer, Fmid/Anstnr, namn, förband, försök, tid, träffar per zon, poäng, poängkvot och utfall — plus en summering av hur många som blev godkända.
 
 En skytt räknas som godkänd i sammanställningen om **något** av försöken var godkänt.
 

@@ -288,6 +288,51 @@ test('automatkarbin har en enda målyta med nio träff', () => {
   assert.equal(doc.querySelector('#pkvarde').textContent, '1,31');
 });
 
+test('en ny skytt läggs upp i en ruta där två av tre fält är valfria', async () => {
+  klicka('Lägg till & hantera skyttar');
+  klicka('+ Ny skytt');
+  const ruta = doc.querySelector('.modal');
+  assert.ok(ruta, 'rutan ska ligga ovanpå vyn, inte ersätta den');
+  assert.equal(ruta.querySelector('#nyttForband').placeholder, 'valfritt');
+  assert.equal(ruta.querySelector('#nyttFmid').placeholder, 'valfritt');
+  assert.match(ruta.textContent, /Fmid\/Anstnr/, 'fältet heter som i exporten');
+
+  // Utan namn finns ingen skytt att spara — rutan står kvar och pekar ut fältet
+  knapp('Spara', ruta).click();
+  assert.ok(doc.querySelector('.modal'), 'rutan får inte stängas utan namn');
+  assert.ok(ruta.querySelector('#nyttNamn').classList.contains('saknas'));
+  assert.equal(lagret().personer.length, 3, 'ingenting sparat');
+
+  ruta.querySelector('#nyttNamn').value = 'Nord, Nils';
+  ruta.querySelector('#nyttFmid').value = '19900101-5555';
+  knapp('Spara', ruta).click();
+  await new Promise((r) => setTimeout(r, 0));   // löftet löses ut på egen tur
+
+  assert.equal(doc.querySelector('.modal'), null, 'rutan stängs när det sparats');
+  const ny = lagret().personer.find((p) => p.namn === 'Nord, Nils');
+  assert.ok(ny, 'skytten ska ligga i registret');
+  assert.equal(ny.fmid, '19900101-5555');
+  assert.equal(ny.forband, '', 'förbandet fick lämnas tomt');
+  assert.match(doc.querySelector('#app').textContent, /Nord, Nils/);
+  assert.match(doc.querySelector('#app').textContent, /19900101-5555/,
+    'registret visar fmid under namnet');
+});
+
+test('avbryter man rutan för ny skytt händer ingenting', async () => {
+  klicka('+ Ny omgång');
+  doc.querySelector('#plats').value = 'Hätilä';
+  klicka('+ Ny skytt');
+  const ruta = doc.querySelector('.modal');
+  ruta.querySelector('#nyttNamn').value = 'Nord, Nils';
+  knapp('Avbryt', ruta).click();
+  await new Promise((r) => setTimeout(r, 0));
+
+  assert.equal(doc.querySelector('.modal'), null);
+  assert.equal(lagret().personer.length, 3, 'ingen skytt lades upp');
+  assert.equal(doc.querySelector('#plats').value, 'Hätilä',
+    'och vyn under rutan står orörd kvar');
+});
+
 test('att radera en skytt tar med sig resultaten', async () => {
   klicka('+ Ny omgång');
   rader()[0].click();

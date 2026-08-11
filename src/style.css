@@ -95,6 +95,29 @@ label.falt input, label.falt select {
   border-radius: var(--radie); padding: 0.7rem 0.8rem; min-height: 50px;
 }
 
+/* Grått "valfritt" i de fält som får lämnas tomma — dämpat, så att ett ifyllt
+   värde och en tom ruta går att skilja åt med en blick. */
+label.falt input::placeholder { color: var(--dampad); opacity: 1; }
+
+/* Namnet är det enda som måste fyllas i, och säger ifrån på plats. */
+label.falt input.saknas { border-color: var(--underkand); }
+
+/* Rutan för en ny skytt ligger ovanpå den vy man står i, så att den som
+   bockar i deltagare inte tappar sin halvfyllda omgång. Överkanten är ledig:
+   telefonens tangentbord tar underkanten så fort namnfältet får fokus. */
+.modal {
+  position: fixed; inset: 0; z-index: 60;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 2rem 1rem calc(1rem + env(safe-area-inset-bottom));
+  background: rgba(0, 0, 0, 0.66); overflow-y: auto;
+}
+.modalkort {
+  width: 100%; max-width: 26rem; margin: 0;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+}
+.modalkort h2 { margin-top: 0.2rem; }
+.modalkort .knapprad { margin-bottom: 0; }
+
 /* --------------------------------------------------------------- kort */
 
 .kort {

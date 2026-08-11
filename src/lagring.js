@@ -71,11 +71,15 @@ export function person(id) {
   return las().personer.find((p) => p.id === id) || null;
 }
 
-export function laggTillPerson(namn, forband = '') {
+// Fmid/Anstnr är frivilligt: en hemvärnsgrupp har det sällan till hands på
+// banan, medan ett förband som lämnar protokollet vidare vill ha det med.
+// Poster från tidigare versioner saknar fältet — läs det alltid som `|| ''`.
+export function laggTillPerson(namn, forband = '', fmid = '') {
   const p = {
     id: nyttId(),
     namn: String(namn).trim(),
     forband: String(forband).trim(),
+    fmid: String(fmid).trim(),
     skapad: new Date().toISOString(),
   };
   las().personer.push(p);
@@ -83,11 +87,12 @@ export function laggTillPerson(namn, forband = '') {
   return p;
 }
 
-export function andraPerson(id, namn, forband) {
+export function andraPerson(id, namn, forband, fmid = '') {
   const p = person(id);
   if (!p) return null;
   p.namn = String(namn).trim();
   p.forband = String(forband).trim();
+  p.fmid = String(fmid).trim();
   spara();
   return p;
 }

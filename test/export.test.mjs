@@ -8,10 +8,12 @@ import { underlag, somText, somCsv, somXlsx, somPdf } from '../src/export.js';
 const UT = process.env.EXPORT_UT || path.join(os.tmpdir(), 'fm-kompetensprov-prov');
 fs.mkdirSync(UT, { recursive: true });
 
+// p2 saknar fältet helt — så ser poster ut som lades upp innan Fmid/Anstnr
+// fanns, och de ska exporteras utan att kolumnen tappar sin plats.
 const personer = [
-  { id: 'p1', namn: 'Andersson, Åsa', forband: '1. plut' },
+  { id: 'p1', namn: 'Andersson, Åsa', forband: '1. plut', fmid: '19850101-1234' },
   { id: 'p2', namn: 'Öberg, Björn', forband: '1. plut' },
-  { id: 'p3', namn: 'Ek, Cecilia', forband: '2. plut' },
+  { id: 'p3', namn: 'Ek, Cecilia', forband: '2. plut', fmid: '770412-9876' },
 ];
 const omgang = {
   id: 'o1', gren: 'pist', datum: '2026-08-11',
@@ -39,14 +41,17 @@ test('underlaget räknar godkända per skytt, inte per försök', () => {
   assert.equal(u.rader.at(-1).celler.at(-2), 'Ej skjuten');
   assert.deepEqual(u.rader.map((r) => r.nr), [1, 2, 2, 3],
     'numret är skjutordningen, och upprepas för varje försök');
-  assert.equal(u.kolumner[0], 'Nr');
+  assert.deepEqual(u.kolumner.slice(0, 4), ['Nr', 'Fmid/Anstnr', 'Namn', 'Förband'],
+    'Fmid/Anstnr står före namnet');
 });
 
 test('texten innehåller rubrik, försök och summering', () => {
   const t = somText(u);
   assert.match(t, /Pistol — Delmoment 14/);
   assert.match(t, /Hätilä skjutbana/);
-  assert.match(t, /1\. Andersson, Åsa \(1\. plut\)/);
+  assert.match(t, /1\. 19850101-1234 · Andersson, Åsa \(1\. plut\)/,
+    'fmid står före namnet även i textformen');
+  assert.match(t, /2\. Öberg, Björn \(1\. plut\)/, 'utan fmid står namnet direkt');
   // Träffarna skrivs alltid i zonordning A B C D X H, inte i den ordning de
   // knappades in — protokollet ska se likadant ut varje gång.
   assert.match(t, /Försök 1: 11,20 s · A2 B4 · 26 p · PK 2,32 · GODKÄND/);
@@ -59,8 +64,9 @@ test('texten innehåller rubrik, försök och summering', () => {
 test('csv:n har BOM, semikolon och tal med komma', () => {
   const c = somCsv(u);
   assert.ok(c.startsWith('﻿'), 'BOM krävs för att Excel ska läsa å ä ö');
-  assert.match(c, /Nr;Namn;Förband;Försök;Tid \(s\)/);
-  assert.match(c, /1;Andersson, Åsa;1\. plut;1;11,20/);
+  assert.match(c, /Nr;Fmid\/Anstnr;Namn;Förband;Försök;Tid \(s\)/);
+  assert.match(c, /1;19850101-1234;Andersson, Åsa;1\. plut;1;11,20/);
+  assert.match(c, /2;;Öberg, Björn;1\. plut;1;15,00/, 'tomt fmid lämnar cellen tom');
   assert.ok(c.includes('\r\n'), 'radbrytning enligt csv-konvention');
 });
 

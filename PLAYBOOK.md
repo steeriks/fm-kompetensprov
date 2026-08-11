@@ -38,6 +38,11 @@ poängen bli rätt i stället för för hög.
 `omgang.deltagare` — flyttas hen numreras alla om. Numret följer med till rubriken, till
 listan och till exportens `Nr`-kolumn, så att protokollet går att matcha mot banan.
 
+**`person.fmid` är valfritt och kan saknas helt.** Fältet kom till efter version 1, så
+poster som lades upp innan dess har det inte alls — läs det alltid som `p.fmid || ''`.
+Lagringsversionen bumpades inte: ett fält som får vara tomt behöver ingen migrering.
+I exporten står kolumnen `Fmid/Anstnr` **före** namnet, i alla fyra formaten.
+
 ## Två svep, inte ett formulär
 
 Hela gränssnittet är byggt kring att provet genomförs i två vändor: alla tiderna först,
