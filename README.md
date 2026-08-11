@@ -1,0 +1,90 @@
+# FM kompetensprov — Ak och Pistol
+
+Instruktörsverktyg för Försvarsmaktens kompetensprov i **pistol** (Delmoment 14,
+Kompetensprov BAS "PILEN") och **automatkarbin** (Delmoment 12, Kompetensprov Bas).
+En webbapp som körs i telefonen, fungerar utan täckning, och lagrar allt lokalt.
+
+**Appen:** <https://steeriks.github.io/kompetensprov/>
+
+## Så används den
+
+Appen följer hur provet faktiskt går till. Skyttarna står uppställda på en linje och
+instruktören skjuter en åt gången:
+
+1. **Lägg upp en omgång** — prov, datum, plats, och bocka i deltagarna i skjutordning.
+2. **TID-läget:** knappa in tiden för en skytt, tryck *Spara & nästa skytt*, och appen
+   hoppar direkt till nästa i ordningen. Hela linjen i ett svep.
+3. Gå fram till tavlorna och byt till **POÄNG-läget**. *Nästa som saknar poäng* börjar om
+   från första skytten.
+4. **Knappa in träffarna** — en tryckning per träff på respektive zon. Poängen står under
+   varje knapp och kvoten räknas medan du knappar. Håll in en knapp för att nolla den.
+5. **Registrera resultat** låser försöket och går vidare till nästa skytt. Kvoten och
+   godkänt/underkänt syns på skyttens rad i listan.
+6. **Dela** ger hela omgången som text, PDF, Excel eller CSV, redo att mejla.
+
+En skytt kan skjuta om provet — *+ Nytt försök* på raden. Provet får skjutas tre gånger
+innan kompletterande träning krävs, och appen räknar försöken.
+
+## Regler appen känner till
+
+Målet är **Helfigur 2020**: A 5, B 4, C 3, D 3, X 2, H 1 poäng.
+
+| | Automatkarbin, Dm 12 Bas | Pistol, Dm 14 BAS (PILEN) |
+|---|---|---|
+| Avstånd | 50 m | 10 m |
+| Träffar som räknas | 9 bästa | 4 bästa i XBCD + 2 bästa i AH |
+| Poängkvot | minst 1,0 | minst 2,0 |
+
+Poängkvoten är räknade poäng delat med tiden mellan startsignal och sista skott.
+Bättringsskott hanteras av sig själva: appen tar de bästa träffarna i varje målyta.
+Osäker eller felaktig vapenhantering underkänner provet, och kryssrutan för det finns
+på poängskärmen.
+
+**Kvoten avrundas till två decimaler innan den jämförs med kravet.** Det som visas är
+det som bedöms — en app som visar 1,00 och säger underkänt vore obegriplig i fält.
+
+## Var resultaten bor
+
+I telefonen, ingen annanstans. Ingen server, inget konto, ingen inloggning. Ingenting
+lämnar enheten förrän du själv trycker på *Dela*.
+
+Priset är att lagringen sitter i webbläsaren: rensar du den försvinner listorna. Under
+*Inställningar* finns **Spara kopia** och **Läs in kopia** — en JSON-fil som också är
+vägen att flytta ett register till en annan telefon. Inläsning lägger till, den skriver
+aldrig över.
+
+**Installera den på hemskärmen** (Dela → Lägg till på hemskärmen). Då fungerar den utan
+täckning, och lagringen är beständig.
+
+> Appen går även att skicka som **en enda HTML-fil** och öppna direkt ur mailet. Då
+> saknar den egen säker adress, och lagringen är opålitlig — Android kan neka den helt.
+> Den vägen är bra för att visa appen eller köra ett enstaka tillfälle. Ska resultaten
+> sparas: använd den installerade versionen.
+
+## Utveckling
+
+Ingen byggkedja, inga beroenden i appen — bara ren HTML, CSS och JavaScript.
+
+```bash
+npm run serve     # http://localhost:8390 mot src/
+npm test          # regelmotor, export och hela flödet i jsdom
+npm run bygg      # bakar ihop src/ till dist/index.html
+```
+
+`npm test` kräver `jsdom` (`npm install`), som bara används av testerna.
+
+| Fil | Ansvar |
+|---|---|
+| `src/regler.js` | Provtabellen och all poängräkning. Nya delmoment läggs till som data. |
+| `src/lagring.js` | localStorage, säkerhetskopia, radering. |
+| `src/export.js` | Text, CSV, XLSX och PDF — skrivna för hand, utan bibliotek. |
+| `src/app.js` | Vyer och flöde. |
+| `bygg.py` | Slår ihop modulerna till `dist/index.html`. |
+| `gen_ikon.py` | Genererar ikonerna, ren stdlib. |
+
+`dist/index.html` är både det som publiceras och det som kan mejlas — samma fil, så det
+aldrig råder tvivel om vilken version någon kör. `publicera.sh` kopierar `dist/` till det
+publika repot som GitHub Pages serverar.
+
+Se [PLAYBOOK.md](PLAYBOOK.md) för hur delarna hänger ihop och vad som är värt att veta
+innan något ändras.

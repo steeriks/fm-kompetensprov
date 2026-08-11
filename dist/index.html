@@ -1,0 +1,1850 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FM kompetensprov</title>
+<meta name="description" content="Instruktörsverktyg för Försvarsmaktens kompetensprov, pistol och automatkarbin.">
+<meta name="theme-color" content="#0b0d0c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kompetensprov">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="ikon-180.png">
+<link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAACDElEQVR42u3dwQ2DMBBFwb0TaqYESkpraYDkgGwT7R/pVbCag4W8prb9JV1WRiA4BIfgEByCQ3AIDsEhOASHBIfgEByCQ3AIDsEhOASH4JDgEByC427n+/gdHEwclMBxh0UskcICkXQcA2Xk+CgsEAnFMVVGex9FBh9xOJbJaOwDDjjCcCyW0dVHkcEHHHDE43hQRj8fcMCRgeNxGc18wAEHHHDAAQcc/yujkw844IADDjjggAMOOOCAAw444IADDjj48IUUDjjggMNlHzLggAMOOOBw+xwOS01wwAGHXVk4+PAEAx8eb+GDjCAc83y0n5vXBMmIxzGQSM64Ep+3xgKOkUQyR+SXGl+hGAscgkNwCA7BITgER4dVtqgP8HDAAQcccMABBxxwwAEHHHDAAQcccMABBxxwwAEHHHDAAQcccMABBxxwwAEHHHDAAQcccMABBxxwwGFvRXAIDsEhOBxI4YADDjjggAMOOOCAAw444IADDjjggAMOOOCAAw444IADDjjggAMOOOCAAw444IADDjjggAMOOOCAAw7ZWxEcEhxyIHUghQMOOOCAAw444IADDjjggAMOOOCAAw444IADDjjggAMOOOCAAw444IADDjjggAMOOOBwwVhwCA7BITgEh+AQHIJDcEhwCA7BITgEh+AQHIJDcAgOCQ7BITgEh+AQHIJDcAgOJfQBgabNOSCNxPwAAAAASUVORK5CYII=">
+<style>
+/* FM kompetensprov — mörkt högkontrasttema, byggt för en hand i mörker.
+   Allt som ska nås under skjutning ligger i nederkant, inom tummens räckvidd.
+   Minsta träffyta är 48 px; knappar som trycks ofta är större än så. */
+
+:root {
+  color-scheme: dark;
+  --bg: #0b0d0c;
+  --kort: #161916;
+  --kort-ljus: #1e221e;
+  --ink: #f2f4ec;
+  --dampad: #a4ab9c;
+  --linje: #363c34;
+  --accent: #8fbf7f;
+  --accent-ink: #0b0d0c;
+  --godkand: #6fbf63;
+  --underkand: #e07a6d;
+  --varning: #e3c33c;
+  --font: ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", sans-serif;
+  --radie: 12px;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 17px/1.45 var(--font);
+  padding-bottom: env(safe-area-inset-bottom);
+  overscroll-behavior-y: contain;
+}
+
+header {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: calc(0.6rem + env(safe-area-inset-top)) 0.9rem 0.6rem;
+  background: #101310; border-bottom: 1px solid var(--linje);
+}
+header h1 { font-size: 1.05rem; margin: 0; font-weight: 600; letter-spacing: 0.01em; }
+header .under { display: block; font-size: 0.8rem; color: var(--dampad); font-weight: 400; }
+.tillbaka {
+  flex: 0 0 auto; min-width: 44px; min-height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: 0; color: var(--accent); font-size: 1.5rem; cursor: pointer;
+}
+
+main { padding: 0.9rem 0.9rem 7.5rem; max-width: 46rem; margin: 0 auto; }
+h2 { font-size: 1rem; margin: 1.2rem 0 0.5rem; color: var(--dampad); font-weight: 600; }
+p.dampad, .dampad { color: var(--dampad); }
+.liten { font-size: 0.85rem; }
+
+/* ------------------------------------------------------------- knappar */
+
+button { font: inherit; }
+.knapp {
+  display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+  width: 100%; min-height: 56px; padding: 0.7rem 1rem;
+  background: var(--kort); color: var(--ink);
+  border: 1px solid var(--linje); border-radius: var(--radie);
+  cursor: pointer; touch-action: manipulation;
+}
+.knapp.primar { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; }
+.knapp.fara { color: var(--underkand); border-color: var(--underkand); background: none; }
+.knapp.liten { min-height: 44px; width: auto; padding: 0.4rem 0.9rem; font-size: 0.9rem; }
+.knapp:active { transform: scale(0.98); }
+.knapprad { display: flex; gap: 0.5rem; margin: 0.6rem 0; }
+.knapprad .knapp { width: auto; flex: 1; }
+
+/* --------------------------------------------------------------- fält */
+
+label.falt { display: block; margin-bottom: 0.8rem; font-size: 0.9rem; color: var(--dampad); }
+label.falt input, label.falt select {
+  display: block; width: 100%; margin-top: 0.25rem;
+  font: 17px/1.4 var(--font); color: var(--ink);
+  background: var(--kort); border: 1px solid var(--linje);
+  border-radius: var(--radie); padding: 0.7rem 0.8rem; min-height: 50px;
+}
+
+/* --------------------------------------------------------------- kort */
+
+.kort {
+  background: var(--kort); border: 1px solid var(--linje);
+  border-radius: var(--radie); padding: 0.8rem; margin-bottom: 0.6rem;
+}
+.tom {
+  text-align: center; color: var(--dampad); padding: 2rem 1rem;
+}
+
+/* ------------------------------------------------------------ vallista */
+
+.skyttrad {
+  display: grid; grid-template-columns: 1fr auto auto;
+  align-items: center; gap: 0.2rem 0.6rem;
+  background: var(--kort); border: 1px solid var(--linje);
+  border-radius: var(--radie); margin-bottom: 0.5rem;
+  padding: 0.6rem 0.7rem; min-height: 64px; width: 100%;
+  color: inherit; text-align: left; cursor: pointer;
+}
+.skyttrad.klar { border-color: #2f4a2c; }
+.skyttrad .namn { font-weight: 600; }
+.skyttrad .forband { grid-column: 1; font-size: 0.8rem; color: var(--dampad); }
+.skyttrad .varden {
+  grid-column: 2; grid-row: 1 / span 2; text-align: right;
+  font-variant-numeric: tabular-nums; font-size: 0.9rem; color: var(--dampad);
+}
+.skyttrad .varden b { color: var(--ink); font-size: 1.05rem; }
+.skyttrad .chip { grid-column: 3; grid-row: 1 / span 2; }
+.chip {
+  display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px;
+  font-size: 0.78rem; font-weight: 700; letter-spacing: 0.02em;
+  border: 1px solid var(--linje); color: var(--dampad);
+}
+.chip.g { background: rgba(111, 191, 99, 0.16); color: var(--godkand); border-color: var(--godkand); }
+.chip.u { background: rgba(224, 122, 109, 0.16); color: var(--underkand); border-color: var(--underkand); }
+.chip.v { background: rgba(227, 195, 60, 0.14); color: var(--varning); border-color: var(--varning); }
+
+.historik { margin: -0.2rem 0 0.6rem; padding: 0 0.7rem; }
+.historik .forsokrad {
+  display: flex; justify-content: space-between; gap: 0.6rem;
+  padding: 0.45rem 0; border-bottom: 1px solid var(--linje);
+  font-size: 0.88rem; color: var(--dampad); font-variant-numeric: tabular-nums;
+}
+.historik .forsokrad:last-child { border-bottom: 0; }
+
+/* --------------------------------------------------------- lägesväljare */
+
+.bottenrad {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  padding: 0.6rem 0.9rem calc(0.6rem + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, #101310 72%, rgba(16, 19, 16, 0));
+  display: flex; flex-direction: column; gap: 0.5rem;
+  max-width: 46rem; margin: 0 auto;
+}
+.lagesvaljare {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem;
+  background: var(--kort); border: 1px solid var(--linje);
+  border-radius: var(--radie); padding: 0.25rem;
+}
+.lagesvaljare button {
+  min-height: 48px; border: 0; border-radius: 9px; cursor: pointer;
+  background: none; color: var(--dampad); font-weight: 700; letter-spacing: 0.03em;
+}
+.lagesvaljare button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+
+/* -------------------------------------------------------- sifferknappsats */
+
+.tidvisning {
+  text-align: center; font-variant-numeric: tabular-nums;
+  font-size: 3.4rem; font-weight: 700; letter-spacing: 0.02em;
+  padding: 1rem 0 0.4rem; min-height: 5rem;
+}
+.tidvisning .enhet { font-size: 1.2rem; color: var(--dampad); font-weight: 400; }
+.tidvisning.tom { color: var(--linje); }
+.knappsats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+.knappsats button {
+  min-height: 68px; font-size: 1.6rem; font-weight: 600;
+  background: var(--kort-ljus); color: var(--ink);
+  border: 1px solid var(--linje); border-radius: var(--radie); cursor: pointer;
+  touch-action: manipulation;
+}
+.knappsats button:active { background: var(--accent); color: var(--accent-ink); }
+
+/* ------------------------------------------------------------ zonknappar */
+
+.zongrupp { margin-bottom: 0.9rem; }
+.zongrupp h3 {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 0.9rem; margin: 0 0 0.4rem; color: var(--dampad); font-weight: 600;
+}
+.zongrupp h3 .raknare { font-variant-numeric: tabular-nums; }
+.zongrupp h3 .raknare.klar { color: var(--godkand); }
+.zoner { display: grid; grid-template-columns: repeat(auto-fit, minmax(4.6rem, 1fr)); gap: 0.5rem; }
+.zonknapp {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 0.15rem; min-height: 82px; padding: 0.5rem 0.2rem;
+  background: var(--kort-ljus); color: var(--ink);
+  border: 1px solid var(--linje); border-radius: var(--radie);
+  cursor: pointer; touch-action: manipulation; user-select: none; -webkit-user-select: none;
+}
+.zonknapp .bokstav { font-size: 1.5rem; font-weight: 700; line-height: 1; }
+.zonknapp .antal { font-size: 1.25rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.zonknapp .poang { font-size: 0.75rem; color: var(--dampad); line-height: 1; }
+.zonknapp.har { border-color: var(--accent); background: rgba(143, 191, 127, 0.18); }
+.zonknapp.har .antal { color: var(--accent); }
+.zonknapp:active { transform: scale(0.96); }
+
+.summering {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 0.6rem; padding: 0.7rem 0.8rem; margin: 0.4rem 0 0.6rem;
+  background: var(--kort); border: 1px solid var(--linje); border-radius: var(--radie);
+  font-variant-numeric: tabular-nums;
+}
+.summering .pk { font-size: 1.6rem; font-weight: 700; }
+.summering .pk.g { color: var(--godkand); }
+.summering .pk.u { color: var(--underkand); }
+.brister { color: var(--underkand); font-size: 0.85rem; margin: 0.2rem 0 0.6rem; }
+
+/* ---------------------------------------------------------------- dialog */
+
+.flash {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: calc(9rem + env(safe-area-inset-bottom)); z-index: 40;
+  background: var(--kort-ljus); border: 1px solid var(--accent);
+  color: var(--ink); padding: 0.7rem 1rem; border-radius: var(--radie);
+  max-width: 90%; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
+}
+.varningsruta {
+  background: rgba(227, 195, 60, 0.1); border: 1px solid var(--varning);
+  border-radius: var(--radie); padding: 0.7rem 0.8rem; margin-bottom: 0.8rem;
+  font-size: 0.9rem;
+}
+
+/* Utskrift: svart på vitt, inga knappar. iOS ger "Spara som PDF" härifrån. */
+@media print {
+  body { background: #fff; color: #000; }
+  header, .bottenrad, .knapp, .knapprad { display: none !important; }
+  main { padding: 0; max-width: none; }
+  .kort, .skyttrad { border-color: #999; background: #fff; color: #000; }
+}
+
+</style>
+</head>
+<body>
+<header>
+  <button class="tillbaka" id="tillbaka" hidden aria-label="Tillbaka">‹</button>
+  <h1 id="rubrik">FM kompetensprov<span class="under" id="underrubrik">Pistol och automatkarbin</span></h1>
+</header>
+<main id="app"></main>
+<div class="bottenrad" id="bottenrad"></div>
+<script>
+// ---- regler.js ---------------------------------------------------------
+// Regelverket — Försvarsmaktens kompetensprov, pistol och automatkarbin.
+//
+// Allt som skiljer proven åt ligger som DATA i PROV nedan, inte som kod:
+// målytor, hur många träffar som räknas i varje målyta, och kravet på
+// poängkvot. Ett nytt delmoment ska kunna läggas till här utan att en enda
+// rad räknelogik rörs.
+
+// Helfigur 2020. Skalan är inte fallande — A är ansiktet (5 p) och H hjälmen
+// (1 p), medan X är bröstet (2 p). Zonerna delas i två målytor på pistol.
+const ZONPOANG = { A: 5, B: 4, C: 3, D: 3, X: 2, H: 1 };
+
+const PROV = {
+  ak: {
+    kod: 'ak',
+    namn: 'Automatkarbin',
+    delmoment: 'Delmoment 12 – Kompetensprov Bas',
+    avstand: '50 m',
+    mal: '1/1-figur',
+    stallning: 'Liggande med stöd → knästående/sittande → stående',
+    pkKrav: 1.0,
+    maxForsok: 3,
+    // De nio bästa träffarna räknas, oavsett var på figuren de sitter.
+    grupper: [
+      { id: 'alla', namn: 'Träffar', zoner: ['A', 'B', 'C', 'D', 'X', 'H'], antal: 9 },
+    ],
+  },
+  pist: {
+    kod: 'pist',
+    namn: 'Pistol',
+    delmoment: 'Delmoment 14 – Kompetensprov BAS (PILEN)',
+    avstand: '10 m',
+    mal: '1/1-figur',
+    stallning: 'Stående grundställning — vändning, drag och omladdning',
+    pkKrav: 2.0,
+    maxForsok: 3,
+    // Fyra träff i kroppen och två i huvudet. Bättringsskott får gå mot
+    // samtliga zoner, men bara de bästa i varje målyta räknas in i kvoten.
+    grupper: [
+      { id: 'xbcd', namn: 'XBCD', zoner: ['X', 'B', 'C', 'D'], antal: 4 },
+      { id: 'ah', namn: 'AH', zoner: ['A', 'H'], antal: 2 },
+    ],
+  },
+};
+
+const ZONORDNING = ['A', 'B', 'C', 'D', 'X', 'H'];
+
+/** Alla zoner som ingår i provet, i visningsordning. */
+function zonerFor(provKod) {
+  const grupper = PROV[provKod].grupper;
+  return ZONORDNING.filter((z) => grupper.some((g) => g.zoner.includes(z)));
+}
+
+/** Avrundning till två decimaler — samma tal som visas är det som bedöms. */
+function tvaDecimaler(n) {
+  return Math.round(n * 100) / 100;
+}
+
+/**
+ * Bedömer ett försök.
+ *
+ * traffar: { A: 2, C: 4, ... } — antal träffar per zon, som de knappats in.
+ * tid: sekunder mellan startsignal och sista skott, eller null om den inte
+ *      förts in ännu.
+ *
+ * Returnerar poäng, poängkvot, godkänt och en lista brister i klartext. Kvoten
+ * jämförs mot kravet EFTER avrundning till två decimaler: det är talet som står
+ * på skärmen och i protokollet, och en app som visar 1,00 och säger underkänt
+ * vore obegriplig i fält.
+ */
+function bedom(provKod, traffar = {}, tid = null, vapenhanteringUnderkand = false) {
+  const prov = PROV[provKod];
+  const brister = [];
+  let poang = 0;
+
+  const grupper = prov.grupper.map((g) => {
+    // Träffarna som en lista poängvärden, bästa först — då blir "de N bästa"
+    // bara en avhuggning, och bättringsskott sköter sig själva.
+    const varden = [];
+    for (const zon of g.zoner) {
+      for (let i = 0; i < (traffar[zon] || 0); i++) varden.push(ZONPOANG[zon]);
+    }
+    varden.sort((a, b) => b - a);
+    const raknade = varden.slice(0, g.antal);
+    const summa = raknade.reduce((a, b) => a + b, 0);
+    poang += summa;
+    if (varden.length < g.antal) {
+      brister.push(
+        prov.grupper.length > 1
+          ? `${g.namn}: ${varden.length} av ${g.antal} träff`
+          : `${varden.length} av ${g.antal} träff`,
+      );
+    }
+    return {
+      id: g.id, namn: g.namn, antal: varden.length, kravAntal: g.antal,
+      poang: summa, over: Math.max(0, varden.length - g.antal),
+    };
+  });
+
+  const pk = tid > 0 ? tvaDecimaler(poang / tid) : null;
+  if (tid === null || tid === undefined || tid === '') brister.push('Tid saknas');
+  else if (!(tid > 0)) brister.push('Ogiltig tid');
+  else if (pk < prov.pkKrav) brister.push(`Poängkvot ${komma(pk)} — kravet är ${komma(prov.pkKrav)}`);
+  if (vapenhanteringUnderkand) brister.push('Underkänd vapenhantering');
+
+  return {
+    poang,
+    pk,
+    grupper,
+    brister,
+    godkand: brister.length === 0,
+    // Komplett = allt som behövs för en bedömning är infört. Ett försök kan
+    // vara komplett och ändå underkänt; det är två olika frågor.
+    komplett: tid > 0 && grupper.every((g) => g.antal >= g.kravAntal),
+  };
+}
+
+/** 1.5 → "1,5" — svenskt decimaltecken överallt i gränssnitt och export. */
+function komma(n, decimaler = 2) {
+  if (n === null || n === undefined || Number.isNaN(n)) return '';
+  return n.toFixed(decimaler).replace('.', ',');
+}
+
+/** "4,23" eller "4.23" → 4.23. Tomt eller skräp ger null. */
+function taltolk(text) {
+  if (text === null || text === undefined) return null;
+  const rensad = String(text).trim().replace(',', '.');
+  if (!rensad) return null;
+  const n = Number(rensad);
+  return Number.isFinite(n) ? n : null;
+}
+
+// ---- lagring.js --------------------------------------------------------
+// Lagring — allt bor i telefonen, under en enda nyckel i localStorage.
+//
+// Ingen server, inget konto, ingenting lämnar enheten förrän du själv trycker
+// på exportknappen. Priset är att lagringen sitter i webbläsaren och kan
+// försvinna om den töms, och att den är opålitlig när appen öppnas som lös fil
+// (file://). Därför finns säkerhetskopiering till fil, som också är vägen att
+// flytta ett register till en annan telefon.
+
+const NYCKEL = 'fm-kompetensprov';
+const VERSION = 1;
+
+// Ett tomt lager byggs varje gång i stället för att klonas från en förlaga:
+// structuredClone finns inte i äldre iOS-Safari, och appen ska starta även på
+// en telefon som inte uppdaterats på ett par år.
+const tomtLager = () => ({ version: VERSION, personer: [], omgangar: [], resultat: [] });
+
+let data = null;
+
+function nyttId() {
+  // Tidsstämpel + slump: sorterbart, och kan inte krocka mellan två poster
+  // som skapas i samma millisekund.
+  return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+}
+
+/** Läser hela lagret. Trasigt eller saknat innehåll ger ett tomt lager. */
+function las() {
+  if (data) return data;
+  try {
+    const ratt = localStorage.getItem(NYCKEL);
+    data = ratt ? JSON.parse(ratt) : tomtLager();
+  } catch {
+    data = tomtLager();
+  }
+  for (const falt of ['personer', 'omgangar', 'resultat']) {
+    if (!Array.isArray(data[falt])) data[falt] = [];
+  }
+  data.version = VERSION;
+  return data;
+}
+
+/** Skriver ner lagret. Returnerar false om utrymmet tagit slut eller nekats. */
+function spara() {
+  try {
+    localStorage.setItem(NYCKEL, JSON.stringify(las()));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Sant när lagringen faktiskt går att skriva till — falskt på lös fil i
+ *  vissa webbläsare, och då ska appen säga ifrån i stället för att tappa data
+ *  under tystnad. */
+function lagringFungerar() {
+  try {
+    localStorage.setItem(NYCKEL + '-prov', '1');
+    localStorage.removeItem(NYCKEL + '-prov');
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// --------------------------------------------------------------- personer
+
+function personer() {
+  return las().personer.slice().sort((a, b) => a.namn.localeCompare(b.namn, 'sv'));
+}
+
+function person(id) {
+  return las().personer.find((p) => p.id === id) || null;
+}
+
+function laggTillPerson(namn, forband = '') {
+  const p = {
+    id: nyttId(),
+    namn: String(namn).trim(),
+    forband: String(forband).trim(),
+    skapad: new Date().toISOString(),
+  };
+  las().personer.push(p);
+  spara();
+  return p;
+}
+
+function andraPerson(id, namn, forband) {
+  const p = person(id);
+  if (!p) return null;
+  p.namn = String(namn).trim();
+  p.forband = String(forband).trim();
+  spara();
+  return p;
+}
+
+/** Tar bort en person OCH alla resultat som hör till hen — annars blir det
+ *  resultatrader utan ägare, och de skulle dyka upp tomma i exporten. */
+function raderaPerson(id) {
+  const d = las();
+  d.personer = d.personer.filter((p) => p.id !== id);
+  d.resultat = d.resultat.filter((r) => r.personId !== id);
+  for (const o of d.omgangar) o.deltagare = o.deltagare.filter((x) => x !== id);
+  spara();
+}
+
+// --------------------------------------------------------------- omgångar
+
+function omgangar() {
+  return las().omgangar.slice().sort((a, b) =>
+    (b.datum + b.id).localeCompare(a.datum + a.id));
+}
+
+function omgang(id) {
+  return las().omgangar.find((o) => o.id === id) || null;
+}
+
+function laggTillOmgang({ gren, datum, plats = '', instruktor = '', deltagare = [] }) {
+  const o = {
+    id: nyttId(),
+    gren,
+    datum: datum || new Date().toISOString().slice(0, 10),
+    plats: plats.trim(),
+    instruktor: instruktor.trim(),
+    deltagare: deltagare.slice(),
+    skapad: new Date().toISOString(),
+  };
+  las().omgangar.push(o);
+  spara();
+  return o;
+}
+
+function andraOmgang(id, andringar) {
+  const o = omgang(id);
+  if (!o) return null;
+  Object.assign(o, andringar);
+  spara();
+  return o;
+}
+
+function raderaOmgang(id) {
+  const d = las();
+  d.omgangar = d.omgangar.filter((o) => o.id !== id);
+  d.resultat = d.resultat.filter((r) => r.omgangId !== id);
+  spara();
+}
+
+// --------------------------------------------------------------- resultat
+
+/** Alla försök i en omgång, äldst först. */
+function resultat(omgangId) {
+  return las().resultat.filter((r) => r.omgangId === omgangId)
+    .sort((a, b) => a.forsok - b.forsok);
+}
+
+/** En skytts försök i en omgång, äldst först. */
+function resultatFor(omgangId, personId) {
+  return resultat(omgangId).filter((r) => r.personId === personId);
+}
+
+/**
+ * Det försök som pågår för en skytt: det senaste som ännu inte registrerats.
+ * Finns inget sådant skapas ett nytt. Det är den här funktionen som gör att
+ * tidssvepet och poängsvepet hittar tillbaka till samma rad — instruktören
+ * knappar in tiderna på hela linjen först och poängen långt senare.
+ */
+function pagaende(omgangId, personId, skapaOmSaknas = true) {
+  const alla = resultatFor(omgangId, personId);
+  const oppet = alla.find((r) => !r.registrerad);
+  if (oppet) return oppet;
+  if (!skapaOmSaknas) return null;
+  const r = {
+    id: nyttId(),
+    omgangId,
+    personId,
+    forsok: alla.length + 1,
+    tid: null,
+    traffar: {},
+    vapenhanteringUnderkand: false,
+    registrerad: null,
+  };
+  las().resultat.push(r);
+  spara();
+  return r;
+}
+
+function andraResultat(id, andringar) {
+  const r = las().resultat.find((x) => x.id === id);
+  if (!r) return null;
+  Object.assign(r, andringar);
+  spara();
+  return r;
+}
+
+/** Låser försöket. Efter det startar nästa tryck ett nytt försök i stället. */
+function registrera(id) {
+  return andraResultat(id, { registrerad: new Date().toISOString() });
+}
+
+function raderaResultat(id) {
+  const d = las();
+  d.resultat = d.resultat.filter((r) => r.id !== id);
+  spara();
+}
+
+// ------------------------------------------------- säkerhetskopia och nollställning
+
+function sakerhetskopia() {
+  return JSON.stringify({ ...las(), exporterad: new Date().toISOString() }, null, 1);
+}
+
+/**
+ * Läser in en säkerhetskopia. Lägger till i stället för att skriva över:
+ * poster med id som redan finns hoppas över, så att en inläsning två gånger
+ * inte ger dubbletter och så att två telefoners listor kan slås ihop.
+ */
+function lasInSakerhetskopia(text) {
+  const inkommande = JSON.parse(text);
+  if (!inkommande || typeof inkommande !== 'object') throw new Error('Filen ser inte ut som en säkerhetskopia.');
+  const d = las();
+  const rakning = { personer: 0, omgangar: 0, resultat: 0 };
+  for (const falt of ['personer', 'omgangar', 'resultat']) {
+    if (!Array.isArray(inkommande[falt])) continue;
+    const fanns = new Set(d[falt].map((x) => x.id));
+    for (const post of inkommande[falt]) {
+      if (post && post.id && !fanns.has(post.id)) {
+        d[falt].push(post);
+        rakning[falt]++;
+      }
+    }
+  }
+  spara();
+  return rakning;
+}
+
+function raderaAllt() {
+  data = tomtLager();
+  try {
+    localStorage.removeItem(NYCKEL);
+  } catch {
+    /* redan borta */
+  }
+  spara();
+}
+
+const lager = { las, spara, lagringFungerar, personer, person, laggTillPerson, andraPerson, raderaPerson, omgangar, omgang, laggTillOmgang, andraOmgang, raderaOmgang, resultat, resultatFor, pagaende, andraResultat, registrera, raderaResultat, sakerhetskopia, lasInSakerhetskopia, raderaAllt };
+
+// ---- export.js ---------------------------------------------------------
+// Export — samma underlag i fyra former: text, CSV, XLSX och PDF.
+//
+// Inga bibliotek. Appen ska vara en enda fil utan en enda extern begäran, och
+// då kan den inte luta sig mot en CDN. XLSX är en ZIP med XML som skrivs
+// okomprimerad (STORED) — giltigt, och ingen deflate behöver implementeras.
+// PDF:en byggs för hand med inbyggd Helvetica och WinAnsi, som täcker å ä ö.
+
+
+// ------------------------------------------------------------- underlaget
+
+/** Bygger tabellen som alla fyra formaten skriver ut. */
+function underlag(omgang, personer, resultat) {
+  const prov = PROV[omgang.gren];
+  const zoner = ZONORDNING;
+  const kolumner = [
+    'Namn', 'Förband', 'Försök', 'Tid (s)',
+    ...zoner.map((z) => `${z} (${{ A: 5, B: 4, C: 3, D: 3, X: 2, H: 1 }[z]}p)`),
+    'Poäng', 'PK', 'Utfall', 'Anmärkning',
+  ];
+  const rader = [];
+  let godkanda = 0;
+  for (const id of omgang.deltagare) {
+    const p = personer.find((x) => x.id === id);
+    if (!p) continue;
+    const forsok = resultat.filter((r) => r.personId === id && r.registrerad);
+    if (!forsok.length) {
+      rader.push({
+        person: p, forsok: null,
+        celler: [p.namn, p.forband, '', '', ...zoner.map(() => ''), '', '', 'Ej skjuten', ''],
+      });
+      continue;
+    }
+    // Godkänd på något av försöken räcker — provet får skjutas tre gånger.
+    if (forsok.some((r) => bedom(omgang.gren, r.traffar, r.tid, r.vapenhanteringUnderkand).godkand)) {
+      godkanda++;
+    }
+    for (const r of forsok) {
+      const b = bedom(omgang.gren, r.traffar, r.tid, r.vapenhanteringUnderkand);
+      rader.push({
+        person: p, forsok: r, bedomning: b,
+        celler: [
+          p.namn, p.forband, r.forsok, r.tid === null ? '' : komma(r.tid),
+          ...zoner.map((z) => r.traffar[z] || 0),
+          b.poang, b.pk === null ? '' : komma(b.pk),
+          b.godkand ? 'Godkänd' : 'Underkänd',
+          b.godkand ? '' : b.brister.join('; '),
+        ],
+      });
+    }
+  }
+  return {
+    omgang, prov, kolumner, rader,
+    antalSkyttar: omgang.deltagare.length,
+    godkanda,
+    rubrik: `${prov.namn} — ${prov.delmoment}`,
+    filnamn: `kompetensprov-${prov.kod}-${omgang.datum}`,
+  };
+}
+
+/**
+ * Kort form av bristerna, för PDF-tabellens smala kolumn. Text och CSV får
+ * den fullständiga formuleringen — där finns plats, och den ska gå att läsa
+ * utan att kunna appens förkortningar.
+ */
+function kortAnmarkning(bedomning) {
+  if (!bedomning) return '';
+  return bedomning.brister.map((b) => b
+    .replace(/^Poängkvot (\S+) — kravet är (\S+)$/, 'PK $1 < $2')
+    .replace(/^(\w+): (\d+) av (\d+) träff$/, '$1 $2/$3')
+    .replace(/^(\d+) av (\d+) träff$/, '$1/$2 träff')
+    .replace(/^Underkänd vapenhantering$/, 'Vapenhantering'),
+  ).join('; ');
+}
+
+function huvudrader(u) {
+  const o = u.omgang;
+  return [
+    u.rubrik,
+    `${o.datum}${o.plats ? ' · ' + o.plats : ''}${o.instruktor ? ' · Instruktör: ' + o.instruktor : ''}`,
+    `${u.prov.avstand}, ${u.prov.mal} · Krav: poängkvot ${komma(u.prov.pkKrav)}`,
+  ];
+}
+
+// ------------------------------------------------------------------- text
+
+function somText(u) {
+  const rader = [...huvudrader(u), ''];
+  let nuvarande = null;
+  for (const rad of u.rader) {
+    if (rad.person.id !== nuvarande) {
+      nuvarande = rad.person.id;
+      rader.push(`${rad.person.namn}${rad.person.forband ? ' (' + rad.person.forband + ')' : ''}`);
+    }
+    if (!rad.forsok) {
+      rader.push('   ej skjuten');
+      continue;
+    }
+    const b = rad.bedomning;
+    const traffar = ZONORDNING.filter((z) => rad.forsok.traffar[z])
+      .map((z) => `${z}${rad.forsok.traffar[z]}`).join(' ');
+    rader.push(
+      `   Försök ${rad.forsok.forsok}: ${komma(rad.forsok.tid)} s · ${traffar || 'inga träffar'}` +
+      ` · ${b.poang} p · PK ${komma(b.pk)} · ${b.godkand ? 'GODKÄND' : 'UNDERKÄND'}` +
+      (b.godkand ? '' : ` (${b.brister.join('; ')})`),
+    );
+  }
+  rader.push('', `${u.godkanda} av ${u.antalSkyttar} godkända.`);
+  return rader.join('\n');
+}
+
+// -------------------------------------------------------------------- CSV
+
+function somCsv(u) {
+  const cell = (v) => {
+    const s = String(v ?? '');
+    return /[";\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  };
+  const rader = [
+    ...huvudrader(u).map((r) => cell(r)),
+    '',
+    u.kolumner.map(cell).join(';'),
+    ...u.rader.map((rad) => rad.celler.map(cell).join(';')),
+    '',
+    cell(`${u.godkanda} av ${u.antalSkyttar} godkända`),
+  ];
+  // Semikolon och BOM: svensk Excel öppnar då filen rätt utan importdialog,
+  // och å ä ö blir inte förvanskade.
+  return '﻿' + rader.join('\r\n') + '\r\n';
+}
+
+// ------------------------------------------------------------------- XLSX
+//
+// En xlsx är en ZIP med några XML-delar. Vi skriver posterna okomprimerade,
+// vilket formatet tillåter — då slipper vi en deflate-implementation, och
+// Excel bryr sig inte.
+
+const CRC_TABELL = (() => {
+  const t = new Uint32Array(256);
+  for (let i = 0; i < 256; i++) {
+    let c = i;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    t[i] = c >>> 0;
+  }
+  return t;
+})();
+
+function crc32(bytes) {
+  let c = 0xffffffff;
+  for (let i = 0; i < bytes.length; i++) c = CRC_TABELL[(c ^ bytes[i]) & 0xff] ^ (c >>> 8);
+  return (c ^ 0xffffffff) >>> 0;
+}
+
+function zip(filer) {
+  const kodare = new TextEncoder();
+  const delar = [];
+  const katalog = [];
+  let offset = 0;
+  const u16 = (n) => [n & 0xff, (n >>> 8) & 0xff];
+  const u32 = (n) => [n & 0xff, (n >>> 8) & 0xff, (n >>> 16) & 0xff, (n >>> 24) & 0xff];
+
+  for (const fil of filer) {
+    const namn = kodare.encode(fil.namn);
+    const data = typeof fil.data === 'string' ? kodare.encode(fil.data) : fil.data;
+    const crc = crc32(data);
+    // Flagga 0x0800 = filnamnen är UTF-8. Tid/datum lämnas nollade; det är
+    // giltigt och gör bygget deterministiskt.
+    const huvud = [
+      ...u32(0x04034b50), ...u16(20), ...u16(0x0800), ...u16(0), ...u16(0), ...u16(0),
+      ...u32(crc), ...u32(data.length), ...u32(data.length),
+      ...u16(namn.length), ...u16(0),
+    ];
+    delar.push(new Uint8Array(huvud), namn, data);
+    katalog.push({ namn, crc, storlek: data.length, offset });
+    offset += huvud.length + namn.length + data.length;
+  }
+
+  const katalogDelar = [];
+  let katalogStorlek = 0;
+  for (const post of katalog) {
+    const huvud = [
+      ...u32(0x02014b50), ...u16(20), ...u16(20), ...u16(0x0800), ...u16(0),
+      ...u16(0), ...u16(0), ...u32(post.crc), ...u32(post.storlek), ...u32(post.storlek),
+      ...u16(post.namn.length), ...u16(0), ...u16(0), ...u16(0), ...u16(0),
+      ...u32(0), ...u32(post.offset),
+    ];
+    katalogDelar.push(new Uint8Array(huvud), post.namn);
+    katalogStorlek += huvud.length + post.namn.length;
+  }
+  const slut = new Uint8Array([
+    ...u32(0x06054b50), ...u16(0), ...u16(0),
+    ...u16(katalog.length), ...u16(katalog.length),
+    ...u32(katalogStorlek), ...u32(offset), ...u16(0),
+  ]);
+
+  const allt = [...delar, ...katalogDelar, slut];
+  const total = allt.reduce((n, d) => n + d.length, 0);
+  const ut = new Uint8Array(total);
+  let p = 0;
+  for (const d of allt) { ut.set(d, p); p += d.length; }
+  return ut;
+}
+
+const xmlEsc = (s) => String(s ?? '')
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;');
+
+function kolumnBokstav(i) {
+  let s = '';
+  i += 1;
+  while (i > 0) {
+    const rest = (i - 1) % 26;
+    s = String.fromCharCode(65 + rest) + s;
+    i = Math.floor((i - 1) / 26);
+  }
+  return s;
+}
+
+function somXlsx(u) {
+  const arkRader = [];
+  const skrivRad = (radnr, celler, fet = false) => {
+    const c = celler.map((v, i) => {
+      const ref = kolumnBokstav(i) + radnr;
+      const stil = fet ? ' s="1"' : '';
+      if (typeof v === 'number' && Number.isFinite(v)) {
+        return `<c r="${ref}"${stil}><v>${v}</v></c>`;
+      }
+      if (v === '' || v === null || v === undefined) return `<c r="${ref}"${stil}/>`;
+      return `<c r="${ref}"${stil} t="inlineStr"><is><t xml:space="preserve">${xmlEsc(v)}</t></is></c>`;
+    }).join('');
+    arkRader.push(`<row r="${radnr}">${c}</row>`);
+  };
+
+  let rad = 1;
+  for (const text of huvudrader(u)) skrivRad(rad++, [text], true);
+  rad++;
+  skrivRad(rad++, u.kolumner, true);
+  for (const r of u.rader) {
+    // Tid och PK som text med komma vore obrukbart i kalkyl — skriv tal.
+    const celler = r.celler.map((v) => {
+      if (typeof v === 'string' && /^-?\d+,\d+$/.test(v)) return Number(v.replace(',', '.'));
+      return v;
+    });
+    skrivRad(rad++, celler);
+  }
+  rad++;
+  skrivRad(rad++, [`${u.godkanda} av ${u.antalSkyttar} godkända`], true);
+
+  const ns = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+  const filer = [
+    {
+      namn: '[Content_Types].xml',
+      data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+<Default Extension="xml" ContentType="application/xml"/>
+<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
+</Types>`,
+    },
+    {
+      namn: '_rels/.rels',
+      data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+</Relationships>`,
+    },
+    {
+      namn: 'xl/workbook.xml',
+      data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="${ns}" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+<sheets><sheet name="Resultat" sheetId="1" r:id="rId1"/></sheets></workbook>`,
+    },
+    {
+      namn: 'xl/_rels/workbook.xml.rels',
+      data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
+<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+</Relationships>`,
+    },
+    {
+      namn: 'xl/styles.xml',
+      data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="${ns}">
+<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>
+<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>
+<borders count="1"><border/></borders>
+<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+<cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs>
+<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
+</styleSheet>`,
+    },
+    {
+      namn: 'xl/worksheets/sheet1.xml',
+      data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="${ns}"><sheetData>${arkRader.join('')}</sheetData></worksheet>`,
+    },
+  ];
+  return zip(filer);
+}
+
+// -------------------------------------------------------------------- PDF
+//
+// Ett minimalt PDF-dokument: inbyggd Helvetica (finns i alla läsare, ingen
+// font behöver bäddas in) med WinAnsiEncoding, som täcker å ä ö.
+
+const SIDBREDD = 595;   // A4 i punkter
+const SIDHOJD = 842;
+const MARGINAL = 36;
+
+function winAnsi(text) {
+  // WinAnsi ligger nära Latin-1 för det vi behöver. Tecken utanför byts mot
+  // frågetecken hellre än att ge en trasig fil.
+  const ut = [];
+  const SARSKILDA = {
+    0x2013: 0x96,   // – kort tankstreck
+    0x2014: 0x97,   // — långt tankstreck
+    0x2018: 0x91, 0x2019: 0x92,
+    0x201c: 0x93, 0x201d: 0x94,
+    0x2022: 0x95,   // punktlista
+    0x2026: 0x85,   // … avbrott — utan den här raden blev kapad text "?"
+  };
+  for (const tecken of String(text)) {
+    const k = tecken.codePointAt(0);
+    if (SARSKILDA[k]) ut.push(SARSKILDA[k]);
+    else if (k < 256) ut.push(k);
+    else ut.push(0x3f);
+  }
+  return ut;
+}
+
+function pdfText(text) {
+  const ut = [];
+  for (const b of winAnsi(text)) {
+    if (b === 0x28 || b === 0x29 || b === 0x5c) ut.push(0x5c);  // ( ) \
+    ut.push(b);
+  }
+  return ut;
+}
+
+/** Ungefärlig textbredd i punkter — räcker för att kapa text som inte får
+ *  plats i sin kolumn. Helvetica är ~0,5 em i snitt för gemener. */
+function bredd(text, storlek) {
+  return String(text).length * storlek * 0.52;
+}
+
+function kapa(text, storlek, maxbredd) {
+  let s = String(text ?? '');
+  if (bredd(s, storlek) <= maxbredd) return s;
+  while (s.length > 1 && bredd(s + '…', storlek) > maxbredd) s = s.slice(0, -1);
+  return s + '…';
+}
+
+function somPdf(u) {
+  // Kolumnbredderna måste summera till sidbredden minus båda marginalerna
+  // (595 − 72 = 523 pt), annars hamnar sista kolumnen utanför pappret.
+  const kol = [
+    { rubrik: 'Namn', bredd: 92 },
+    { rubrik: 'Förband', bredd: 60 },
+    { rubrik: 'F', bredd: 12 },
+    { rubrik: 'Tid', bredd: 30 },
+    ...ZONORDNING.map((z) => ({ rubrik: z, bredd: 18 })),
+    { rubrik: 'Poäng', bredd: 30 },
+    { rubrik: 'PK', bredd: 28 },
+    { rubrik: 'Utfall', bredd: 48 },
+    { rubrik: 'Anmärkning', bredd: 115 },
+  ];
+  const summa = kol.reduce((n, k) => n + k.bredd, 0);
+  if (summa > SIDBREDD - 2 * MARGINAL) {
+    throw new Error(`Kolumnerna är ${summa} pt breda, sidan rymmer ${SIDBREDD - 2 * MARGINAL}`);
+  }
+
+  const sidor = [];
+  let strommar = [];
+  let y = 0;
+
+  const nySida = () => {
+    strommar = [];
+    sidor.push(strommar);
+    y = SIDHOJD - MARGINAL;
+  };
+  const skriv = (text, x, storlek, fet) => {
+    strommar.push(
+      `BT /${fet ? 'F2' : 'F1'} ${storlek} Tf 1 0 0 1 ${x} ${y} Tm (` +
+      String.fromCharCode(...pdfText(text)) + ') Tj ET',
+    );
+  };
+  const rad = (celler, storlek, fet) => {
+    let x = MARGINAL;
+    celler.forEach((v, i) => {
+      skriv(kapa(v, storlek, kol[i].bredd - 3), x, storlek, fet);
+      x += kol[i].bredd;
+    });
+    y -= storlek + 4;
+  };
+
+  nySida();
+  for (const text of huvudrader(u)) {
+    skriv(text, MARGINAL, text === u.rubrik ? 14 : 9, text === u.rubrik);
+    y -= (text === u.rubrik ? 14 : 9) + 6;
+  }
+  y -= 6;
+  rad(kol.map((k) => k.rubrik), 8, true);
+  y -= 2;
+
+  for (const r of u.rader) {
+    if (y < MARGINAL + 40) {
+      nySida();
+      rad(kol.map((k) => k.rubrik), 8, true);
+      y -= 2;
+    }
+    // Nollor i zonkolumnerna görs tomma — en tabell full av nollor är svårare
+    // att läsa än en gles. Sista kolumnen får den korta anmärkningen.
+    const celler = r.celler.map((v) => (v === 0 ? '' : v));
+    celler[celler.length - 1] = kortAnmarkning(r.bedomning);
+    rad(celler, 8, false);
+  }
+  y -= 8;
+  if (y < MARGINAL) nySida();
+  skriv(`${u.godkanda} av ${u.antalSkyttar} godkända.`, MARGINAL, 9, true);
+
+  // --- sätt ihop filen; xref kräver byteoffset för varje objekt ---
+  const bitar = [];
+  let langd = 0;
+  const skrivBytes = (bytes) => { bitar.push(bytes); langd += bytes.length; };
+  const skrivRad = (text) => skrivBytes(new Uint8Array(winAnsi(text + '\n')));
+
+  const objekt = [];
+  const sidObjektNr = (i) => 4 + i * 2;          // sida, sedan dess innehåll
+  const antalSidor = sidor.length;
+  const fontNr = 4 + antalSidor * 2;
+
+  skrivRad('%PDF-1.4');
+  const laggObjekt = (nr, kropp, strom) => {
+    objekt[nr] = langd;
+    skrivRad(`${nr} 0 obj`);
+    skrivRad(kropp);
+    if (strom !== undefined) {
+      skrivRad('stream');
+      skrivBytes(new Uint8Array(winAnsi(strom)));
+      skrivRad('');
+      skrivRad('endstream');
+    }
+    skrivRad('endobj');
+  };
+
+  laggObjekt(1, '<< /Type /Catalog /Pages 2 0 R >>');
+  const barn = sidor.map((_, i) => `${sidObjektNr(i)} 0 R`).join(' ');
+  laggObjekt(2, `<< /Type /Pages /Kids [${barn}] /Count ${antalSidor} >>`);
+  laggObjekt(3, '<< >>');   // platshållare så numreringen blir läsbar
+
+  sidor.forEach((strom, i) => {
+    const innehall = strom.join('\n');
+    const bytes = winAnsi(innehall).length;
+    laggObjekt(sidObjektNr(i),
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${SIDBREDD} ${SIDHOJD}] ` +
+      `/Resources << /Font << /F1 ${fontNr} 0 R /F2 ${fontNr + 1} 0 R >> >> ` +
+      `/Contents ${sidObjektNr(i) + 1} 0 R >>`);
+    laggObjekt(sidObjektNr(i) + 1, `<< /Length ${bytes} >>`, innehall);
+  });
+
+  laggObjekt(fontNr, '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
+  laggObjekt(fontNr + 1, '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
+
+  const antalObjekt = fontNr + 2;
+  const xrefPos = langd;
+  skrivRad('xref');
+  skrivRad(`0 ${antalObjekt}`);
+  skrivRad('0000000000 65535 f ');
+  for (let nr = 1; nr < antalObjekt; nr++) {
+    skrivRad(String(objekt[nr] ?? 0).padStart(10, '0') + ' 00000 n ');
+  }
+  skrivRad('trailer');
+  skrivRad(`<< /Size ${antalObjekt} /Root 1 0 R >>`);
+  skrivRad('startxref');
+  skrivRad(String(xrefPos));
+  skrivRad('%%EOF');
+
+  const ut = new Uint8Array(langd);
+  let p = 0;
+  for (const b of bitar) { ut.set(b, p); p += b.length; }
+  return ut;
+}
+
+// --------------------------------------------------------- dela eller spara
+
+const MIME = {
+  txt: 'text/plain',
+  csv: 'text/csv',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  pdf: 'application/pdf',
+};
+
+/**
+ * Skickar filen till delningsrutan (som öppnar Mail på både iPhone och
+ * Android). Går det inte laddas den ned i stället. Returnerar vad som hände,
+ * så att gränssnittet kan säga det rakt ut.
+ */
+async function dela(filnamn, innehall, format, text = '') {
+  const blob = new Blob([innehall], { type: MIME[format] });
+  const fil = new File([blob], filnamn, { type: MIME[format] });
+  if (navigator.canShare && navigator.canShare({ files: [fil] })) {
+    try {
+      await navigator.share({ files: [fil], title: filnamn, text });
+      return 'delad';
+    } catch (fel) {
+      if (fel && fel.name === 'AbortError') return 'avbruten';
+      // Faller igenom till nedladdning
+    }
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filnamn;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+  return 'nedladdad';
+}
+
+// ---- app.js ------------------------------------------------------------
+// FM kompetensprov — gränssnitt och flöde.
+//
+// Appen följer hur provet faktiskt går till: instruktören skjuter en skytt i
+// taget och knappar in TIDERNA för hela linjen, går sedan fram till tavlorna
+// och knappar in POÄNGEN för samma skyttar i samma ordning. Därför har
+// vallistan två lägen i stället för ett formulär per skytt — och därför finns
+// "Nästa som saknar …", som är hela svepet i en knapp.
+
+
+
+
+const app = document.getElementById('app');
+const bottenrad = document.getElementById('bottenrad');
+const rubrik = document.getElementById('rubrik');
+const underrubrik = document.getElementById('underrubrik');
+const tillbakaKnapp = document.getElementById('tillbaka');
+
+// Vy, och vad vyn handlar om. Ingen router — appen är en enda skärm i taget
+// och webbläsarens bakåtknapp hanteras med history.state.
+let vy = { namn: 'start' };
+let utkastTid = '';       // sifferknappsatsens buffert
+
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
+  ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function vibrera(ms = 20) {
+  if (navigator.vibrate) navigator.vibrate(ms);
+}
+
+function flash(text, sekunder = 2.5) {
+  document.querySelectorAll('.flash').forEach((e) => e.remove());
+  const d = document.createElement('div');
+  d.className = 'flash';
+  d.textContent = text;
+  document.body.appendChild(d);
+  setTimeout(() => d.remove(), sekunder * 1000);
+}
+
+/**
+ * Byter vy. `ersatt` lägger den nya vyn i stället för den nuvarande i
+ * historiken, i stället för ovanpå. Det används varje gång vi går tillbaka
+ * till vallistan eller vidare till nästa skytt: annars växer stacken med en
+ * post per knappsatsskärm, och bakåtknappen skulle vandra baklänges genom
+ * hela skjutlaget i stället för att lämna listan.
+ */
+function gaTill(namn, extra = {}, ersatt = false) {
+  vy = { namn, ...extra };
+  utkastTid = '';
+  if (ersatt) history.replaceState(vy, '');
+  else history.pushState(vy, '');
+  rita();
+}
+
+window.addEventListener('popstate', (e) => {
+  vy = e.state || { namn: 'start' };
+  rita();
+});
+
+// ------------------------------------------------------------------ start
+
+function ritaStart() {
+  const omgangar = lager.omgangar();
+  rubrik.firstChild.textContent = 'FM kompetensprov';
+  underrubrik.textContent = 'Pistol och automatkarbin';
+  tillbakaKnapp.hidden = true;
+
+  const lista = omgangar.length ? omgangar.map((o) => {
+    const prov = PROV[o.gren];
+    const res = lager.resultat(o.id).filter((r) => r.registrerad);
+    const godkanda = new Set(res
+      .filter((r) => bedom(o.gren, r.traffar, r.tid, r.vapenhanteringUnderkand).godkand)
+      .map((r) => r.personId)).size;
+    return `<button class="skyttrad" data-oppna="${o.id}">
+      <span class="namn">${esc(prov.namn)} · ${esc(o.datum)}</span>
+      <span class="forband">${esc(o.plats || 'utan plats')}${o.instruktor ? ' · ' + esc(o.instruktor) : ''}</span>
+      <span class="varden"><b>${godkanda}/${o.deltagare.length}</b><br>godkända</span>
+    </button>`;
+  }).join('') : '<p class="tom">Inga omgångar ännu.<br>Börja med att lägga upp en.</p>';
+
+  app.innerHTML = `<h2>Omgångar</h2>${lista}`;
+  bottenrad.innerHTML = `
+    <button class="knapp primar" data-vy="ny">+ Ny omgång</button>
+    <div class="knapprad">
+      <button class="knapp liten" data-vy="register">Skyttar</button>
+      <button class="knapp liten" data-vy="installningar">Inställningar</button>
+    </div>`;
+}
+
+// ------------------------------------------------------------- ny omgång
+
+function ritaNy() {
+  rubrik.firstChild.textContent = 'Ny omgång';
+  underrubrik.textContent = 'Välj prov och deltagare';
+  tillbakaKnapp.hidden = false;
+
+  const personer = lager.personer();
+  const valda = new Set(vy.valda || []);
+  app.innerHTML = `
+    <label class="falt">Prov
+      <select id="gren">
+        <option value="pist">Pistol — Delmoment 14, BAS (PILEN)</option>
+        <option value="ak">Automatkarbin — Delmoment 12, Bas</option>
+      </select>
+    </label>
+    <div class="knapprad">
+      <label class="falt" style="flex:1">Datum
+        <input type="date" id="datum" value="${new Date().toISOString().slice(0, 10)}">
+      </label>
+    </div>
+    <label class="falt">Plats<input type="text" id="plats" placeholder="t.ex. Hätilä skjutbana"></label>
+    <label class="falt">Instruktör<input type="text" id="instruktor" placeholder="ditt namn"></label>
+
+    <h2>Deltagare i skjutordning</h2>
+    ${personer.length ? personer.map((p) => `
+      <button class="skyttrad ${valda.has(p.id) ? 'klar' : ''}" data-vaxla="${p.id}">
+        <span class="namn">${esc(p.namn)}</span>
+        <span class="forband">${esc(p.forband || '')}</span>
+        <span class="chip ${valda.has(p.id) ? 'g' : ''}">${valda.has(p.id) ? '✓ med' : 'lägg till'}</span>
+      </button>`).join('')
+      : '<p class="tom">Inga skyttar i registret ännu.</p>'}
+    <div class="knapprad"><button class="knapp liten" data-ny-skytt="1">+ Ny skytt</button></div>`;
+
+  app.querySelector('#gren').value = vy.gren || 'pist';
+  for (const falt of ['datum', 'plats', 'instruktor']) {
+    if (vy[falt]) app.querySelector('#' + falt).value = vy[falt];
+  }
+  bottenrad.innerHTML =
+    `<button class="knapp primar" data-starta="1" ${valda.size ? '' : 'disabled'}>
+       Starta omgången${valda.size ? ` (${valda.size} skyttar)` : ''}</button>`;
+}
+
+/** Sparar det som skrivits in innan vyn ritas om — annars tappas texten när
+ *  listan uppdateras av en ibockning. */
+function spegla() {
+  for (const falt of ['gren', 'datum', 'plats', 'instruktor']) {
+    const el = app.querySelector('#' + falt);
+    if (el) vy[falt] = el.value;
+  }
+}
+
+// -------------------------------------------------------------- vallistan
+
+function ritaOmgang() {
+  const o = lager.omgang(vy.omgangId);
+  if (!o) return gaTill('start');
+  const prov = PROV[o.gren];
+  const lage = vy.lage || 'tid';
+  rubrik.firstChild.textContent = `${prov.namn} ${o.datum}`;
+  underrubrik.textContent = `${prov.delmoment} · krav PK ${komma(prov.pkKrav)}`;
+  tillbakaKnapp.hidden = false;
+
+  const rader = o.deltagare.map((id) => {
+    const p = lager.person(id);
+    if (!p) return '';
+    const pagar = lager.pagaende(o.id, id, false);
+    const klara = lager.resultatFor(o.id, id).filter((r) => r.registrerad);
+    const senaste = klara[klara.length - 1];
+    const b = pagar ? bedom(o.gren, pagar.traffar, pagar.tid, pagar.vapenhanteringUnderkand) : null;
+
+    let varden = '<span class="dampad liten">—</span>';
+    let chip = '<span class="chip">väntar</span>';
+    if (pagar && pagar.tid !== null) {
+      varden = `<b>${komma(pagar.tid)} s</b><br>${b.poang} p · PK ${b.pk === null ? '–' : komma(b.pk)}`;
+      chip = `<span class="chip v">pågår</span>`;
+    }
+    if (senaste) {
+      const sb = bedom(o.gren, senaste.traffar, senaste.tid, senaste.vapenhanteringUnderkand);
+      if (!pagar) {
+        varden = `<b>${komma(senaste.tid)} s</b><br>${sb.poang} p · PK ${komma(sb.pk)}`;
+        chip = `<span class="chip ${sb.godkand ? 'g' : 'u'}">${sb.godkand ? 'godkänd' : 'underkänd'}</span>`;
+      }
+    }
+    const oppen = vy.oppen === id;
+    return `<button class="skyttrad ${senaste && !pagar ? 'klar' : ''}" data-skytt="${id}">
+        <span class="namn">${esc(p.namn)}</span>
+        <span class="forband">${esc(p.forband || '')}${klara.length ? ` · ${klara.length} försök` : ''}</span>
+        <span class="varden">${varden}</span>
+        ${chip}
+      </button>
+      ${klara.length ? `<div class="knapprad" style="margin-top:-0.35rem">
+         <button class="knapp liten" data-historik="${id}">${oppen ? 'Dölj' : 'Visa'} försök</button>
+         ${!pagar && klara.length < prov.maxForsok
+           ? `<button class="knapp liten" data-nytt-forsok="${id}">+ Nytt försök</button>` : ''}
+       </div>` : ''}
+      ${oppen ? ritaHistorik(o, klara) : ''}`;
+  }).join('');
+
+  const utanTid = o.deltagare.filter((id) => {
+    const r = lager.pagaende(o.id, id, false);
+    return !r || r.tid === null;
+  }).length;
+  const utanPoang = o.deltagare.filter((id) => {
+    const r = lager.pagaende(o.id, id, false);
+    return r && r.tid !== null;
+  }).length;
+
+  app.innerHTML = rader || '<p class="tom">Inga deltagare i omgången.</p>';
+  bottenrad.innerHTML = `
+    <div class="lagesvaljare">
+      <button data-lage="tid" aria-pressed="${lage === 'tid'}">TID${utanTid ? ` (${utanTid})` : ''}</button>
+      <button data-lage="poang" aria-pressed="${lage === 'poang'}">POÄNG${utanPoang ? ` (${utanPoang})` : ''}</button>
+    </div>
+    <div class="knapprad">
+      <button class="knapp primar" data-nasta="${lage}">
+        ${lage === 'tid' ? 'Nästa som saknar tid' : 'Nästa som saknar poäng'}</button>
+      <button class="knapp liten" data-export="1">Dela</button>
+    </div>`;
+}
+
+function ritaHistorik(o, forsok) {
+  return `<div class="historik">${forsok.map((r) => {
+    const b = bedom(o.gren, r.traffar, r.tid, r.vapenhanteringUnderkand);
+    const traffar = Object.entries(r.traffar).filter(([, n]) => n)
+      .map(([z, n]) => `${z}${n}`).join(' ');
+    return `<div class="forsokrad">
+      <span>Försök ${r.forsok} · ${komma(r.tid)} s · ${esc(traffar || 'inga träffar')}</span>
+      <span>${b.poang} p · <b>${komma(b.pk)}</b> ·
+        <span class="${b.godkand ? 'chip g' : 'chip u'}">${b.godkand ? 'G' : 'U'}</span></span>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+// ----------------------------------------------------------------- tiden
+
+function ritaTid() {
+  const o = lager.omgang(vy.omgangId);
+  const p = lager.person(vy.personId);
+  if (!o || !p) return gaTill('start');
+  const r = lager.pagaende(o.id, p.id);
+  if (!utkastTid && r.tid !== null) utkastTid = komma(r.tid);
+  rubrik.firstChild.textContent = p.namn;
+  underrubrik.textContent = `Tid · försök ${r.forsok} · ${PROV[o.gren].namn}`;
+  tillbakaKnapp.hidden = false;
+
+  app.innerHTML = `
+    <div class="tidvisning ${utkastTid ? '' : 'tom'}">${esc(utkastTid || '0,00')}<span class="enhet"> s</span></div>
+    <p class="dampad liten" style="text-align:center">Tiden mäts mellan startsignal och sista skott.</p>
+    <div class="knappsats">
+      ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => `<button data-siffra="${n}">${n}</button>`).join('')}
+      <button data-siffra=",">,</button>
+      <button data-siffra="0">0</button>
+      <button data-radera="1">⌫</button>
+    </div>`;
+  bottenrad.innerHTML = `
+    <button class="knapp primar" data-spara-tid="nasta">Spara &amp; nästa skytt</button>
+    <div class="knapprad">
+      <button class="knapp liten" data-spara-tid="lista">Spara och tillbaka</button>
+      <button class="knapp liten" data-till-poang="1">Poäng för ${esc(p.namn.split(' ')[0])}</button>
+    </div>`;
+}
+
+function sparaTid() {
+  const o = lager.omgang(vy.omgangId);
+  const r = lager.pagaende(o.id, vy.personId);
+  const tal = taltolk(utkastTid);
+  if (utkastTid && (tal === null || tal <= 0)) {
+    flash('Tiden ser inte ut som ett tal.');
+    return false;
+  }
+  lager.andraResultat(r.id, { tid: tal });
+  return true;
+}
+
+// ---------------------------------------------------------------- poängen
+
+function ritaPoang() {
+  const o = lager.omgang(vy.omgangId);
+  const p = lager.person(vy.personId);
+  if (!o || !p) return gaTill('start');
+  const prov = PROV[o.gren];
+  const r = lager.pagaende(o.id, p.id);
+  rubrik.firstChild.textContent = p.namn;
+  underrubrik.textContent = `Poäng · försök ${r.forsok} · ${prov.namn}`;
+  tillbakaKnapp.hidden = false;
+
+  const grupper = prov.grupper.map((g) => `
+    <div class="zongrupp" data-grupp="${g.id}">
+      <h3><span>${esc(g.namn)}</span><span class="raknare"></span></h3>
+      <div class="zoner">
+        ${g.zoner.map((z) => `
+          <button class="zonknapp" data-zon="${z}" data-poang="${ZONPOANG[z]}">
+            <span class="bokstav">${z}</span>
+            <span class="antal">${r.traffar[z] || 0}</span>
+            <span class="poang">${(r.traffar[z] || 0) * ZONPOANG[z]} p</span>
+          </button>`).join('')}
+      </div>
+    </div>`).join('');
+
+  app.innerHTML = `
+    ${r.tid === null ? '<div class="varningsruta">Ingen tid inlagd ännu — utan tid går ingen poängkvot att räkna.</div>' : ''}
+    <p class="dampad liten">Tryck en gång per träff. Håll in en knapp för att nolla den.</p>
+    ${grupper}
+    <div class="summering">
+      <span>Tid <b>${r.tid === null ? '–' : komma(r.tid) + ' s'}</b> · <span id="poangsumma">0 p</span></span>
+      <span class="pk" id="pkvarde">–</span>
+    </div>
+    <p class="brister" id="brister"></p>
+    <label class="falt" style="display:flex;align-items:center;gap:0.6rem">
+      <input type="checkbox" id="vapen" style="width:26px;height:26px;margin:0"
+             ${r.vapenhanteringUnderkand ? 'checked' : ''}>
+      <span>Underkänd — osäker eller felaktig vapenhantering</span>
+    </label>`;
+  bottenrad.innerHTML = `
+    <button class="knapp primar" data-registrera="1">Registrera resultat</button>
+    <div class="knapprad">
+      <button class="knapp liten" data-till-tid="1">Ändra tiden</button>
+      <button class="knapp liten" data-vy="omgang-ater">Tillbaka till listan</button>
+    </div>`;
+  uppdateraPoang();
+}
+
+/** Räknar om summering, kvot och brister utan att rita om knapparna — det ska
+ *  gå att knappa fort utan att skärmen hoppar. */
+function uppdateraPoang() {
+  const o = lager.omgang(vy.omgangId);
+  const r = lager.pagaende(o.id, vy.personId);
+  const b = bedom(o.gren, r.traffar, r.tid, r.vapenhanteringUnderkand);
+
+  for (const g of PROV[o.gren].grupper) {
+    const del = app.querySelector(`[data-grupp="${g.id}"] .raknare`);
+    const grupp = b.grupper.find((x) => x.id === g.id);
+    del.textContent = `${grupp.antal} av ${g.antal}${grupp.over ? ` (+${grupp.over} bättring)` : ''}`;
+    del.classList.toggle('klar', grupp.antal >= g.antal);
+  }
+  app.querySelector('#poangsumma').textContent = `${b.poang} p`;
+  const pk = app.querySelector('#pkvarde');
+  pk.textContent = b.pk === null ? '–' : komma(b.pk);
+  pk.className = 'pk ' + (b.pk === null ? '' : (b.godkand ? 'g' : 'u'));
+  app.querySelector('#brister').textContent = b.godkand ? '' : b.brister.join(' · ');
+}
+
+function sattZon(knapp, antal) {
+  const o = lager.omgang(vy.omgangId);
+  const r = lager.pagaende(o.id, vy.personId);
+  const zon = knapp.dataset.zon;
+  const traffar = { ...r.traffar };
+  if (antal > 0) traffar[zon] = antal; else delete traffar[zon];
+  lager.andraResultat(r.id, { traffar });
+  knapp.querySelector('.antal').textContent = antal;
+  knapp.querySelector('.poang').textContent = antal * Number(knapp.dataset.poang) + ' p';
+  knapp.classList.toggle('har', antal > 0);
+  uppdateraPoang();
+}
+
+// ------------------------------------------------------------- skytteregister
+
+function ritaRegister() {
+  rubrik.firstChild.textContent = 'Skyttar';
+  underrubrik.textContent = 'Registret ligger kvar mellan omgångar';
+  tillbakaKnapp.hidden = false;
+  const personer = lager.personer();
+  app.innerHTML = personer.length ? personer.map((p) => `
+    <div class="kort">
+      <div style="display:flex;justify-content:space-between;gap:0.6rem;align-items:center">
+        <div><b>${esc(p.namn)}</b><br><span class="dampad liten">${esc(p.forband || 'utan förband')}</span></div>
+        <button class="knapp liten fara" data-radera-person="${p.id}">Radera</button>
+      </div>
+    </div>`).join('') : '<p class="tom">Inga skyttar ännu.</p>';
+  bottenrad.innerHTML = '<button class="knapp primar" data-ny-skytt="1">+ Ny skytt</button>';
+}
+
+function nySkytt() {
+  const namn = prompt('Namn på skytten:');
+  if (!namn || !namn.trim()) return null;
+  const forband = prompt('Förband eller pluton (kan lämnas tomt):') || '';
+  const p = lager.laggTillPerson(namn, forband);
+  flash(`${p.namn} tillagd.`);
+  return p;
+}
+
+// ------------------------------------------------------------- inställningar
+
+function ritaInstallningar() {
+  rubrik.firstChild.textContent = 'Inställningar';
+  underrubrik.textContent = 'Säkerhetskopia och nollställning';
+  tillbakaKnapp.hidden = false;
+  const d = lager.las();
+  app.innerHTML = `
+    ${lager.lagringFungerar() ? '' : `<div class="varningsruta">
+      <b>Lagringen fungerar inte här.</b> Appen är troligen öppnad som lös fil.
+      Det du knappar in ligger kvar så länge sidan är öppen, men försvinner när
+      den stängs. Använd den installerade versionen om resultaten ska sparas.
+    </div>`}
+    <div class="kort">
+      <b>I appen just nu</b><br>
+      <span class="dampad liten">${d.personer.length} skyttar · ${d.omgangar.length} omgångar
+      · ${d.resultat.filter((r) => r.registrerad).length} registrerade försök</span>
+    </div>
+    <h2>Säkerhetskopia</h2>
+    <p class="dampad liten">En fil med allt. Läs in den på en annan telefon, eller
+    som återställning. Inläsning lägger till — den skriver aldrig över det som finns.</p>
+    <div class="knapprad">
+      <button class="knapp liten" data-kopia="ut">Spara kopia</button>
+      <button class="knapp liten" data-kopia="in">Läs in kopia</button>
+    </div>
+    <h2>Nollställ</h2>
+    <div class="knapprad"><button class="knapp fara" data-radera-allt="1">Radera allt innehåll</button></div>
+    <p class="dampad liten" style="margin-top:2rem">
+      Poängzoner enligt Helfigur 2020: A 5, B 4, C 3, D 3, X 2, H 1.
+      Krav enligt respektive delmoment — pistol PK 2,0, automatkarbin PK 1,0.
+      Allt du knappar in stannar i telefonen tills du delar det själv.</p>
+    <input type="file" id="kopiafil" accept="application/json,.json" hidden>`;
+  bottenrad.innerHTML = '<button class="knapp liten" data-skriv-ut="1">Skriv ut / spara som PDF</button>';
+}
+
+// ---------------------------------------------------------------- exporten
+
+async function exportera(format) {
+  const o = lager.omgang(vy.omgangId);
+  const u = underlag(o, lager.las().personer, lager.resultat(o.id));
+  const text = somText(u);
+  if (format === 'txt') return dela(`${u.filnamn}.txt`, text, 'txt', text);
+  if (format === 'csv') return dela(`${u.filnamn}.csv`, somCsv(u), 'csv', text);
+  if (format === 'xlsx') return dela(`${u.filnamn}.xlsx`, somXlsx(u), 'xlsx', text);
+  if (format === 'pdf') return dela(`${u.filnamn}.pdf`, somPdf(u), 'pdf', text);
+}
+
+function ritaExportval() {
+  const o = lager.omgang(vy.omgangId);
+  const u = underlag(o, lager.las().personer, lager.resultat(o.id));
+  rubrik.firstChild.textContent = 'Dela resultatet';
+  underrubrik.textContent = `${u.godkanda} av ${u.antalSkyttar} godkända`;
+  tillbakaKnapp.hidden = false;
+  app.innerHTML = `
+    <p class="dampad liten">Delningsrutan öppnar Mail, Meddelanden eller det du väljer.
+    Kan telefonen inte dela filer laddas de ned i stället.</p>
+    <div class="knapprad"><button class="knapp" data-format="txt">Text i mailet</button></div>
+    <div class="knapprad"><button class="knapp" data-format="pdf">PDF</button></div>
+    <div class="knapprad"><button class="knapp" data-format="xlsx">Excel (xlsx)</button></div>
+    <div class="knapprad"><button class="knapp" data-format="csv">CSV</button></div>
+    <h2>Förhandsgranskning</h2>
+    <div class="kort"><pre style="white-space:pre-wrap;margin:0;font-size:0.8rem">${esc(somText(u))}</pre></div>`;
+  bottenrad.innerHTML = '<button class="knapp liten" data-skriv-ut="1">Skriv ut / spara som PDF</button>';
+}
+
+// -------------------------------------------------------------- rita om allt
+
+function rita() {
+  document.querySelectorAll('.flash').forEach((e) => e.remove());
+  if (vy.namn === 'start') ritaStart();
+  else if (vy.namn === 'ny') ritaNy();
+  else if (vy.namn === 'omgang') ritaOmgang();
+  else if (vy.namn === 'tid') ritaTid();
+  else if (vy.namn === 'poang') ritaPoang();
+  else if (vy.namn === 'register') ritaRegister();
+  else if (vy.namn === 'installningar') ritaInstallningar();
+  else if (vy.namn === 'export') ritaExportval();
+  window.scrollTo(0, 0);
+}
+
+// ------------------------------------------------------- nästa i ordningen
+
+function nastaSkytt(omgang, lage, efterId = null) {
+  const ordning = omgang.deltagare;
+  const start = efterId ? ordning.indexOf(efterId) + 1 : 0;
+  const behover = (id) => {
+    const r = lager.pagaende(omgang.id, id, false);
+    if (lage === 'tid') return !r || r.tid === null;
+    return r && r.tid !== null;          // har tid men är inte registrerad
+  };
+  // Sök framåt från den nyss avklarade, och varva sedan om från början —
+  // instruktören ska aldrig behöva leta själv.
+  for (let i = start; i < ordning.length; i++) if (behover(ordning[i])) return ordning[i];
+  for (let i = 0; i < start && i < ordning.length; i++) if (behover(ordning[i])) return ordning[i];
+  return null;
+}
+
+// ------------------------------------------------------------ händelser
+
+document.addEventListener('click', async (ev) => {
+  const t = ev.target.closest('[data-vy], [data-oppna], [data-vaxla], [data-ny-skytt], ' +
+    '[data-starta], [data-skytt], [data-lage], [data-nasta], [data-siffra], [data-radera], ' +
+    '[data-spara-tid], [data-till-poang], [data-till-tid], [data-registrera], [data-export], ' +
+    '[data-format], [data-historik], [data-nytt-forsok], [data-radera-person], [data-kopia], ' +
+    '[data-radera-allt], [data-skriv-ut], .zonknapp');
+  if (!t) return;
+  const d = t.dataset;
+
+  // --- navigering ---
+  if (d.vy === 'ny') return gaTill('ny', { valda: [] });
+  if (d.vy === 'register') return gaTill('register');
+  if (d.vy === 'installningar') return gaTill('installningar');
+  if (d.vy === 'omgang-ater') return gaTill('omgang', { omgangId: vy.omgangId, lage: 'poang' }, true);
+  if (d.oppna) return gaTill('omgang', { omgangId: d.oppna, lage: 'tid' });
+
+  // --- ny omgång ---
+  if (d.vaxla) {
+    spegla();
+    const valda = new Set(vy.valda || []);
+    valda.has(d.vaxla) ? valda.delete(d.vaxla) : valda.add(d.vaxla);
+    vy.valda = [...valda];
+    return rita();
+  }
+  if (d.nySkytt) {
+    const p = nySkytt();
+    if (!p) return;
+    if (vy.namn === 'ny') {
+      spegla();
+      vy.valda = [...(vy.valda || []), p.id];
+    }
+    return rita();
+  }
+  if (d.starta) {
+    spegla();
+    const o = lager.laggTillOmgang({
+      gren: vy.gren || 'pist', datum: vy.datum, plats: vy.plats || '',
+      instruktor: vy.instruktor || '', deltagare: vy.valda || [],
+    });
+    return gaTill('omgang', { omgangId: o.id, lage: 'tid' }, true);
+  }
+
+  // --- vallistan ---
+  if (d.lage) {
+    vy.lage = d.lage;
+    return rita();
+  }
+  if (d.skytt) {
+    return gaTill(vy.lage === 'poang' ? 'poang' : 'tid',
+      { omgangId: vy.omgangId, personId: d.skytt, lage: vy.lage });
+  }
+  if (d.historik) {
+    vy.oppen = vy.oppen === d.historik ? null : d.historik;
+    return rita();
+  }
+  if (d.nyttForsok) {
+    lager.pagaende(vy.omgangId, d.nyttForsok);      // skapar nästa försök
+    vy.lage = 'tid';
+    return gaTill('tid', { omgangId: vy.omgangId, personId: d.nyttForsok, lage: 'tid' });
+  }
+  if (d.nasta) {
+    const o = lager.omgang(vy.omgangId);
+    const id = nastaSkytt(o, d.nasta);
+    if (!id) {
+      return flash(d.nasta === 'tid'
+        ? 'Alla har en tid. Byt till POÄNG.'
+        : 'Ingen väntar på poäng.');
+    }
+    return gaTill(d.nasta === 'tid' ? 'tid' : 'poang',
+      { omgangId: vy.omgangId, personId: id, lage: d.nasta });
+  }
+
+  // --- sifferknappsatsen ---
+  if (d.siffra) {
+    vibrera(12);
+    if (d.siffra === ',' && utkastTid.includes(',')) return;
+    if (utkastTid.replace(',', '').length >= 6) return;
+    utkastTid += d.siffra;
+    return rita();
+  }
+  if (d.radera) {
+    vibrera(12);
+    utkastTid = utkastTid.slice(0, -1);
+    return rita();
+  }
+  if (d.sparaTid) {
+    if (!sparaTid()) return;
+    const o = lager.omgang(vy.omgangId);
+    if (d.sparaTid === 'nasta') {
+      const id = nastaSkytt(o, 'tid', vy.personId);
+      if (id) return gaTill('tid', { omgangId: o.id, personId: id, lage: 'tid' }, true);
+      flash('Alla har en tid. Byt till POÄNG när ni gått fram.');
+    }
+    return gaTill('omgang', { omgangId: o.id, lage: 'tid' }, true);
+  }
+  if (d.tillPoang) {
+    if (!sparaTid()) return;
+    return gaTill('poang', { omgangId: vy.omgangId, personId: vy.personId, lage: 'poang' }, true);
+  }
+  if (d.tillTid) {
+    return gaTill('tid', { omgangId: vy.omgangId, personId: vy.personId, lage: 'tid' }, true);
+  }
+
+  // --- zonknappar ---
+  if (t.classList.contains('zonknapp')) {
+    if (t.dataset.hollsIn === '1') { delete t.dataset.hollsIn; return; }
+    vibrera(15);
+    const nu = Number(t.querySelector('.antal').textContent) || 0;
+    return sattZon(t, nu + 1);
+  }
+
+  // --- registrera försöket ---
+  if (d.registrera) {
+    const o = lager.omgang(vy.omgangId);
+    const r = lager.pagaende(o.id, vy.personId);
+    if (r.tid === null && !r.vapenhanteringUnderkand) {
+      return flash('Lägg in tiden först — utan den finns ingen poängkvot.');
+    }
+    lager.registrera(r.id);
+    vibrera(30);
+    const b = bedom(o.gren, r.traffar, r.tid, r.vapenhanteringUnderkand);
+    flash(`${lager.person(vy.personId).namn}: ${b.godkand ? 'GODKÄND' : 'UNDERKÄND'}` +
+      (b.pk === null ? '' : ` · PK ${komma(b.pk)}`));
+    const id = nastaSkytt(o, 'poang', vy.personId);
+    if (id) return gaTill('poang', { omgangId: o.id, personId: id, lage: 'poang' }, true);
+    return gaTill('omgang', { omgangId: o.id, lage: 'poang' }, true);
+  }
+
+  // --- export ---
+  if (d.export) return gaTill('export', { omgangId: vy.omgangId });
+  if (d.format) {
+    try {
+      const utfall = await exportera(d.format);
+      if (utfall === 'nedladdad') flash('Filen laddades ned.');
+    } catch (fel) {
+      flash('Det gick inte att skapa filen: ' + fel.message, 5);
+    }
+    return;
+  }
+  if (d.skrivUt) return window.print();
+
+  // --- register och inställningar ---
+  if (d.raderaPerson) {
+    const p = lager.person(d.raderaPerson);
+    if (confirm(`Radera ${p.namn} och alla resultat för hen?`)) {
+      lager.raderaPerson(p.id);
+      flash(`${p.namn} raderad.`);
+      rita();
+    }
+    return;
+  }
+  if (d.kopia === 'ut') {
+    const namn = `kompetensprov-kopia-${new Date().toISOString().slice(0, 10)}.json`;
+    await dela(namn, lager.sakerhetskopia(), 'txt', 'Säkerhetskopia från FM kompetensprov');
+    return;
+  }
+  if (d.kopia === 'in') return app.querySelector('#kopiafil').click();
+  if (d.raderaAllt) {
+    const svar = prompt('Det här raderar alla skyttar, omgångar och resultat.\n' +
+      'Skriv RADERA för att bekräfta:');
+    if (svar === 'RADERA') {
+      lager.raderaAllt();
+      flash('Allt innehåll raderat.');
+      return gaTill('start');
+    }
+    if (svar !== null) flash('Ingenting raderades.');
+    return;
+  }
+});
+
+// Håll in en zonknapp för att nolla den — enda vägen tillbaka efter en
+// feltryckning med handskar på.
+let hallTimer = null;
+document.addEventListener('pointerdown', (ev) => {
+  const knapp = ev.target.closest('.zonknapp');
+  if (!knapp) return;
+  hallTimer = setTimeout(() => {
+    knapp.dataset.hollsIn = '1';
+    vibrera(40);
+    sattZon(knapp, 0);
+  }, 500);
+});
+for (const h of ['pointerup', 'pointercancel', 'pointerleave']) {
+  document.addEventListener(h, () => clearTimeout(hallTimer));
+}
+
+document.addEventListener('change', (ev) => {
+  if (ev.target.id === 'vapen') {
+    const o = lager.omgang(vy.omgangId);
+    const r = lager.pagaende(o.id, vy.personId);
+    lager.andraResultat(r.id, { vapenhanteringUnderkand: ev.target.checked });
+    uppdateraPoang();
+  }
+  if (ev.target.id === 'kopiafil' && ev.target.files[0]) {
+    const fil = ev.target.files[0];
+    const lasare = new FileReader();
+    lasare.onload = () => {
+      try {
+        const n = lager.lasInSakerhetskopia(lasare.result);
+        flash(`Inläst: ${n.personer} skyttar, ${n.omgangar} omgångar, ${n.resultat} försök.`, 4);
+        rita();
+      } catch (fel) {
+        flash('Filen gick inte att läsa: ' + fel.message, 5);
+      }
+    };
+    lasare.readAsText(fil);
+  }
+});
+
+// Pilen i huvudet går dit man rimligen vill, inte dit historiken råkar peka:
+// från en skytt till vallistan, från listan till startsidan. Telefonens egen
+// bakåtgest följer stacken som vanligt — den är grund tack vare gaTill(…, true).
+const OVANFOR = {
+  tid: 'omgang', poang: 'omgang', export: 'omgang',
+  omgang: 'start', ny: 'start', register: 'start', installningar: 'start',
+};
+tillbakaKnapp.addEventListener('click', () => {
+  const mal = OVANFOR[vy.namn] || 'start';
+  if (mal === 'omgang') return gaTill('omgang', { omgangId: vy.omgangId, lage: vy.lage }, true);
+  gaTill('start', {}, true);
+});
+
+// Servicearbetaren finns bara i den installerade versionen; som lös fil
+// saknas den, och då ska appen starta ändå.
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+history.replaceState(vy, '');
+rita();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "fm-kompetensprov",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Instruktörsverktyg för FM kompetensprov pistol och automatkarbin",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "bygg": "python3 bygg.py",
+    "serve": "python3 -m http.server 8390 --directory src"
+  }
+}

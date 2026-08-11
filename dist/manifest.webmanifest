@@ -1,0 +1,16 @@
+{
+  "name": "FM kompetensprov",
+  "short_name": "Kompetensprov",
+  "description": "Instruktörsverktyg för Försvarsmaktens kompetensprov, pistol och automatkarbin.",
+  "lang": "sv-SE",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b0d0c",
+  "theme_color": "#0b0d0c",
+  "icons": [
+    { "src": "ikon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "ikon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

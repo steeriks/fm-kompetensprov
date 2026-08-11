@@ -1,0 +1,219 @@
+/* FM kompetensprov — mörkt högkontrasttema, byggt för en hand i mörker.
+   Allt som ska nås under skjutning ligger i nederkant, inom tummens räckvidd.
+   Minsta träffyta är 48 px; knappar som trycks ofta är större än så. */
+
+:root {
+  color-scheme: dark;
+  --bg: #0b0d0c;
+  --kort: #161916;
+  --kort-ljus: #1e221e;
+  --ink: #f2f4ec;
+  --dampad: #a4ab9c;
+  --linje: #363c34;
+  --accent: #8fbf7f;
+  --accent-ink: #0b0d0c;
+  --godkand: #6fbf63;
+  --underkand: #e07a6d;
+  --varning: #e3c33c;
+  --font: ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", sans-serif;
+  --radie: 12px;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 17px/1.45 var(--font);
+  padding-bottom: env(safe-area-inset-bottom);
+  overscroll-behavior-y: contain;
+}
+
+header {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: calc(0.6rem + env(safe-area-inset-top)) 0.9rem 0.6rem;
+  background: #101310; border-bottom: 1px solid var(--linje);
+}
+header h1 { font-size: 1.05rem; margin: 0; font-weight: 600; letter-spacing: 0.01em; }
+header .under { display: block; font-size: 0.8rem; color: var(--dampad); font-weight: 400; }
+.tillbaka {
+  flex: 0 0 auto; min-width: 44px; min-height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: 0; color: var(--accent); font-size: 1.5rem; cursor: pointer;
+}
+
+main { padding: 0.9rem 0.9rem 7.5rem; max-width: 46rem; margin: 0 auto; }
+h2 { font-size: 1rem; margin: 1.2rem 0 0.5rem; color: var(--dampad); font-weight: 600; }
+p.dampad, .dampad { color: var(--dampad); }
+.liten { font-size: 0.85rem; }
+
+/* ------------------------------------------------------------- knappar */
+
+button { font: inherit; }
+.knapp {
+  display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+  width: 100%; min-height: 56px; padding: 0.7rem 1rem;
+  background: var(--kort); color: var(--ink);
+  border: 1px solid var(--linje); border-radius: var(--radie);
+  cursor: pointer; touch-action: manipulation;
+}
+.knapp.primar { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; }
+.knapp.fara { color: var(--underkand); border-color: var(--underkand); background: none; }
+.knapp.liten { min-height: 44px; width: auto; padding: 0.4rem 0.9rem; font-size: 0.9rem; }
+.knapp:active { transform: scale(0.98); }
+.knapprad { display: flex; gap: 0.5rem; margin: 0.6rem 0; }
+.knapprad .knapp { width: auto; flex: 1; }
+
+/* --------------------------------------------------------------- fält */
+
+label.falt { display: block; margin-bottom: 0.8rem; font-size: 0.9rem; color: var(--dampad); }
+label.falt input, label.falt select {
+  display: block; width: 100%; margin-top: 0.25rem;
+  font: 17px/1.4 var(--font); color: var(--ink);
+  background: var(--kort); border: 1px solid var(--linje);
+  border-radius: var(--radie); padding: 0.7rem 0.8rem; min-height: 50px;
+}
+
+/* --------------------------------------------------------------- kort */
+
+.kort {
+  background: var(--kort); border: 1px solid var(--linje);
+  border-radius: var(--radie); padding: 0.8rem; margin-bottom: 0.6rem;
+}
+.tom {
+  text-align: center; color: var(--dampad); padding: 2rem 1rem;
+}
+
+/* ------------------------------------------------------------ vallista */
+
+.skyttrad {
+  display: grid; grid-template-columns: 1fr auto auto;
+  align-items: center; gap: 0.2rem 0.6rem;
+  background: var(--kort); border: 1px solid var(--linje);
+  border-radius: var(--radie); margin-bottom: 0.5rem;
+  padding: 0.6rem 0.7rem; min-height: 64px; width: 100%;
+  color: inherit; text-align: left; cursor: pointer;
+}
+.skyttrad.klar { border-color: #2f4a2c; }
+.skyttrad .namn { font-weight: 600; }
+.skyttrad .forband { grid-column: 1; font-size: 0.8rem; color: var(--dampad); }
+.skyttrad .varden {
+  grid-column: 2; grid-row: 1 / span 2; text-align: right;
+  font-variant-numeric: tabular-nums; font-size: 0.9rem; color: var(--dampad);
+}
+.skyttrad .varden b { color: var(--ink); font-size: 1.05rem; }
+.skyttrad .chip { grid-column: 3; grid-row: 1 / span 2; }
+.chip {
+  display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px;
+  font-size: 0.78rem; font-weight: 700; letter-spacing: 0.02em;
+  border: 1px solid var(--linje); color: var(--dampad);
+}
+.chip.g { background: rgba(111, 191, 99, 0.16); color: var(--godkand); border-color: var(--godkand); }
+.chip.u { background: rgba(224, 122, 109, 0.16); color: var(--underkand); border-color: var(--underkand); }
+.chip.v { background: rgba(227, 195, 60, 0.14); color: var(--varning); border-color: var(--varning); }
+
+.historik { margin: -0.2rem 0 0.6rem; padding: 0 0.7rem; }
+.historik .forsokrad {
+  display: flex; justify-content: space-between; gap: 0.6rem;
+  padding: 0.45rem 0; border-bottom: 1px solid var(--linje);
+  font-size: 0.88rem; color: var(--dampad); font-variant-numeric: tabular-nums;
+}
+.historik .forsokrad:last-child { border-bottom: 0; }
+
+/* --------------------------------------------------------- lägesväljare */
+
+.bottenrad {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  padding: 0.6rem 0.9rem calc(0.6rem + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, #101310 72%, rgba(16, 19, 16, 0));
+  display: flex; flex-direction: column; gap: 0.5rem;
+  max-width: 46rem; margin: 0 auto;
+}
+.lagesvaljare {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem;
+  background: var(--kort); border: 1px solid var(--linje);
+  border-radius: var(--radie); padding: 0.25rem;
+}
+.lagesvaljare button {
+  min-height: 48px; border: 0; border-radius: 9px; cursor: pointer;
+  background: none; color: var(--dampad); font-weight: 700; letter-spacing: 0.03em;
+}
+.lagesvaljare button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+
+/* -------------------------------------------------------- sifferknappsats */
+
+.tidvisning {
+  text-align: center; font-variant-numeric: tabular-nums;
+  font-size: 3.4rem; font-weight: 700; letter-spacing: 0.02em;
+  padding: 1rem 0 0.4rem; min-height: 5rem;
+}
+.tidvisning .enhet { font-size: 1.2rem; color: var(--dampad); font-weight: 400; }
+.tidvisning.tom { color: var(--linje); }
+.knappsats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+.knappsats button {
+  min-height: 68px; font-size: 1.6rem; font-weight: 600;
+  background: var(--kort-ljus); color: var(--ink);
+  border: 1px solid var(--linje); border-radius: var(--radie); cursor: pointer;
+  touch-action: manipulation;
+}
+.knappsats button:active { background: var(--accent); color: var(--accent-ink); }
+
+/* ------------------------------------------------------------ zonknappar */
+
+.zongrupp { margin-bottom: 0.9rem; }
+.zongrupp h3 {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 0.9rem; margin: 0 0 0.4rem; color: var(--dampad); font-weight: 600;
+}
+.zongrupp h3 .raknare { font-variant-numeric: tabular-nums; }
+.zongrupp h3 .raknare.klar { color: var(--godkand); }
+.zoner { display: grid; grid-template-columns: repeat(auto-fit, minmax(4.6rem, 1fr)); gap: 0.5rem; }
+.zonknapp {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 0.15rem; min-height: 82px; padding: 0.5rem 0.2rem;
+  background: var(--kort-ljus); color: var(--ink);
+  border: 1px solid var(--linje); border-radius: var(--radie);
+  cursor: pointer; touch-action: manipulation; user-select: none; -webkit-user-select: none;
+}
+.zonknapp .bokstav { font-size: 1.5rem; font-weight: 700; line-height: 1; }
+.zonknapp .antal { font-size: 1.25rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.zonknapp .poang { font-size: 0.75rem; color: var(--dampad); line-height: 1; }
+.zonknapp.har { border-color: var(--accent); background: rgba(143, 191, 127, 0.18); }
+.zonknapp.har .antal { color: var(--accent); }
+.zonknapp:active { transform: scale(0.96); }
+
+.summering {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 0.6rem; padding: 0.7rem 0.8rem; margin: 0.4rem 0 0.6rem;
+  background: var(--kort); border: 1px solid var(--linje); border-radius: var(--radie);
+  font-variant-numeric: tabular-nums;
+}
+.summering .pk { font-size: 1.6rem; font-weight: 700; }
+.summering .pk.g { color: var(--godkand); }
+.summering .pk.u { color: var(--underkand); }
+.brister { color: var(--underkand); font-size: 0.85rem; margin: 0.2rem 0 0.6rem; }
+
+/* ---------------------------------------------------------------- dialog */
+
+.flash {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: calc(9rem + env(safe-area-inset-bottom)); z-index: 40;
+  background: var(--kort-ljus); border: 1px solid var(--accent);
+  color: var(--ink); padding: 0.7rem 1rem; border-radius: var(--radie);
+  max-width: 90%; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
+}
+.varningsruta {
+  background: rgba(227, 195, 60, 0.1); border: 1px solid var(--varning);
+  border-radius: var(--radie); padding: 0.7rem 0.8rem; margin-bottom: 0.8rem;
+  font-size: 0.9rem;
+}
+
+/* Utskrift: svart på vitt, inga knappar. iOS ger "Spara som PDF" härifrån. */
+@media print {
+  body { background: #fff; color: #000; }
+  header, .bottenrad, .knapp, .knapprad { display: none !important; }
+  main { padding: 0; max-width: none; }
+  .kort, .skyttrad { border-color: #999; background: #fff; color: #000; }
+}
