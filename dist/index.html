@@ -1731,7 +1731,7 @@ function ritaTid() {
   const p = lager.person(vy.personId);
   if (!o || !p) return gaTill('start');
   const r = lager.pagaende(o.id, p.id, false);
-  if (!r) return gaTill('omgang', { omgangId: o.id, lage: 'tid' }, true);
+  if (!r) return gaTill('omgang', { omgangId: o.id, lage: lampligtLage(o, 'tid') }, true);
   if (!utkastTid && r.tid !== null) utkastTid = komma(r.tid);
   sattRubrik(p.namn, o.deltagare.indexOf(p.id) + 1);
   underrubrik.textContent = `Tid · försök ${r.forsok} · ${PROV[o.gren].namn}`;
@@ -1783,7 +1783,7 @@ function ritaPoang() {
   if (!o || !p) return gaTill('start');
   const prov = PROV[o.gren];
   const r = lager.pagaende(o.id, p.id, false);
-  if (!r) return gaTill('omgang', { omgangId: o.id, lage: 'poang' }, true);
+  if (!r) return gaTill('omgang', { omgangId: o.id, lage: lampligtLage(o, 'poang') }, true);
   sattRubrik(p.namn, o.deltagare.indexOf(p.id) + 1);
   underrubrik.textContent = `Poäng · försök ${r.forsok} · ${prov.namn}`;
   hemKnapp.hidden = false;
@@ -2162,6 +2162,22 @@ function behoverLage(omgang, personId, lage) {
   return !!oppet && oppet.tid !== null;
 }
 
+/**
+ * Vilket läge vallistan ska stå i när man kommer tillbaka till den.
+ *
+ * Regeln är enkel: stå kvar i det läge man kom ifrån så länge det finns något
+ * kvar att göra där — alltså så länge dess knapp bär en siffra. Är det läget
+ * avklarat byter listan till det andra, som ju är nästa steg. Är allt klart
+ * står den kvar där den var.
+ */
+function lampligtLage(omgang, nuvarande) {
+  const kvar = (lage) => omgang.deltagare.some((id) => behoverLage(omgang, id, lage));
+  if (nuvarande && kvar(nuvarande)) return nuvarande;
+  if (kvar('tid')) return 'tid';
+  if (kvar('poang')) return 'poang';
+  return nuvarande || 'tid';
+}
+
 // ------------------------------------------------------- nästa i ordningen
 
 function nastaSkytt(omgang, lage, efterId = null) {
@@ -2195,14 +2211,21 @@ document.addEventListener('click', async (ev) => {
   if (d.vy === 'anvisning') {
     // Öppnas anvisningen från en omgång ska den visa det prov som skjuts.
     const o = vy.omgangId ? lager.omgang(vy.omgangId) : null;
-    return gaTill('anvisning', { gren: o ? o.gren : (vy.gren || 'pist'), omgangId: vy.omgangId });
+    return gaTill('anvisning',
+      { gren: o ? o.gren : (vy.gren || 'pist'), omgangId: vy.omgangId, lage: vy.lage });
   }
   if (d.anvisning) {
-    vy.gren = d.anvisning;
+    vy.gren = d.anvisning;      // rör bara vilket prov som visas
     return rita();
   }
   if (d.vy === 'installningar') return gaTill('installningar');
-  if (d.vy === 'omgang-ater') return gaTill('omgang', { omgangId: vy.omgangId, lage: 'poang' }, true);
+  if (d.vy === 'omgang-ater') {
+    // Knappen fanns först bara på poängvyn och hårdkodade 'poang'; sedan den
+    // hamnade även under anvisningen och exporten slängde den tillbaka en i
+    // poängläget mitt i tidssvepet.
+    const o = lager.omgang(vy.omgangId);
+    return gaTill('omgang', { omgangId: vy.omgangId, lage: lampligtLage(o, vy.lage) }, true);
+  }
   if (d.oppna) {
     if (t.dataset.spärrKlick) { delete t.dataset.spärrKlick; return; }
     return gaTill('omgang', { omgangId: d.oppna, lage: 'tid' });
@@ -2314,7 +2337,7 @@ document.addEventListener('click', async (ev) => {
         return oppnaSkytt(o, nasta.id, 'poang');
       }
     }
-    return gaTill('omgang', { omgangId: o.id, lage: 'tid' }, true);
+    return gaTill('omgang', { omgangId: o.id, lage: lampligtLage(o, 'tid') }, true);
   }
   if (d.tillPoang) {
     if (!sparaTid()) return;
@@ -2364,11 +2387,11 @@ document.addEventListener('click', async (ev) => {
     // ställer sig i det ögonblicket.
     const u = underlag(o, lager.las().personer, lager.resultat(o.id));
     flash(`${utfall}. Omgången klar — ${u.godkanda} av ${u.antalSkyttar} godkända.`, 5);
-    return gaTill('omgang', { omgangId: o.id, lage: 'poang' }, true);
+    return gaTill('omgang', { omgangId: o.id, lage: lampligtLage(o, 'poang') }, true);
   }
 
   // --- export ---
-  if (d.export) return gaTill('export', { omgangId: vy.omgangId });
+  if (d.export) return gaTill('export', { omgangId: vy.omgangId, lage: vy.lage });
   if (d.format) {
     try {
       const utfall = await exportera(d.format);

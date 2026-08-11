@@ -899,9 +899,11 @@ test('knapparna säger vad som ska göras, inte bara "nästa"', () => {
   knappaZon('B', 4);
   knappaZon('A', 2);
   klicka('Registrera');
+  // Tillbaka på listan: två skyttar saknar fortfarande TID, och listan ska
+  // stå i det läge som har något kvar att göra.
   assert.match(doc.querySelector('#underrubrik').textContent, /krav PK|Poäng · försök/);
   if (!doc.querySelector('#bottenrad .knapp.primar').textContent.includes('Registrera &')) {
-    assert.equal(primar(), 'Nästa som saknar poäng');
+    assert.equal(primar(), 'Nästa som saknar tid');
   }
 });
 
@@ -966,4 +968,44 @@ test('hjälpen finns i appen, med installation, data, buggar och licens', () => 
 
   klicka('Tillbaka till inställningar');
   assert.match(doc.querySelector('#app').textContent, /Säkerhetskopia/);
+});
+
+test('tillbaka till listan landar i det läge som har något kvar att göra', () => {
+  klicka('+ Ny omgång');
+  bockaIAlla();
+  klicka('Starta omgången');
+  const lage = () => [...doc.querySelectorAll('.lagesvaljare button')]
+    .find((b) => b.getAttribute('aria-pressed') === 'true').textContent.trim();
+
+  assert.match(lage(), /^TID \(3\)/, 'en ny omgång börjar med tre som saknar tid');
+
+  // En avstickare till anvisningen mitt i tidssvepet får inte byta läge
+  klicka('Anvisning för genomförande');
+  klicka('Tillbaka till listan');
+  assert.match(lage(), /^TID \(3\)/, 'anvisningen ska lämna tillbaka till siffran');
+
+  // Samma sak från exporten
+  klicka('Dela resultat');
+  klicka('Tillbaka till listan');
+  assert.match(lage(), /^TID \(3\)/);
+
+  // Även om man själv byter till det tomma läget innan avstickaren ska listan
+  // komma tillbaka till det som har en siffra
+  klicka('POÄNG');
+  assert.equal(lage(), 'POÄNG', 'poängläget har inget att göra ännu');
+  klicka('Anvisning för genomförande');
+  klicka('Tillbaka till listan');
+  assert.match(lage(), /^TID \(3\)/, 'tomt läge ska bytas mot det som väntar');
+
+  // När alla fått tid vänder det: nu är det poängen som väntar
+  nastaIListan();
+  for (const tid of ['1100', '1200', '1300']) {
+    knappaTid(tid);
+    klicka('Spara &');
+  }
+  klicka('Tillbaka till listan');
+  assert.match(lage(), /^POÄNG \(3\)/, 'tiderna är klara — nu väntar poängen');
+  klicka('Anvisning för genomförande');
+  klicka('Tillbaka till listan');
+  assert.match(lage(), /^POÄNG \(3\)/);
 });

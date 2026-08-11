@@ -54,6 +54,12 @@ hittar på försök åt dem.
 registrerats. Tidssvepet skapar det, poängsvepet hittar tillbaka till samma post timmar
 senare. Först `registrera()` låser posten.
 
+**Listan landar där det finns något kvar att göra.** `lampligtLage()` väljer läge varje
+gång man kommer tillbaka till vallistan: man står kvar i sitt läge så länge dess knapp bär
+en siffra, annars byter listan till det andra. En avstickare till anvisningen eller
+exporten ska inte kunna lämna en i ett tomt läge — och när tiderna är klara är poängen
+nästa steg, utan att man behöver peta på växeln själv.
+
 **Knapparna säger vad som ska göras.** I en ny omgång finns ingen föregående skytt att vara
 "nästa" efter, så huvudknappen heter *Registrera tid för första skytt* tills första tiden är
 inne. Under den står vem som står på tur, och när linjen är klar lämnar knappen över till

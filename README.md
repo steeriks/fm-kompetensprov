@@ -48,6 +48,9 @@ och zontabellen.
 - **Omtag:** provet får skjutas tre gånger. Ett nytt försök startas alltid med flit, med
   *+ Nytt försök* på raden; ett tryck på en färdig skytt gör ingenting.
 - **⌂** längst upp till vänster går alltid hem, och sparar en påbörjad tid på vägen.
+- **Listan står alltid där det finns något att göra.** Kommer du tillbaka från anvisningen
+  eller exporten hamnar du i det läge vars knapp bär en siffra — och när alla fått tid
+  byter den till POÄNG av sig själv.
 
 ### Radera
 
