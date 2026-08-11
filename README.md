@@ -1,10 +1,17 @@
 # FM kompetensprov — Ak och Pistol
 
-Instruktörsverktyg för Försvarsmaktens kompetensprov i **pistol** (Delmoment 14,
-Kompetensprov BAS "PILEN") och **automatkarbin** (Delmoment 12, Kompetensprov Bas).
-En webbapp som körs i telefonen, fungerar utan täckning och lagrar allt lokalt.
+**Ett stöd för instruktören** vid genomförandet av Försvarsmaktens kompetensprov i
+**pistol** (Delmoment 14, Kompetensprov BAS "PILEN") och **automatkarbin** (Delmoment 12,
+Kompetensprov Bas). En webbapp som körs i telefonen, fungerar utan täckning och lagrar
+allt lokalt.
 
-**Appen:** <https://steeriks.github.io/kompetensprov/>
+> **Appen är inte utgiven av Försvarsmakten och är inget officiellt system.** Den är
+> privat gjord som ett hjälpmedel: den håller ordning på skjutordningen, räknar
+> poängkvoten och samlar resultaten. Kraven den räknar med är hämtade ur handböckerna för
+> respektive delmoment och ska kontrolleras mot gällande utgåva. Bedömningen är
+> instruktörens.
+
+**Appen:** <https://steeriks.github.io/FM-Kompetensprov/>
 — öppna i telefonen och välj *Lägg till på hemskärmen*.
 
 Byggd för att användas i fält: **en hand, i mörker, utan täckning**. Stora knappar i
@@ -141,9 +148,8 @@ kostat tid, och vad som gäller vid publicering.
 
 Fri att använda, kopiera och ändra under [MIT-licens](LICENSE).
 
-Appen är ett hjälpmedel, **inte ett officiellt system**: den är inte utgiven av
-Försvarsmakten, och kraven kommer ur handböckerna för respektive delmoment. Kontrollera
-alltid mot gällande utgåva — det är instruktören som ansvarar för bedömningen, inte appen.
+Appen lämnas som den är, utan garantier. Se förbehållet överst: den är inte utgiven av
+Försvarsmakten, och ansvaret för bedömningen ligger hos instruktören.
 
 Buggar och önskemål: [issues i det publika
-arkivet](https://github.com/steeriks/kompetensprov/issues).
+arkivet](https://github.com/steeriks/FM-Kompetensprov/issues).

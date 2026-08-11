@@ -3,6 +3,11 @@
 Handbok för den som ska ändra i appen. README beskriver hur den *används*; här står varför
 den ser ut som den gör och var fällorna ligger.
 
+Appen är ett **stöd för instruktören** vid genomförandet av kompetensproven — inte ett
+officiellt system, och inte utgiven av Försvarsmakten. Det förbehållet ska finnas kvar i
+README, i användarinstruktionen, i hjälptexten och i anvisningsvyn; det är fyra ställen
+och de ska säga samma sak.
+
 ## Grundvalen
 
 **Appen är en fil.** `src/` är uppdelad för att gå att läsa och testa, men det som
@@ -191,8 +196,8 @@ python3 bygg.py
 cp dist/index.html ~/Desktop/"FM kompetensprov.html"   # den mejlbara filen
 ```
 
-Källan ligger privat i `steeriks/fm-kompetensprov`. Det som Pages serverar ligger i det
-publika `steeriks/kompetensprov` — GitHub Pages kräver publikt arkiv på gratisplanen. Appen
+Källan ligger privat i `steeriks/FM-Kompetensprov-kalla`. Det som Pages serverar ligger i det
+publika `steeriks/FM-Kompetensprov` — GitHub Pages kräver publikt arkiv på gratisplanen. Appen
 innehåller inga hemligheter och inga resultat lämnar telefonen, så det som blir publikt är
 enbart programmet självt. `LICENSE` följer med dit.
 
@@ -203,5 +208,5 @@ GitHub Pages ligger ofta en halv minut efter pushen. Jämför checksummor innan 
 slutsatser om att en ändring inte kom med:
 
 ```bash
-shasum dist/index.html <(curl -s https://steeriks.github.io/kompetensprov/)
+shasum dist/index.html <(curl -s https://steeriks.github.io/FM-Kompetensprov/)
 ```

@@ -1,3 +1,5 @@
+Appen är ett **stöd för instruktören** vid genomförandet av kompetensproven — inte ett officiellt system, och inte utgiven av Försvarsmakten. Den räknar och håller ordning; bedömningen är din.
+
 ## Innan ni börjar
 
 Lägg upp skyttarna en gång under **Lägg till skyttar** — namn och förband. Registret ligger kvar mellan tillfällen, så samma grupp kan skjuta både pistol och automatkarbin utan att skrivas in två gånger.

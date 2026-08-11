@@ -540,6 +540,9 @@ function ritaAnvisning() {
     <h2>Bedömningar och krav</h2>
     ${BEDOMNING.map((s) => `<p class="dampad liten">${esc(s)}</p>`).join('')}
 
+    <div class="varningsruta">Återgivet ur handboken som stöd för genomförandet.
+    Appen är inte utgiven av Försvarsmakten — kontrollera mot gällande utgåva.</div>
+
     <h2>Poängzoner — Helfigur 2020</h2>
     <div class="kort">
       <dl class="fakta">

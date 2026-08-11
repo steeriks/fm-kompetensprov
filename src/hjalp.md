@@ -1,3 +1,9 @@
+## Vad appen är
+
+Ett **stöd för instruktören** vid genomförandet av kompetensproven: den håller ordning på skjutordningen, räknar poängkvoten och samlar resultaten i en lista som går att dela.
+
+**Appen är inte utgiven av Försvarsmakten** och är inget officiellt system. Den är privat gjord, och kraven den räknar med är hämtade ur handböckerna för respektive delmoment. Kontrollera alltid mot gällande utgåva — det är instruktören som bedömer, inte appen.
+
 ## Installera på hemskärmen
 
 Installerad startar appen som vilken app som helst och **fungerar utan täckning** — vilket är hela poängen på en skjutbana. Resultaten ligger kvar mellan gångerna.
@@ -35,7 +41,7 @@ Delar du ett resultat via mail eller fil lämnar uppgifterna telefonen i det ög
 
 Fungerar något inte, eller saknas något? Skriv ett ärende:
 
-[github.com/steeriks/kompetensprov/issues](https://github.com/steeriks/kompetensprov/issues)
+[github.com/steeriks/FM-Kompetensprov/issues](https://github.com/steeriks/FM-Kompetensprov/issues)
 
 Skriv gärna vilken telefon och webbläsare det gäller, vad du gjorde, och vad som hände i stället för det du väntade dig.
 
@@ -43,4 +49,4 @@ Skriv gärna vilken telefon och webbläsare det gäller, vad du gjorde, och vad 
 
 Appen är **fri att använda**, kopiera och ändra under MIT-licens.
 
-Den är ett hjälpmedel, inte ett officiellt system: den är inte utgiven av Försvarsmakten, och kraven som räknas kommer ur handböckerna för respektive delmoment. **Kontrollera alltid mot gällande utgåva** — det är instruktören som ansvarar för bedömningen, inte appen.
+Den lämnas som den är, utan garantier. Ansvaret för bedömningen, för att kraven stämmer med gällande utgåva och för hur uppgifterna hanteras ligger hos den som använder appen.

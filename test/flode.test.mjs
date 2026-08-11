@@ -963,9 +963,10 @@ test('hjälpen finns i appen, med installation, data, buggar och licens', () => 
   assert.match(text, /Radera allt innehåll/);
   assert.match(text, /MIT-licens/);
   assert.match(text, /inte utgiven av Försvarsmakten/);
+  assert.match(text, /stöd för instruktören/i, 'vad appen är ska stå först');
 
   const lank = doc.querySelector('#app a');
-  assert.match(lank.getAttribute('href'), /github\.com\/steeriks\/kompetensprov\/issues/);
+  assert.match(lank.getAttribute('href'), /github\.com\/steeriks\/FM-Kompetensprov\/issues/);
   assert.equal(lank.getAttribute('rel'), 'noopener');
   assert.ok(doc.querySelectorAll('#app .dokument h2').length >= 4, 'fyra avsnitt');
 
@@ -1075,4 +1076,22 @@ test('skyttelistan har en genväg till ny omgång överst', () => {
   klicka('Lägg till skyttar');
   assert.equal(doc.querySelector('#app button').textContent.trim(), '+ Ny omgång');
   assert.match(doc.querySelector('#app').textContent, /Inga skyttar ännu/);
+});
+
+test('förbehållet om att appen inte är officiell står på alla ställen', () => {
+  const sagerDet = (text) => /inte.{0,30}(utgiven av Försvarsmakten|officiell)/i.test(text)
+    || /stöd för instruktören/i.test(text);
+
+  klicka('Så använder du appen');
+  assert.ok(sagerDet(doc.querySelector('#app').textContent), 'användarinstruktionen');
+
+  klicka('Tillbaka till startsidan');
+  klicka('Anvisningar för genomförande');
+  assert.ok(sagerDet(doc.querySelector('#app').textContent),
+    'anvisningsvyn — där regelverket återges är det som viktigast');
+
+  hem();
+  klicka('Appinställningar');
+  klicka('Installation, data och licens');
+  assert.ok(sagerDet(doc.querySelector('#app').textContent), 'hjälptexten');
 });

@@ -354,6 +354,8 @@ label.falt input, label.falt select {
      data-fil. Att hämta dem vid körning hade brutit löftet om en app utan
      externa anrop. -->
 <script type="text/markdown" id="dok-anvandning" data-fil="anvandning.md">
+Appen är ett **stöd för instruktören** vid genomförandet av kompetensproven — inte ett officiellt system, och inte utgiven av Försvarsmakten. Den räknar och håller ordning; bedömningen är din.
+
 ## Innan ni börjar
 
 Lägg upp skyttarna en gång under **Lägg till skyttar** — namn och förband. Registret ligger kvar mellan tillfällen, så samma grupp kan skjuta både pistol och automatkarbin utan att skrivas in två gånger.
@@ -405,6 +407,12 @@ Kom ihåg att allt bara finns i den här telefonen. Se *Installation, data och l
 Kraven för respektive delmoment — avstånd, ställning, träffkrav och poängkvot — finns i appen under **Anvisningar för genomförande**, tillsammans med genomförandet steg för steg.
 </script>
 <script type="text/markdown" id="dok-hjalp" data-fil="hjalp.md">
+## Vad appen är
+
+Ett **stöd för instruktören** vid genomförandet av kompetensproven: den håller ordning på skjutordningen, räknar poängkvoten och samlar resultaten i en lista som går att dela.
+
+**Appen är inte utgiven av Försvarsmakten** och är inget officiellt system. Den är privat gjord, och kraven den räknar med är hämtade ur handböckerna för respektive delmoment. Kontrollera alltid mot gällande utgåva — det är instruktören som bedömer, inte appen.
+
 ## Installera på hemskärmen
 
 Installerad startar appen som vilken app som helst och **fungerar utan täckning** — vilket är hela poängen på en skjutbana. Resultaten ligger kvar mellan gångerna.
@@ -442,7 +450,7 @@ Delar du ett resultat via mail eller fil lämnar uppgifterna telefonen i det ög
 
 Fungerar något inte, eller saknas något? Skriv ett ärende:
 
-[github.com/steeriks/kompetensprov/issues](https://github.com/steeriks/kompetensprov/issues)
+[github.com/steeriks/FM-Kompetensprov/issues](https://github.com/steeriks/FM-Kompetensprov/issues)
 
 Skriv gärna vilken telefon och webbläsare det gäller, vad du gjorde, och vad som hände i stället för det du väntade dig.
 
@@ -450,7 +458,7 @@ Skriv gärna vilken telefon och webbläsare det gäller, vad du gjorde, och vad 
 
 Appen är **fri att använda**, kopiera och ändra under MIT-licens.
 
-Den är ett hjälpmedel, inte ett officiellt system: den är inte utgiven av Försvarsmakten, och kraven som räknas kommer ur handböckerna för respektive delmoment. **Kontrollera alltid mot gällande utgåva** — det är instruktören som ansvarar för bedömningen, inte appen.
+Den lämnas som den är, utan garantier. Ansvaret för bedömningen, för att kraven stämmer med gällande utgåva och för hur uppgifterna hanteras ligger hos den som använder appen.
 </script>
 <div class="bottenrad" id="bottenrad"></div>
 <script>
@@ -1987,6 +1995,9 @@ function ritaAnvisning() {
 
     <h2>Bedömningar och krav</h2>
     ${BEDOMNING.map((s) => `<p class="dampad liten">${esc(s)}</p>`).join('')}
+
+    <div class="varningsruta">Återgivet ur handboken som stöd för genomförandet.
+    Appen är inte utgiven av Försvarsmakten — kontrollera mot gällande utgåva.</div>
 
     <h2>Poängzoner — Helfigur 2020</h2>
     <div class="kort">
