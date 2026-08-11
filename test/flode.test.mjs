@@ -1055,3 +1055,24 @@ test('hjälpen och användarinstruktionen är två olika texter', () => {
   klicka('Tillbaka till inställningar');
   assert.match(doc.querySelector('#app').textContent, /Säkerhetskopia/);
 });
+
+test('skyttelistan har en genväg till ny omgång överst', () => {
+  klicka('Lägg till skyttar');
+  const forsta = doc.querySelector('#app button');
+  assert.equal(forsta.textContent.trim(), '+ Ny omgång', 'genvägen ska ligga överst');
+
+  forsta.click();
+  assert.match(doc.querySelector('#rubriktext').textContent, /Ny omgång/);
+  assert.equal(doc.querySelectorAll('#app .skyttrad').length, 3,
+    'och leda till formuläret med skyttarna att bocka i');
+
+  // Den ska finnas även när registret är tomt — det är då man behöver den minst,
+  // men den får inte försvinna och flytta på allt annat.
+  hem();
+  klicka('Appinställningar');
+  win.prompt = () => 'RADERA';
+  klicka('Radera allt innehåll');
+  klicka('Lägg till skyttar');
+  assert.equal(doc.querySelector('#app button').textContent.trim(), '+ Ny omgång');
+  assert.match(doc.querySelector('#app').textContent, /Inga skyttar ännu/);
+});

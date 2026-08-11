@@ -566,13 +566,17 @@ function ritaRegister() {
   underrubrik.textContent = 'Registret ligger kvar mellan omgångar';
   hemKnapp.hidden = false;
   const personer = lager.personer();
-  app.innerHTML = personer.length ? personer.map((p) => `
+  // Genvägen ligger överst: hit går man för att fylla på registret inför en
+  // omgång, och då är nästa steg att lägga upp den.
+  app.innerHTML = '<div class="knapprad"><button class="knapp liten" data-vy="ny">'
+    + '+ Ny omgång</button></div>'
+    + (personer.length ? personer.map((p) => `
     <div class="kort">
       <div style="display:flex;justify-content:space-between;gap:0.6rem;align-items:center">
         <div><b>${esc(p.namn)}</b><br><span class="dampad liten">${esc(p.forband || 'utan förband')}</span></div>
         <button class="knapp liten fara" data-radera-person="${p.id}">Radera</button>
       </div>
-    </div>`).join('') : '<p class="tom">Inga skyttar ännu.</p>';
+    </div>`).join('') : '<p class="tom">Inga skyttar ännu.</p>');
   bottenrad.innerHTML = `
     <button class="knapp primar" data-ny-skytt="1">+ Ny skytt</button>
     ${personer.length ? '<div class="knapprad"><button class="knapp liten fara" '
