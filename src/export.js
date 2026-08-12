@@ -100,7 +100,7 @@ export function somText(u) {
         + `${rad.person.forband ? ' (' + rad.person.forband + ')' : ''}`);
     }
     if (!rad.forsok) {
-      rader.push('   ej skjuten');
+      rader.push('   Ej skjuten');
       continue;
     }
     const b = rad.bedomning;

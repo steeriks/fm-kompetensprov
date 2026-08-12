@@ -43,7 +43,7 @@ const u = underlag(omgang, personer, resultat);
 test('underlaget räknar godkända per skytt, inte per försök', () => {
   assert.equal(u.antalSkyttar, 3);
   assert.equal(u.godkanda, 2, 'p2 blev godkänd på andra försöket');
-  assert.equal(u.rader.length, 4, 'tre försök plus en ej skjuten');
+  assert.equal(u.rader.length, 4, 'tre försök plus en som inte skjutit');
   assert.equal(u.rader.at(-1).celler.at(-2), 'Ej skjuten');
   assert.deepEqual(u.rader.map((r) => r.nr), [1, 2, 2, 3],
     'numret är skjutordningen, och upprepas för varje försök');
@@ -63,7 +63,7 @@ test('texten innehåller rubrik, försök och summering', () => {
   assert.match(t, /Försök 1: 11,20 s · A2 B4 · 26 p · PK 2,32 · GODKÄND/);
   // 4 × C (3 p) + 2 × H (1 p) = 14 p på 15,0 s → 0,93
   assert.match(t, /UNDERKÄND \(Poängkvot 0,93 — kravet är 2,00\)/);
-  assert.match(t, /ej skjuten/);
+  assert.match(t, /Ej skjuten/, 'samma versal som i tabellformaten');
   assert.match(t, /2 av 3 godkända\./);
 });
 

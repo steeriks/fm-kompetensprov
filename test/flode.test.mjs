@@ -459,7 +459,7 @@ test('poängsvepet börjar om från första skytten och räknar kvoten', () => {
   for (const tid of ['11,20', '9,80', '14,05']) {
     nastaIListan();
     knappaTid(tid);
-    klicka('Spara och tillbaka');
+    klicka('Spara & tillbaka');
   }
 
   klicka('POÄNG');
@@ -484,6 +484,33 @@ test('poängsvepet börjar om från första skytten och räknar kvoten', () => {
   const klart = lagret().resultat.filter((r) => r.registrerad);
   assert.equal(klart.length, 1);
   assert.deepEqual(klart[0].traffar, { B: 4, A: 2 });
+});
+
+test('knappen bär skyttens förnamn, inte efternamnet med kommat kvar', () => {
+  klicka('+ Ny omgång');
+  bockaIAlla();
+  klicka('Starta omgången');
+  nastaIListan();
+  // Registret skrivs "Efternamn, Förnamn". Ett naivt split(' ')[0] gav "Ek,"
+  // på knappen — efternamn plus kommatecken, alltså varken det ena eller det
+  // andra. Skyttarna sorteras på namn, så tavla 1 är Berg, Bo.
+  assert.match(knapp('Poäng för').textContent, /Poäng för Bo$/);
+});
+
+test('entalsformerna säger "1 skytt", inte "1 skyttar"', async () => {
+  starta([{ id: 'p1', namn: 'Ek, Anna', forband: '', skapad: '' }]);
+  klicka('Appinställningar');
+  assert.match(doc.querySelector('#app').textContent, /1 skytt(?! )/,
+    'inställningarnas sammanfattning ska böja rätt');
+  assert.doesNotMatch(doc.querySelector('#app').textContent, /1 skyttar/);
+
+  win.confirm = () => true;
+  hem();
+  klicka('Lägg till & hantera skyttar');
+  klicka('Radera alla');
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(lagret().personer.length, 0);
+  assert.match(doc.querySelector('.flash').textContent, /^1 skytt raderad\.$/);
 });
 
 test('för få träffar i en målyta underkänns oavsett fart', () => {
@@ -628,7 +655,7 @@ test('att radera en skytt tar med sig resultaten', async () => {
   klicka('Starta omgången');
   nastaIListan();
   knappaTid('10,00');
-  klicka('Spara och tillbaka');
+  klicka('Spara & tillbaka');
   assert.equal(lagret().resultat.length, 1);
 
   win.confirm = () => true;
@@ -664,9 +691,9 @@ test('hemikonen går hem från vilken vy som helst, och sparar tiden på vägen'
   klicka('Pistol');
   rader()[0].click();
   assert.match(doc.querySelector('#underrubrik').textContent, /Tid · försök 1/);
-  klicka('Spara och tillbaka');
+  klicka('Spara & tillbaka');
   assert.match(doc.querySelector('#underrubrik').textContent, /Delmoment/,
-    '"Spara och tillbaka" ska lämna till vallistan');
+    '"Spara & tillbaka" ska lämna till vallistan');
 });
 
 test('fler träffar än de som räknas går inte att knappa in', () => {
@@ -844,7 +871,7 @@ test('radera alla skyttar frågar först och tar med sig resultaten', () => {
   klicka('Starta omgången');
   nastaIListan();
   knappaTid('10,00');
-  klicka('Spara och tillbaka');
+  klicka('Spara & tillbaka');
   hem();
   klicka('Lägg till & hantera skyttar');
 
@@ -1038,7 +1065,7 @@ test('komma går fortfarande att använda, och tar högst två decimaler', () =>
   assert.equal(visas(), '12,50 s');
   knappaTid('9');
   assert.equal(visas(), '12,50 s', 'en tredje decimal ska studsa');
-  klicka('Spara och tillbaka');
+  klicka('Spara & tillbaka');
   assert.equal(lagret().resultat[0].tid, 12.5);
 });
 
@@ -1090,7 +1117,7 @@ test('tidvyn säger vem som står på tur — och byter till poäng när linjen 
 
   nastaIListan();
   const nasta = () => doc.querySelector('.nastaskytt').textContent.replace(/\s+/g, ' ').trim();
-  assert.match(nasta(), /^Nästa: 2\./, 'näste man ska stå under knappen');
+  assert.match(nasta(), /^Nästa: 2\./, 'vem som står på tur ska stå under knappen');
   assert.ok(!nasta().includes('poäng'));
   knappaTid('550');
   klicka('Spara & nästa skytt');
@@ -1138,7 +1165,7 @@ test('poängvyn säger vem som står på tur, och summerar när laget är klart'
   const nasta = () => doc.querySelector('.nastaskytt').textContent.replace(/\s+/g, ' ').trim();
 
   assert.match(doc.querySelector('.knapp.primar').textContent, /Registrera & nästa skytt/);
-  assert.match(nasta(), /^Nästa: 2\./, 'näste man ska stå under knappen');
+  assert.match(nasta(), /^Nästa: 2\./, 'vem som står på tur ska stå under knappen');
   knappaZon('B', 4); knappaZon('A', 2);
   klicka('Registrera');
 
@@ -1226,7 +1253,7 @@ test('en färdig skytt får inget nytt försök av ett tryck på raden', () => {
   // Raden i vallistan: ett tryck ska inte starta försök 2
   rader()[0].click();
   assert.equal(lagret().resultat.length, 1, 'inget nytt försök får uppstå');
-  assert.match(doc.querySelector('.flash').textContent, /är klar\. Tryck "\+ Nytt försök"/);
+  assert.match(doc.querySelector('.flash').textContent, /är klar\. Tryck ”\+ Nytt försök”/);
   assert.match(doc.querySelector('#underrubrik').textContent, /krav PK/, 'vi står kvar i listan');
 
   // Och lägesväljaren ska inte påstå att någon väntar
@@ -1259,7 +1286,7 @@ test('knapparna säger vad som ska göras, inte bara "nästa"', () => {
 
   nastaIListan();
   knappaTid('1100');
-  klicka('Spara och tillbaka');
+  klicka('Spara & tillbaka');
   assert.equal(primar(), 'Nästa som saknar tid', 'därefter är det nästa som gäller');
 
   // Poängläget följer samma logik
@@ -1321,7 +1348,7 @@ test('sammanfattningsrutan går att trycka på först när det finns omgångar',
 
 test('hjälpen finns i appen, med installation, data, buggar och licens', () => {
   klicka('Appinställningar');
-  klicka('Installation, data och licens');
+  klicka('Om appen');
   const text = doc.querySelector('#app').textContent.replace(/\s+/g, ' ');
 
   assert.match(text, /Safari/, 'iOS-vägen');
@@ -1418,7 +1445,7 @@ test('hjälpen och användarinstruktionen är två olika texter', () => {
 
   klicka('Tillbaka till startsidan');
   klicka('Appinställningar');
-  klicka('Installation, data och licens');
+  klicka('Om appen');
   const hjalp = doc.querySelector('#app').textContent;
   assert.match(doc.querySelector('#rubriktext').textContent, /Om appen/);
   assert.notEqual(instruktion, hjalp);
@@ -1464,7 +1491,7 @@ test('förbehållet om att appen inte är officiell står på alla ställen', ()
 
   hem();
   klicka('Appinställningar');
-  klicka('Installation, data och licens');
+  klicka('Om appen');
   assert.ok(sagerDet(doc.querySelector('#app').textContent), 'hjälptexten');
 });
 

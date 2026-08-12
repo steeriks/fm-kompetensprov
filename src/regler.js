@@ -16,7 +16,6 @@ export const PROV = {
     delmoment: 'Delmoment 12 – Kompetensprov Bas',
     avstand: '50 m',
     mal: '1/1-figur',
-    stallning: 'Liggande med stöd → knästående/sittande → stående',
     pkKrav: 1.0,
     maxForsok: 3,
     // De nio bästa träffarna räknas, oavsett var på figuren de sitter.
@@ -60,7 +59,6 @@ export const PROV = {
     delmoment: 'Delmoment 14 – Kompetensprov BAS (PILEN)',
     avstand: '10 m',
     mal: '1/1-figur',
-    stallning: 'Stående grundställning — vändning, drag och omladdning',
     pkKrav: 2.0,
     maxForsok: 3,
     // Fyra träff i kroppen och två i huvudet. Bättringsskott får gå mot

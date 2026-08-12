@@ -24,8 +24,8 @@ Behöver något bort — en skytt ur registret eller en hel omgång från starts
 
 Appen följer hur provet genomförs: alla tiderna först, poängen när gruppen gått fram.
 
-- **1. Lägg upp omgången.** *+ Ny omgång* — välj prov, datum, plats och instruktör, och bocka i deltagarna **i skjutordning**. Numret de får är skyttens tavla på banan. *Starta omgången* går rakt in i den; *Spara utan att starta* lägger den åt sidan till senare.
-- **2. Ta tiderna.** *Registrera tid för första skytt* öppnar tavla 1. Knappa tiden rakt av som den står på timern — **555** blir 5,55 — och tryck *Spara & nästa skytt*. Under knappen står vem som är näste man.
+- **1. Lägg upp omgången.** *+ Ny omgång* — välj prov, datum, plats och instruktör, och bocka i deltagarna **i skjutordning**. Numret de får är skyttens tavelnummer på banan. *Starta omgången* går rakt in i den; *Spara utan att starta* lägger den åt sidan till senare.
+- **2. Ta tiderna.** *Registrera tid för första skytt* öppnar tavla 1. Knappa tiden rakt av som den står på timern — **555** blir 5,55 — och tryck *Spara & nästa skytt*. Under knappen står vem som står på tur.
 - **3. Gå fram till tavlorna.** När sista tiden är inne heter knappen *Spara & börja med poängen*, och appen står på tavla 1 i poängläget.
 - **4. För in träffarna.** En tryckning per träff på respektive zon. Målytan tar bara emot de träffar som räknas, så det är de **bästa** träffarna du knappar in. Poängkvoten och utfallet — **Godkänd** eller **Underkänd** — räknas medan du knappar.
 - **5. Registrera.** *Registrera & nästa skytt* låser försöket och går vidare. Efter sista skytten summeras omgången: *"Omgången klar — 2 av 3 godkända."*
@@ -59,7 +59,7 @@ En skytt räknas som godkänd i sammanställningen om **något** av försöken v
 
 Under **Appinställningar**: *Spara kopia* ger en fil med allt, *Läs in kopia* läser tillbaka den. Det är också vägen att flytta registret till en annan telefon. Inläsning lägger till — den skriver aldrig över det som redan finns.
 
-Kom ihåg att allt bara finns i den här telefonen. Se *Installation, data och licens* under Appinställningar.
+Kom ihåg att allt bara finns i den här telefonen. Se *Om appen* under Appinställningar.
 
 ## Om reglerna
 

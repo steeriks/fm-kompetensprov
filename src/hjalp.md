@@ -10,7 +10,7 @@ Installerad startar appen som vilken app som helst och **fungerar utan täckning
 
 **iPhone och iPad**
 
-- Öppna appen i **Safari**. Andra webbläsare kan inte installera på iOS.
+- Öppna appen i **Safari**. Andra webbläsare kan inte lägga till appen på hemskärmen i iOS.
 - Tryck på delningsknappen i nederkant.
 - Välj **Lägg till på hemskärmen**, och sedan **Lägg till**.
 

@@ -180,8 +180,8 @@ function ritaNy() {
     <label class="falt">Instruktör<input type="text" id="instruktor" autocomplete="off"></label>
 
     <h2>Deltagare i skjutordning</h2>
-    <p class="dampad liten">Numret följer ordningen du bockar i dem, och är samma
-    nummer som skyttens tavla på banan.</p>
+    <p class="dampad liten">Numret följer ordningen du bockar i dem, och är
+    skyttens tavelnummer på banan.</p>
     ${personer.length ? personer.map((p) => `
       <button class="skyttrad ${valda.has(p.id) ? 'klar' : ''}" data-vaxla="${p.id}">
         <span class="namn">${valda.has(p.id)
@@ -379,6 +379,29 @@ function stegadSkytt(omgang, personId, riktning) {
   return null;
 }
 
+/**
+ * Tilltalsnamnet, till knappar där hela namnet inte får plats.
+ *
+ * Registret skrivs "Efternamn, Förnamn" — det är så en skyttelista ser ut —
+ * så ett naivt `namn.split(' ')[0]` gav "Ek," på knappen: efternamnet, med
+ * kommatecknet kvar. Kommat avgör alltså vilken del som är förnamnet. Utan
+ * komma antas "Anna Ek", och slutar namnet med ett komma finns bara det som
+ * står före det att gå på.
+ */
+function tilltalsnamn(namn) {
+  const rensat = String(namn).trim();
+  const komma = rensat.indexOf(',');
+  const del = komma === -1 ? rensat
+    : (rensat.slice(komma + 1).trim() || rensat.slice(0, komma).trim());
+  return del.split(/\s+/)[0] || rensat;
+}
+
+/** "1 skytt" men "3 skyttar". Entalsformen är lätt att glömma i en mall och
+ *  syns direkt på skärmen när den saknas. */
+function antalOrd(n, ental, flertal) {
+  return `${n} ${n === 1 ? ental : flertal}`;
+}
+
 /** "3. Ek, Anna" — numret är tavlan, som överallt annars. */
 function skyttEtikett(omgang, personId) {
   const p = lager.person(personId);
@@ -419,15 +442,15 @@ function ritaTid() {
   // Vad knappen leder till ska stå på den, och VEM den leder till under den.
   // I mörker vill man inte gissa om nästa tryck ger nästa skytt eller poängen.
   const nasta = nastaEfterTid(o, p.id);
-  const text = !nasta ? 'Spara och tillbaka'
+  const text = !nasta ? 'Spara &amp; tillbaka'
     : nasta.typ === 'tid' ? 'Spara &amp; nästa skytt' : 'Spara &amp; börja med poängen';
   bottenrad.innerHTML = `
     <button class="knapp primar" data-spara-tid="nasta">${text}</button>
     ${nasta ? `<p class="nastaskytt">Nästa: <b>${esc(skyttEtikett(o, nasta.id))}</b>`
       + `${nasta.typ === 'poang' ? ' — poäng' : ''}</p>` : ''}
     <div class="knapprad">
-      <button class="knapp liten" data-spara-tid="lista">Spara och tillbaka</button>
-      <button class="knapp liten" data-till-poang="1">Poäng för ${esc(p.namn.split(' ')[0])}</button>
+      <button class="knapp liten" data-spara-tid="lista">Spara &amp; tillbaka</button>
+      <button class="knapp liten" data-till-poang="1">Poäng för ${esc(tilltalsnamn(p.namn))}</button>
     </div>`;
 }
 
@@ -893,13 +916,15 @@ function ritaInstallningar() {
     ${d.omgangar.length
       ? `<button class="kort kortknapp" data-vy="start">
            <span><b>I appen just nu</b><br>
-           <span class="dampad liten">${d.personer.length} skyttar · ${d.omgangar.length} omgångar
+           <span class="dampad liten">${antalOrd(d.personer.length, 'skytt', 'skyttar')}
+           · ${antalOrd(d.omgangar.length, 'omgång', 'omgångar')}
            · ${d.resultat.filter((r) => r.registrerad).length} registrerade försök</span></span>
            <span class="pil" aria-hidden="true">›</span>
          </button>`
       : `<div class="kort">
            <b>I appen just nu</b><br>
-           <span class="dampad liten">${d.personer.length} skyttar · inga omgångar ännu</span>
+           <span class="dampad liten">${antalOrd(d.personer.length, 'skytt', 'skyttar')}
+           · inga omgångar ännu</span>
          </div>`}
     <h2>Säkerhetskopia</h2>
     <p class="dampad liten">En fil med allt. Läs in den på en annan telefon, eller
@@ -910,7 +935,7 @@ function ritaInstallningar() {
     </div>
     <h2>Om appen</h2>
     <div class="knapprad">
-      <button class="knapp liten" data-dok="hjalp">Installation, data och licens</button>
+      <button class="knapp liten" data-dok="hjalp">Om appen</button>
     </div>
 
     <h2>Nollställ</h2>
@@ -1006,7 +1031,7 @@ function oppnaSkytt(omgang, personId, lage) {
   const oppet = alla.find((r) => !r.registrerad);
   if (!oppet && alla.length) {
     return flash(`${lager.person(personId).namn} är klar. `
-      + 'Tryck "+ Nytt försök" på raden för ett omtag.', 4);
+      + 'Tryck ”+ Nytt försök” på raden för ett omtag.', 4);
   }
   if (!oppet) lager.pagaende(omgang.id, personId);       // första försöket
   return gaTill(lage === 'poang' ? 'poang' : 'tid',
@@ -1119,7 +1144,7 @@ document.addEventListener('click', async (ev) => {
     }
     if (typ === 'person') {
       const p = lager.person(id);
-      if (p && confirm(`Radera ${p.namn} och alla resultat för hen?`)) {
+      if (p && confirm(`Radera ${p.namn} och alla hens resultat?`)) {
         lager.raderaPerson(p.id);
         flash(`${p.namn} raderad.`);
       }
@@ -1321,10 +1346,11 @@ document.addEventListener('click', async (ev) => {
   // --- register och inställningar ---
   if (d.raderaAllaSkyttar) {
     const antal = lager.personer().length;
-    if (confirm(`Radera alla ${antal} skyttar och deras resultat?\n\n`
+    if (confirm(`${antal === 1 ? 'Radera skytten och hens resultat?'
+      : `Radera alla ${antal} skyttar och deras resultat?`}\n\n`
       + 'Omgångarna finns kvar, men blir tomma.')) {
       for (const p of lager.personer()) lager.raderaPerson(p.id);
-      flash(`${antal} skyttar raderade.`);
+      flash(`${antalOrd(antal, 'skytt raderad', 'skyttar raderade')}.`);
       rita();
     }
     return;
@@ -1495,7 +1521,7 @@ document.addEventListener('pointerdown', (ev) => {
     vibrera(40);
     vy.flyttlage = true;
     rita();
-    flash('Dra i ☰ för att ändra ordningen.', 4);
+    flash('Dra i ☰ för att flytta en skytt till en annan tavla.', 4);
   }, 500) };
 });
 
@@ -1590,7 +1616,8 @@ document.addEventListener('change', (ev) => {
     lasare.onload = () => {
       try {
         const n = lager.lasInSakerhetskopia(lasare.result);
-        flash(`Inläst: ${n.personer} skyttar, ${n.omgangar} omgångar, ${n.resultat} försök.`, 4);
+        flash(`Inläst: ${antalOrd(n.personer, 'skytt', 'skyttar')}, `
+          + `${antalOrd(n.omgangar, 'omgång', 'omgångar')}, ${n.resultat} försök.`, 4);
         rita();
       } catch (fel) {
         flash('Filen gick inte att läsa: ' + fel.message, 5);

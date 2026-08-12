@@ -155,7 +155,7 @@ raderar dem. Under *Appinställningar* finns **Radera allt innehåll**, och **Sp
 telefon. Inläsning lägger till, den skriver aldrig över.
 
 Samma text, och hur appen installeras på iOS och Android, finns i appen under
-*Appinställningar → Installation, data och licens*.
+*Appinställningar → Om appen*.
 
 > Appen går även att skicka som **en enda HTML-fil** och öppna direkt ur mailet. Då saknar
 > den egen säker adress och lagringen är opålitlig — Android kan neka den helt. Den vägen
@@ -182,7 +182,7 @@ Testerna kör mot `docs/`, så **bygg innan du provar**.
 | `src/export.js` | Text, CSV, XLSX och PDF — skrivna för hand, utan bibliotek. |
 | `src/app.js` | Vyer, flöde och inmatning. |
 | `src/anvandning.md` | Användarinstruktionen i appen; bakas in av bygget. |
-| `src/hjalp.md` | Installation, data och licens; bakas in av bygget. |
+| `src/hjalp.md` | *Om appen* — installation, data och licens; bakas in av bygget. |
 | `bygg.py` | Slår ihop `src/` till en enda `docs/index.html` — den mapp GitHub Pages serverar. |
 | `gen_ikon.py` | Genererar ikonerna, ren stdlib. |
 
