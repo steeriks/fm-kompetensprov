@@ -52,6 +52,21 @@ något innehåll; båda läser tabellen. Ett nytt delmoment läggs till genom at
 `PROV`, inte genom att skriva om vare sig räkningen eller vyn. Det som är gemensamt för
 delmomenten står i `BEDOMNING`.
 
+**Anvisningstexterna är citat, inte appens egen prosa — rätta dem inte.** `anvisning` och
+`BEDOMNING` är återgivna ur handboken, vilket vyn också säger i klartext. Fyra ställen ser
+ut som språkfel och är kontrollerade mot handboken 2026-08-12; de står som de står:
+
+| var | ser ut som fel | men |
+|---|---|---|
+| `pist` genomförande | *"4 träff **mot** XBCD"* men *"2 träff **i** AH"* | olika preposition, så står det |
+| `ak` genomförande | *"skjut tre **skott**"* två gånger, sedan *"skjut tre **träff**"* | skott och träff är inte samma sak |
+| `pist` genomförande | *"Inledningsvis, på signal: genomför skytten…"* | kolon plus omvänd ordföljd |
+| `fakta` | ak har **Krav**, pist har **Träffkrav** | etiketterna följer respektive delmoment |
+
+En språkgenomgång som "jämnar ut" dem gör appen otrogen mot källan. Ska något ändras här
+är det handboken som avgör, inte språkkänslan — och då ska gällande utgåva kontrolleras
+först.
+
 **Målytan har ett tak, inte ett urval.** Både pistol och Ak tillåter bättringsskott efter
 omladdning, men bara de räknande träffarna förs in: nio på Ak, fyra plus två på pistol.
 `arFull()` avgör när en målyta är full, och knapptrycket studsar med en förklaring i
