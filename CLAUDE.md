@@ -22,7 +22,7 @@ before touching anything.
 
 ## The two things that break most easily
 
-**Build before you test.** The flow tests run jsdom against `dist/index.html`, not against `src/`:
+**Build before you test.** The flow tests run jsdom against `docs/index.html`, not against `src/`:
 
 ```bash
 python3 bygg.py     # bundles src/ into one self-contained file
@@ -51,11 +51,14 @@ The same file is what GitHub Pages serves and what can be mailed as an attachmen
 
 ```bash
 python3 bygg.py
-./publicera.sh -m "what you did"     # copies dist/ to the public repo and pushes
+git commit -am "what you did" && git push     # that is the whole publish
 ```
 
-Source lives in `steeriks/fm-kompetensprov-kalla` (private); the built app is served from
-`steeriks/fm-kompetensprov` (public) at `steeriks.github.io/fm-kompetensprov/`. `bygg.py` stamps
+One repository. Source and built app both live in `steeriks/fm-kompetensprov` (public), and
+Pages serves `main` + `/docs` at `steeriks.github.io/fm-kompetensprov/`. Building and pushing
+*is* publishing — there is no second repo to copy into, so the two cannot drift apart. Until
+2026-08-12 the source was private in `fm-kompetensprov-kalla` and `publicera.sh` copied the
+build across; making the source public removed the reason for the split. `bygg.py` stamps
 the service-worker cache name with the file's fingerprint, so a publish takes effect by itself —
 don't hand-edit that value in `src/sw.js`.
 

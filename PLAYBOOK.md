@@ -11,7 +11,7 @@ och de ska säga samma sak.
 ## Grundvalen
 
 **Appen är en fil.** `src/` är uppdelad för att gå att läsa och testa, men det som
-distribueras är `dist/index.html` med allt inbakat — CSS, JavaScript, favikon och
+distribueras är `docs/index.html` med allt inbakat — CSS, JavaScript, favikon och
 hjälptexten. Samma fil serveras av GitHub Pages och kan mejlas som bilaga.
 
 **Ingenting går ut ur appen, och det kontrolleras på tre ställen.** Skälet är dubbelt:
@@ -211,7 +211,7 @@ ingen markdown läcker ut som asterisker på skärmen.
 ## Prov
 
 ```bash
-python3 bygg.py     # måste köras först — flödesproven kör mot dist/
+python3 bygg.py     # måste köras först — flödesproven kör mot docs/
 npm test            # 74 prov: regelmotor, export, hela flödet
 ```
 
@@ -231,17 +231,25 @@ radbrytning och om något är svårt att träffa med tummen i mörker måste ses
 
 ```bash
 python3 bygg.py
-./publicera.sh -m "vad du gjorde"      # kopierar dist/ till det publika arkivet
-cp dist/index.html ~/Desktop/"FM kompetensprov.html"   # den mejlbara filen
+git commit -am "vad du gjorde" && git push        # det är hela publiceringen
+cp docs/index.html ~/Desktop/"FM kompetensprov.html"   # den mejlbara filen
 ```
 
-Arkivnamnen är gemener enligt praxis, och därmed också adressen. Källan ligger privat i
-`steeriks/fm-kompetensprov-kalla`. Det som Pages serverar ligger i det
-publika `steeriks/fm-kompetensprov` — GitHub Pages kräver publikt arkiv på gratisplanen. Appen
-innehåller inga hemligheter och inga resultat lämnar telefonen, så det som blir publikt är
-enbart programmet självt. `LICENSE` följer med dit.
+**Ett arkiv.** Källan och den byggda appen bor i `steeriks/fm-kompetensprov`, och Pages
+serverar `main` + `/docs`. Att bygga och pusha *är* att publicera — det finns inget andra
+arkiv att kopiera till och därmed inget som kan glida isär.
 
-`bygg.py` sätter `CACHE` i `dist/sw.js` till appens fingeravtryck, så en publicering slår
+Så var det inte förut. Fram till 2026-08-12 låg källan privat i
+`steeriks/fm-kompetensprov-kalla` medan ett skript kopierade `dist/` till ett publikt arkiv,
+eftersom Pages kräver publikt arkiv på gratisplanen. När källan gjordes publik för granskning
+föll hela skälet till uppdelningen bort. Det publika arkivet behöll namnet — det är det som
+adressen sitter i — och källan flyttade in i det. `publicera.sh` finns inte längre.
+
+Appen innehåller inga hemligheter och inga resultat lämnar telefonen, så det som är publikt
+är programmet självt och hur det är gjort. Testdatats Fmid-värden är påhittade och har
+avsiktligt felaktig kontrollsiffra; det står som kommentar i `test/export.test.mjs`.
+
+`bygg.py` sätter `CACHE` i `docs/sw.js` till appens fingeravtryck, så en publicering slår
 igenom av sig själv. Rör inte värdet i `src/sw.js` — det skrivs över vid varje bygge.
 
 **Servicearbetaren frågar cachen först, nätet bara när filen saknas där.** Tidigare var det
@@ -259,5 +267,5 @@ GitHub Pages ligger ofta en halv minut efter pushen. Jämför checksummor innan 
 slutsatser om att en ändring inte kom med:
 
 ```bash
-shasum dist/index.html <(curl -s https://steeriks.github.io/fm-kompetensprov/)
+shasum docs/index.html <(curl -s https://steeriks.github.io/fm-kompetensprov/)
 ```

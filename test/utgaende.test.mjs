@@ -15,8 +15,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const ROT = path.join(import.meta.dirname, '..');
-const html = fs.readFileSync(path.join(ROT, 'dist', 'index.html'), 'utf8');
-const sw = fs.readFileSync(path.join(ROT, 'dist', 'sw.js'), 'utf8');
+const html = fs.readFileSync(path.join(ROT, 'docs', 'index.html'), 'utf8');
+const sw = fs.readFileSync(path.join(ROT, 'docs', 'sw.js'), 'utf8');
 
 // HTML-kommentarer kör inte. Kommentaren som förklarar CSP:n nämner API:erna
 // vid namn, och ska få göra det utan att fälla sina egna tester.

@@ -7,7 +7,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { JSDOM } from 'jsdom';
 
-const FIL = path.join(import.meta.dirname, '..', 'dist', 'index.html');
+const FIL = path.join(import.meta.dirname, '..', 'docs', 'index.html');
 let dom, doc, win;
 
 const PERSONER = [

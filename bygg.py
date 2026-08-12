@@ -1,4 +1,4 @@
-"""Bakar ihop src/ till en enda självbärande dist/index.html.
+"""Bakar ihop src/ till en enda självbärande docs/index.html.
 
     python3 bygg.py
 
@@ -19,7 +19,7 @@ from pathlib import Path
 
 HAR = Path(__file__).parent
 SRC = HAR / 'src'
-DIST = HAR / 'dist'
+DIST = HAR / 'docs'
 
 # Beroendeordning: den som importeras måste komma före den som importerar.
 MODULER = ['regler.js', 'lagring.js', 'export.js', 'app.js']
@@ -202,8 +202,8 @@ def main():
     kontrollera_inga_utgaende(html)
 
     kb = len(html.encode()) / 1024
-    print(f'dist/index.html — {kb:.0f} kB, allt inbakat')
-    print('dist/ innehåller även ' + ', '.join(MEDFOLJANDE))
+    print(f'docs/index.html — {kb:.0f} kB, allt inbakat')
+    print('docs/ innehåller även ' + ', '.join(MEDFOLJANDE))
 
 
 if __name__ == '__main__':

@@ -143,11 +143,11 @@ Inga beroenden i appen — ren HTML, CSS och JavaScript, ingen CDN, inget ramver
 ```bash
 npm install       # bara jsdom, och bara för testerna
 npm run serve     # http://localhost:8390 mot src/
-npm run bygg      # bakar ihop src/ till dist/index.html
+npm run bygg      # bakar ihop src/ till docs/index.html
 npm test          # 74 prov: regelmotor, export och hela flödet i jsdom
 ```
 
-Testerna kör mot `dist/`, så **bygg innan du provar**.
+Testerna kör mot `docs/`, så **bygg innan du provar**.
 
 | Fil | Ansvar |
 |---|---|
@@ -157,11 +157,10 @@ Testerna kör mot `dist/`, så **bygg innan du provar**.
 | `src/app.js` | Vyer, flöde och inmatning. |
 | `src/anvandning.md` | Användarinstruktionen i appen; bakas in av bygget. |
 | `src/hjalp.md` | Installation, data och licens; bakas in av bygget. |
-| `bygg.py` | Slår ihop `src/` till en enda `dist/index.html`. |
+| `bygg.py` | Slår ihop `src/` till en enda `docs/index.html` — den mapp GitHub Pages serverar. |
 | `gen_ikon.py` | Genererar ikonerna, ren stdlib. |
-| `publicera.sh` | Kopierar `dist/` till det publika arkivet som GitHub Pages serverar. |
 
-`dist/index.html` är både det som publiceras och det som kan mejlas — samma fil, så det
+`docs/index.html` är både det som publiceras och det som kan mejlas — samma fil, så det
 aldrig råder tvivel om vilken version någon kör.
 
 Se **[PLAYBOOK.md](PLAYBOOK.md)** för hur delarna hänger ihop, vilka fällor som redan

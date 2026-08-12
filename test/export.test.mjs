@@ -10,6 +10,11 @@ fs.mkdirSync(UT, { recursive: true });
 
 // p2 saknar fältet helt — så ser poster ut som lades upp innan Fmid/Anstnr
 // fanns, och de ska exporteras utan att kolumnen tappar sin plats.
+//
+// Namnen är påhittade och Fmid-värdena har **avsiktligt felaktig kontrollsiffra**
+// (Luhn), så de kan inte vara någons riktiga personnummer. Arkivet är publikt och
+// appen hanterar uppgifter om anställd personal: testdata i det här formatet ska
+// gå att se på och avfärda direkt, utan att någon behöver räkna efter.
 const personer = [
   { id: 'p1', namn: 'Andersson, Åsa', forband: '1. plut', fmid: '19850101-1234' },
   { id: 'p2', namn: 'Öberg, Björn', forband: '1. plut' },
