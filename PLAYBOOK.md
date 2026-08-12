@@ -1,7 +1,12 @@
 # Playbook — FM kompetensprov
 
-Handbok för den som ska ändra i appen. README beskriver hur den *används*; här står varför
-den ser ut som den gör och var fällorna ligger.
+Handbok för den som ska ändra i appen — **läs den här filen först.** README beskriver hur
+appen *används*; här står varför den ser ut som den gör och var fällorna ligger.
+
+Tre saker att ta med sig innan något ändras: **bygg före du provar** (proven kör mot
+`docs/`, inte `src/`), **ingenting får lämna telefonen** (tre spärrar håller det, se nedan),
+och **förbehållet om att appen inte är utgiven av Försvarsmakten** ska stå kvar på alla fyra
+ställena.
 
 Appen är ett **stöd för instruktören** vid genomförandet av kompetensproven — inte ett
 officiellt system, och inte utgiven av Försvarsmakten. Det förbehållet ska finnas kvar i
@@ -211,9 +216,14 @@ ingen markdown läcker ut som asterisker på skärmen.
 ## Prov
 
 ```bash
-python3 bygg.py     # måste köras först — flödesproven kör mot docs/
-npm test            # 74 prov: regelmotor, export, hela flödet
+python3 bygg.py     # måste köras först — proven kör mot docs/
+npm test            # 79 prov: regelmotor, export, hela flödet, spärrarna mot utgående trafik
 ```
+
+**Bygg före du provar.** Det här är den enklaste fällan i arkivet och den värsta, eftersom
+den inte ser ut som ett fel: ändrar du i `src/` och kör `npm test` utan att bygga först,
+provas den *förra* byggda filen. Alla prov blir gröna, glatt och snabbt, och de säger
+ingenting om det du nyss skrev. `npm run bygg` finns som genväg.
 
 Flödesproven kör **den byggda filen** i jsdom, alltså samma artefakt som telefonen får. De
 går igenom hela arbetsgången: tider på tre skyttar, poäng på samma tre, andra försök,
