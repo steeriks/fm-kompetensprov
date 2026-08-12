@@ -15,11 +15,13 @@ fs.mkdirSync(UT, { recursive: true });
 // heter Fmid/Anstnr och ska aldrig bära ett personnummer, någonstans: varken
 // i appen, i exempeltexterna eller här. Arkivet är publikt och appen hanterar
 // uppgifter om anställd personal, så testdata ska gå att se på och avfärda
-// direkt, utan att någon behöver räkna efter på en kontrollsiffra.
+// direkt, utan att någon behöver räkna efter på en kontrollsiffra. Formen är
+// tre bokstäver ur förnamnet, tre ur efternamnet och ett löpnummer — samma
+// form som exemplen i appen, README och användarinstruktionen.
 const personer = [
-  { id: 'p1', namn: 'Andersson, Åsa', forband: '1. plut', fmid: 'AsAn07' },
+  { id: 'p1', namn: 'Andersson, Åsa', forband: '1. plut', fmid: 'AsaAnd07' },
   { id: 'p2', namn: 'Öberg, Björn', forband: '1. plut' },
-  { id: 'p3', namn: 'Ek, Cecilia', forband: '2. plut', fmid: 'CeEk12' },
+  { id: 'p3', namn: 'Ek, Cecilia', forband: '2. plut', fmid: 'CecEk12' },
 ];
 const omgang = {
   id: 'o1', gren: 'pist', datum: '2026-08-11',
@@ -55,7 +57,7 @@ test('texten innehåller rubrik, försök och summering', () => {
   const t = somText(u);
   assert.match(t, /Pistol — Delmoment 14/);
   assert.match(t, /Hätilä skjutbana/);
-  assert.match(t, /1\. AsAn07 · Andersson, Åsa \(1\. plut\)/,
+  assert.match(t, /1\. AsaAnd07 · Andersson, Åsa \(1\. plut\)/,
     'fmid står före namnet även i textformen');
   assert.match(t, /2\. Öberg, Björn \(1\. plut\)/, 'utan fmid står namnet direkt');
   // Träffarna skrivs alltid i zonordning A B C D X H, inte i den ordning de
@@ -71,7 +73,7 @@ test('csv:n har BOM, semikolon och tal med komma', () => {
   const c = somCsv(u);
   assert.ok(c.startsWith('﻿'), 'BOM krävs för att Excel ska läsa å ä ö');
   assert.match(c, /Nr;Fmid\/Anstnr;Namn;Förband;Försök;Tid \(s\)/);
-  assert.match(c, /1;AsAn07;Andersson, Åsa;1\. plut;1;11,20/);
+  assert.match(c, /1;AsaAnd07;Andersson, Åsa;1\. plut;1;11,20/);
   assert.match(c, /2;;Öberg, Björn;1\. plut;1;15,00/, 'tomt fmid lämnar cellen tom');
   assert.ok(c.includes('\r\n'), 'radbrytning enligt csv-konvention');
 });

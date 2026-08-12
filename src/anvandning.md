@@ -8,7 +8,7 @@ Lägg upp skyttarna en gång under **Lägg till & hantera skyttar** — namn, oc
 
 - Ek, Anna
 - Berg, Bo; 1. plut
-- Craf, Cia; 2. plut; CiCr05
+- Craf, Cia; 2. plut; CiaCra05
 
 Fälten skiljs med **semikolon** eller tabb. Komma räknas som en del av namnet, så *Efternamn, Förnamn* fungerar, och numrering eller streck i början av raden stryks. Innan något läggs till visar appen exakt vilka som blir nya skyttar, vilka som redan finns och vilka rader den inte kunde tolka. Samma lista kan köras två gånger utan att registret blir dubbelt.
 

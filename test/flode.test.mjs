@@ -202,12 +202,12 @@ test('en lista klistras in, granskas och läggs till i registret', () => {
   starta([]);                                   // tomt register
   klicka('Lägg till & hantera skyttar');
   klicka('Importera lista');
-  klistraIn('Ek, Anna\nBerg, Bo; 1. plut\nCraf, Cia; 2. plut; CiCr05');
+  klistraIn('Ek, Anna\nBerg, Bo; 1. plut\nCraf, Cia; 2. plut; CiaCra05');
 
   // Granskningen ska stå framme INNAN något skrivs, och knappen räkna
   const granskning = doc.querySelector('#granskning').textContent;
   assert.match(granskning, /Ek, Anna/);
-  assert.match(granskning, /CiCr05/);
+  assert.match(granskning, /CiaCra05/);
   assert.equal(lagret().personer.length, 0, 'granskningen får inte skriva något');
 
   klicka('Lägg till 3 skyttar');
@@ -215,7 +215,7 @@ test('en lista klistras in, granskas och läggs till i registret', () => {
   assert.equal(p.length, 3);
   assert.deepEqual(p.map((x) => x.namn).sort(), ['Berg, Bo', 'Craf, Cia', 'Ek, Anna']);
   assert.equal(p.find((x) => x.namn === 'Craf, Cia').forband, '2. plut');
-  assert.equal(p.find((x) => x.namn === 'Craf, Cia').fmid, 'CiCr05');
+  assert.equal(p.find((x) => x.namn === 'Craf, Cia').fmid, 'CiaCra05');
   assert.equal(p.find((x) => x.namn === 'Ek, Anna').forband, '', 'bara namn är tillåtet');
   assert.match(doc.querySelector('#app').textContent, /Berg, Bo/,
     'appen ska ha gått tillbaka till registret där de nu står');
@@ -620,17 +620,17 @@ test('en ny skytt läggs upp i en ruta där två av tre fält är valfria', asyn
   assert.equal(lagret().personer.length, 3, 'ingenting sparat');
 
   ruta.querySelector('#nyttNamn').value = 'Nord, Nils';
-  ruta.querySelector('#nyttFmid').value = 'NiNo19';
+  ruta.querySelector('#nyttFmid').value = 'NilNor19';
   knapp('Spara', ruta).click();
   await new Promise((r) => setTimeout(r, 0));   // löftet löses ut på egen tur
 
   assert.equal(doc.querySelector('.modal'), null, 'rutan stängs när det sparats');
   const ny = lagret().personer.find((p) => p.namn === 'Nord, Nils');
   assert.ok(ny, 'skytten ska ligga i registret');
-  assert.equal(ny.fmid, 'NiNo19');
+  assert.equal(ny.fmid, 'NilNor19');
   assert.equal(ny.forband, '', 'förbandet fick lämnas tomt');
   assert.match(doc.querySelector('#app').textContent, /Nord, Nils/);
-  assert.match(doc.querySelector('#app').textContent, /NiNo19/,
+  assert.match(doc.querySelector('#app').textContent, /NilNor19/,
     'registret visar fmid under namnet');
 });
 

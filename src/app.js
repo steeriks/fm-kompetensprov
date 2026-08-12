@@ -707,7 +707,7 @@ function ritaImport() {
     med <b>semikolon</b> eller tabb:</p>
     <div class="kort"><span class="dampad liten">Ek, Anna<br>
       Berg, Bo; 1. plut<br>
-      Craf, Cia; 2. plut; CiCr05</span></div>
+      Craf, Cia; 2. plut; CiaCra05</span></div>
     <p class="dampad liten">Komma räknas som en del av namnet, så
     <i>Efternamn, Förnamn</i> fungerar. Numrering och streck i början av raden
     (<i>1.</i> eller <i>-</i>) stryks.</p>

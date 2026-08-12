@@ -86,6 +86,12 @@ poster som lades upp innan dess har det inte alls — läs det alltid som `p.fmi
 Lagringsversionen bumpades inte: ett fält som får vara tomt behöver ingen migrering.
 I exporten står kolumnen `Fmid/Anstnr` **före** namnet, i alla fyra formaten.
 
+**Exempelvärdena är formade `TreTre` plus löpnummer** — tre bokstäver ur förnamnet, tre ur
+efternamnet och ett tvåsiffrigt löpnummer, `Cia Craf` → `CiaCra05`. Det gäller överallt där
+ett Fmid visas som exempel: importrutan i `src/app.js`, README, användarinstruktionen och
+testdatat. Formen är vald för att inte gå att förväxla med ett personnummer; ett kortare
+efternamn skrivs ut så långt det räcker (`Ek, Cecilia` → `CecEk12`).
+
 ## Två svep, inte ett formulär
 
 Hela gränssnittet är byggt kring att provet genomförs i två vändor: alla tiderna först,
@@ -307,8 +313,9 @@ föll hela skälet till uppdelningen bort. Det publika arkivet behöll namnet �
 adressen sitter i — och källan flyttade in i det. `publicera.sh` finns inte längre.
 
 Appen innehåller inga hemligheter och inga resultat lämnar telefonen, så det som är publikt
-är programmet självt och hur det är gjort. Testdatats Fmid-värden är påhittade och har
-avsiktligt felaktig kontrollsiffra; det står som kommentar i `test/export.test.mjs`.
+är programmet självt och hur det är gjort. Testdatats Fmid-värden är påhittade och skrivna i
+`TreTre`-formen ovan, som inte liknar ett personnummer; det står som kommentar i
+`test/export.test.mjs`.
 
 `bygg.py` sätter `CACHE` i `docs/sw.js` till appens fingeravtryck, så en publicering slår
 igenom av sig själv. Rör inte värdet i `src/sw.js` — det skrivs över vid varje bygge.
