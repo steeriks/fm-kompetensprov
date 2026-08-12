@@ -27,14 +27,14 @@ test('kommatecknet tillhör namnet och delar inte raden', () => {
 });
 
 test('semikolon skiljer namn, förband och Fmid', () => {
-  const { poster } = tolkaSkyttelista('Ek, Anna; 1. plut; 850101-1234');
-  assert.deepEqual(poster[0], { namn: 'Ek, Anna', forband: '1. plut', fmid: '850101-1234', rad: 1 });
+  const { poster } = tolkaSkyttelista('Ek, Anna; 1. plut; CiCr05');
+  assert.deepEqual(poster[0], { namn: 'Ek, Anna', forband: '1. plut', fmid: 'CiCr05', rad: 1 });
 });
 
 test('tabb duger lika bra — så klistras ett kalkylark in', () => {
-  const { poster } = tolkaSkyttelista('Ek, Anna\t1. plut\t850101-1234');
+  const { poster } = tolkaSkyttelista('Ek, Anna\t1. plut\tCiCr05');
   assert.equal(poster[0].forband, '1. plut');
-  assert.equal(poster[0].fmid, '850101-1234');
+  assert.equal(poster[0].fmid, 'CiCr05');
 });
 
 test('tabb vinner över semikolon när båda står på raden', () => {
@@ -63,7 +63,7 @@ test('tomma rader och tabbmellanrum hoppas över utan att bli fel', () => {
 });
 
 test('rubrikraden från ett kalkylark räknas inte som skytt', () => {
-  const { poster } = tolkaSkyttelista('Namn;Förband;Fmid\nEk, Anna;1. plut;850101-1234');
+  const { poster } = tolkaSkyttelista('Namn;Förband;Fmid\nEk, Anna;1. plut;CiCr05');
   assert.equal(poster.length, 1);
   assert.equal(poster[0].namn, 'Ek, Anna');
 });
@@ -81,7 +81,7 @@ test('BOM och CRLF från en Excel-fil stör inte', () => {
 });
 
 test('citerade celler avciteras, som Excel skriver dem', () => {
-  const { poster } = tolkaSkyttelista('"Ek, Anna";"1. plut";"850101-1234"');
+  const { poster } = tolkaSkyttelista('"Ek, Anna";"1. plut";"CiCr05"');
   assert.equal(poster[0].namn, 'Ek, Anna');
   assert.equal(poster[0].forband, '1. plut');
 
@@ -90,7 +90,7 @@ test('citerade celler avciteras, som Excel skriver dem', () => {
 });
 
 test('en rad utan namn läses inte in, men rapporteras med radnummer', () => {
-  const { poster, ogiltiga } = tolkaSkyttelista('Ek, Anna\n;1. plut;850101-1234\nBerg, Bo');
+  const { poster, ogiltiga } = tolkaSkyttelista('Ek, Anna\n;1. plut;CiCr05\nBerg, Bo');
   assert.deepEqual(poster.map((p) => p.namn), ['Ek, Anna', 'Berg, Bo']);
   assert.equal(ogiltiga.length, 1);
   assert.equal(ogiltiga[0].rad, 2, 'radnumret ska peka i den inklistrade texten');
@@ -107,6 +107,6 @@ test('en tom lista ger ingenting och inga fel', () => {
 });
 
 test('överflödiga fält ignoreras i stället för att stoppa raden', () => {
-  const { poster } = tolkaSkyttelista('Ek, Anna;1. plut;850101-1234;något extra');
-  assert.equal(poster[0].fmid, '850101-1234');
+  const { poster } = tolkaSkyttelista('Ek, Anna;1. plut;CiCr05;något extra');
+  assert.equal(poster[0].fmid, 'CiCr05');
 });

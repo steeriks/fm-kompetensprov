@@ -459,7 +459,7 @@ Lägg upp skyttarna en gång under **Lägg till & hantera skyttar** — namn, oc
 
 - Ek, Anna
 - Berg, Bo; 1. plut
-- Craf, Cia; 2. plut; 850101-1234
+- Craf, Cia; 2. plut; CiCr05
 
 Fälten skiljs med **semikolon** eller tabb. Komma räknas som en del av namnet, så *Efternamn, Förnamn* fungerar, och numrering eller streck i början av raden stryks. Innan något läggs till visar appen exakt vilka som blir nya skyttar, vilka som redan finns och vilka rader den inte kunde tolka. Samma lista kan köras två gånger utan att registret blir dubbelt.
 
@@ -1534,8 +1534,8 @@ function somPdf(u) {
   // (595 − 72 = 523 pt), annars hamnar sista kolumnen utanför pappret.
   // Fmid/Anstnr fick sina 64 pt ur anmärkningen, förbandet och två pt per
   // zonkolumn — de rymmer en siffra och behövde aldrig sina 18. Bredden är
-  // tilltagen så att även ett fullt personnummer ryms: ett id som kapas med
-  // "…" är värdelöst i just den kolumn som ska peka ut en människa.
+  // tilltagen med marginal: ett id som kapas med "…" är värdelöst i just den
+  // kolumn som ska peka ut en människa, och Fmid/Anstnr skrivs olika långt.
   const kol = [
     { rubrik: 'Nr', bredd: 16 },
     { rubrik: 'Fmid/Anstnr', bredd: 64 },
@@ -1980,8 +1980,8 @@ function ritaOmgang() {
   app.innerHTML = (rader || '<p class="tom">Inga deltagare i omgången.</p>')
     + (vy.flyttlage
       ? '<p class="dampad liten">Dra i ☰ för att flytta en skytt till en annan tavla.</p>'
-      : '<p class="dampad liten">Numret är skyttens tavla. Håll in en rad för att '
-        + 'ändra ordningen.</p>'
+      : '<p class="dampad liten">Siffran före skyttens namn motsvarar skyttens '
+        + 'tavelnummer. Håll in en rad för att ändra ordningen.</p>'
         + '<div class="knapprad"><button class="knapp liten" data-lagg-till="1">'
         + '+ Lägg till skytt</button></div>');
   if (vy.flyttlage) {
@@ -2386,7 +2386,7 @@ function ritaImport() {
     med <b>semikolon</b> eller tabb:</p>
     <div class="kort"><span class="dampad liten">Ek, Anna<br>
       Berg, Bo; 1. plut<br>
-      Craf, Cia; 2. plut; 850101-1234</span></div>
+      Craf, Cia; 2. plut; CiCr05</span></div>
     <p class="dampad liten">Komma räknas som en del av namnet, så
     <i>Efternamn, Förnamn</i> fungerar. Numrering och streck i början av raden
     (<i>1.</i> eller <i>-</i>) stryks.</p>

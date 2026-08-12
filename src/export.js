@@ -365,8 +365,8 @@ export function somPdf(u) {
   // (595 − 72 = 523 pt), annars hamnar sista kolumnen utanför pappret.
   // Fmid/Anstnr fick sina 64 pt ur anmärkningen, förbandet och två pt per
   // zonkolumn — de rymmer en siffra och behövde aldrig sina 18. Bredden är
-  // tilltagen så att även ett fullt personnummer ryms: ett id som kapas med
-  // "…" är värdelöst i just den kolumn som ska peka ut en människa.
+  // tilltagen med marginal: ett id som kapas med "…" är värdelöst i just den
+  // kolumn som ska peka ut en människa, och Fmid/Anstnr skrivs olika långt.
   const kol = [
     { rubrik: 'Nr', bredd: 16 },
     { rubrik: 'Fmid/Anstnr', bredd: 64 },

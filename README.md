@@ -81,7 +81,7 @@ en rad per skytt:
 ```
 Ek, Anna
 Berg, Bo; 1. plut
-Craf, Cia; 2. plut; 850101-1234
+Craf, Cia; 2. plut; CiCr05
 ```
 
 Fälten skiljs med **semikolon eller tabb — aldrig med komma.** Svenska namnlistor skrivs

@@ -278,8 +278,8 @@ function ritaOmgang() {
   app.innerHTML = (rader || '<p class="tom">Inga deltagare i omgången.</p>')
     + (vy.flyttlage
       ? '<p class="dampad liten">Dra i ☰ för att flytta en skytt till en annan tavla.</p>'
-      : '<p class="dampad liten">Numret är skyttens tavla. Håll in en rad för att '
-        + 'ändra ordningen.</p>'
+      : '<p class="dampad liten">Siffran före skyttens namn motsvarar skyttens '
+        + 'tavelnummer. Håll in en rad för att ändra ordningen.</p>'
         + '<div class="knapprad"><button class="knapp liten" data-lagg-till="1">'
         + '+ Lägg till skytt</button></div>');
   if (vy.flyttlage) {
@@ -684,7 +684,7 @@ function ritaImport() {
     med <b>semikolon</b> eller tabb:</p>
     <div class="kort"><span class="dampad liten">Ek, Anna<br>
       Berg, Bo; 1. plut<br>
-      Craf, Cia; 2. plut; 850101-1234</span></div>
+      Craf, Cia; 2. plut; CiCr05</span></div>
     <p class="dampad liten">Komma räknas som en del av namnet, så
     <i>Efternamn, Förnamn</i> fungerar. Numrering och streck i början av raden
     (<i>1.</i> eller <i>-</i>) stryks.</p>
