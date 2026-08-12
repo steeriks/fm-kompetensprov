@@ -1,9 +1,9 @@
 # FM kompetensprov — Ak och Pistol
 
-**Ett stöd för instruktören** vid genomförandet av Försvarsmaktens kompetensprov i
+**Ett stöd för instruktören** vid genomförandet av Försvarsmaktens kompetensprov för
 **pistol** (Delmoment 14, Kompetensprov BAS "PILEN") och **automatkarbin** (Delmoment 12,
-Kompetensprov Bas). En webbapp som körs i telefonen, fungerar utan täckning och lagrar
-allt lokalt.
+Kompetensprov Bas). En webbapp (PWA) som körs i telefonen, fungerar utan täckning och lagrar
+allt lokalt. 
 
 > **Appen är inte utgiven av Försvarsmakten och är inget officiellt system.** Den är
 > privat gjord som ett hjälpmedel: den håller ordning på skjutordningen, räknar
@@ -20,8 +20,8 @@ nederkant, inget systemtangentbord, ingen inloggning och ingenting som behöver 
 ## Så används den
 
 Appen följer hur provet faktiskt går till. Skyttarna står uppställda på en linje,
-instruktören skjuter en åt gången och tar tiderna; först när alla skjutit går gruppen fram
-och poängen förs in. Två svep genom samma lista.
+instruktören kommenderar och startar en skytt åt gången och registrerar tiderna; först när alla skjutit går omgången fram
+och poängen registreras in. Två svep genom samma lista.
 
 1. **Lägg upp en omgång** — prov, datum, plats, instruktör, och bocka i deltagarna i
    skjutordning. Numret de får är skyttens **tavelnummer** på banan och följer med hela
