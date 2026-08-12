@@ -4,7 +4,19 @@ Appen är ett **stöd för instruktören** vid genomförandet av kompetensproven
 
 Lägg upp skyttarna en gång under **Lägg till & hantera skyttar** — namn, och därtill förband och Fmid/Anstnr om du vill ha med dem. De två sista är valfria och står grå tills något skrivs in; Fmid/Anstnr hamnar före namnet i exporten. Registret ligger kvar mellan tillfällen, så samma grupp kan skjuta både pistol och automatkarbin utan att skrivas in två gånger.
 
+**Har du listan redan?** *Importera lista* tar hela skjutlaget på en gång i stället för en skytt i taget. Klistra in listan — ur ett mail, ett meddelande eller ett kalkylark — eller läs in en fil. En rad per skytt:
+
+- Ek, Anna
+- Berg, Bo; 1. plut
+- Craf, Cia; 2. plut; 850101-1234
+
+Fälten skiljs med **semikolon** eller tabb. Komma räknas som en del av namnet, så *Efternamn, Förnamn* fungerar, och numrering eller streck i början av raden stryks. Innan något läggs till visar appen exakt vilka som blir nya skyttar, vilka som redan finns och vilka rader den inte kunde tolka. Samma lista kan köras två gånger utan att registret blir dubbelt.
+
+Knappen finns på två ställen och gör olika saker: under **Lägg till & hantera skyttar** fyller den registret, och under *+ Ny omgång* fyller den dessutom linjen — **ordningen i listan blir skjutordningen**, och de som redan finns i registret bockas i utan att skapas på nytt.
+
 Överst i skyttelistan finns en genväg till *+ Ny omgång*, när registret är påfyllt och ni är redo att börja.
+
+**Omgången kan läggas upp i förväg.** *Spara utan att starta* lägger den på startsidan märkt *ej påbörjad*, och där ligger den tills ni är på plats — öppna den då, så är den igång. Skjutordningen kan vara klar redan kvällen innan, men behöver inte vara det: en sparad omgång utan deltagare fylls på med *+ Lägg till skytt* när gruppen står på linjen.
 
 Behöver något bort — en skytt ur registret eller en hel omgång från startsidan — **håll in raden** tills en soptunna läggs fram i den, och tryck på soptunnan. Appen frågar först, och en raderad skytt tar sina resultat med sig.
 
@@ -12,7 +24,7 @@ Behöver något bort — en skytt ur registret eller en hel omgång från starts
 
 Appen följer hur provet genomförs: alla tiderna först, poängen när gruppen gått fram.
 
-- **1. Lägg upp omgången.** *+ Ny omgång* — välj prov, datum, plats och instruktör, och bocka i deltagarna **i skjutordning**. Numret de får är skyttens tavla på banan.
+- **1. Lägg upp omgången.** *+ Ny omgång* — välj prov, datum, plats och instruktör, och bocka i deltagarna **i skjutordning**. Numret de får är skyttens tavla på banan. *Starta omgången* går rakt in i den; *Spara utan att starta* lägger den åt sidan till senare.
 - **2. Ta tiderna.** *Registrera tid för första skytt* öppnar tavla 1. Knappa tiden rakt av som den står på timern — **555** blir 5,55 — och tryck *Spara & nästa skytt*. Under knappen står vem som är näste man.
 - **3. Gå fram till tavlorna.** När sista tiden är inne heter knappen *Spara & börja med poängen*, och appen står på tavla 1 i poängläget.
 - **4. För in träffarna.** En tryckning per träff på respektive zon. Målytan tar bara emot de träffar som räknas, så det är de **bästa** träffarna du knappar in. Poängkvoten och utfallet — **Godkänd** eller **Underkänd** — räknas medan du knappar.

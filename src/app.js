@@ -118,14 +118,22 @@ function ritaStart() {
 
   const lista = omgangar.length ? omgangar.map((o) => {
     const prov = PROV[o.gren];
-    const res = lager.resultat(o.id).filter((r) => r.registrerad);
+    const alla = lager.resultat(o.id);
+    const res = alla.filter((r) => r.registrerad);
     const godkanda = new Set(res
       .filter((r) => bedom(o.gren, r.traffar, r.tid, r.vapenhanteringUnderkand).godkand)
       .map((r) => r.personId)).size;
+    // En omgång som lagts upp i förväg har ingenting att visa ännu, och
+    // "0/5 godkända" vore en lögn om den — den ser ut som ett skjutlag där
+    // ingen klarade sig. Tills första tiden är inne räknas skyttarna i stället.
+    const paborjad = alla.length > 0;
     return `<button class="skyttrad" data-oppna="${o.id}" data-hall-radera="omgang:${o.id}">
       <span class="namn">${esc(prov.namn)} · ${esc(o.datum)}</span>
       <span class="forband">${esc(o.plats || 'utan plats')}${o.instruktor ? ' · ' + esc(o.instruktor) : ''}</span>
-      <span class="varden"><b>${godkanda}/${o.deltagare.length}</b><br>godkända</span>
+      <span class="varden">${paborjad
+        ? `<b>${godkanda}/${o.deltagare.length}</b><br>godkända`
+        : `<b>${o.deltagare.length}</b><br>${o.deltagare.length === 1 ? 'skytt' : 'skyttar'}`}</span>
+      ${paborjad ? '' : '<span class="chip">ej påbörjad</span>'}
     </button>`;
   }).join('') : '<p class="tom">Inga omgångar ännu.<br>Börja med att lägga upp en.</p>';
 
@@ -182,15 +190,27 @@ function ritaNy() {
         <span class="chip ${valda.has(p.id) ? 'g' : ''}">${valda.has(p.id) ? '✓ med' : 'lägg till'}</span>
       </button>`).join('')
       : '<p class="tom">Inga skyttar i registret ännu.</p>'}
-    <div class="knapprad"><button class="knapp liten" data-ny-skytt="1">+ Ny skytt</button></div>`;
+    <div class="knapprad">
+      <button class="knapp liten" data-ny-skytt="1">+ Ny skytt</button>
+      <button class="knapp liten" data-import="oppna">Importera lista</button>
+    </div>`;
 
   app.querySelector('#gren').value = vy.gren || 'pist';
   for (const falt of ['datum', 'plats', 'instruktor']) {
     if (vy[falt]) app.querySelector('#' + falt).value = vy[falt];
   }
-  bottenrad.innerHTML =
-    `<button class="knapp primar" data-starta="1" ${valda.size ? '' : 'disabled'}>
-       Starta omgången${valda.size ? ` (${valda.size} skyttar)` : ''}</button>`;
+  // Två vägar ut: den vanliga är att gå rakt in i omgången, men den kan också
+  // läggas upp i förväg — kvällen innan, med skjutordningen klar — och plockas
+  // fram från startsidan när gruppen står på plats. Att spara går även utan
+  // deltagare: har man bara provet och platsen klara fylls linjen på med
+  // *+ Lägg till skytt* när den väl står där.
+  bottenrad.innerHTML = `
+    <button class="knapp primar" data-starta="1" ${valda.size ? '' : 'disabled'}>
+       Starta omgången${valda.size
+         ? ` (${valda.size} ${valda.size === 1 ? 'skytt' : 'skyttar'})` : ''}</button>
+    <div class="knapprad">
+      <button class="knapp liten" data-spara-ny="1">Spara utan att starta</button>
+    </div>`;
 }
 
 /** Sparar det som skrivits in innan vyn ritas om — annars tappas texten när
@@ -628,8 +648,115 @@ function ritaRegister() {
       : '<p class="tom">Inga skyttar ännu.</p>');
   bottenrad.innerHTML = `
     <button class="knapp primar" data-ny-skytt="1">+ Ny skytt</button>
-    ${personer.length ? '<div class="knapprad"><button class="knapp liten fara" '
-      + 'data-radera-alla-skyttar="1">Radera alla</button></div>' : ''}`;
+    <div class="knapprad">
+      <button class="knapp liten" data-vy="import">Importera lista</button>
+      ${personer.length ? '<button class="knapp liten fara" '
+        + 'data-radera-alla-skyttar="1">Radera alla</button>' : ''}
+    </div>`;
+}
+
+// ------------------------------------------------- importera en skyttelista
+
+/**
+ * Klistra in ett skjutlag i stället för att knappa in det. Vyn visar hela
+ * tiden vad som faktiskt kommer att hända — vilka som läggs till, vilka som
+ * redan finns och vilka rader som inte gick att tolka — så att den som
+ * klistrar in något oväntat ser det innan knappen trycks och inte efteråt.
+ * Tolkningen måste vara förlåtande, och en förlåtande tolkning måste kunna
+ * granskas.
+ */
+function ritaImport() {
+  sattRubrik('Importera skyttar');
+  // Importen når man från två håll, och den gör olika saker på de två: från
+  // registret fyller den registret, från en omgång som håller på att läggas
+  // upp bockar den dessutom i skyttarna på linjen. `vy.retur` bär den halvt
+  // ifyllda omgången hit och tillbaka — samma omsorg som modalrutan för en ny
+  // skytt visar, ingen ska tappa det hen just knappat in.
+  underrubrik.textContent = vy.retur
+    ? 'En skytt per rad — de bockas i omgången' : 'En skytt per rad';
+  hemKnapp.hidden = false;
+  const text = vy.text || '';
+
+  app.innerHTML = `
+    <p class="dampad liten">Klistra in listan nedan, eller läs in en fil.
+    <b>En rad per skytt.</b>${vy.retur ? ' Ordningen i listan blir skjutordningen.' : ''}
+    Ska förband och Fmid/Anstnr med skiljer du fälten
+    med <b>semikolon</b> eller tabb:</p>
+    <div class="kort"><span class="dampad liten">Ek, Anna<br>
+      Berg, Bo; 1. plut<br>
+      Craf, Cia; 2. plut; 850101-1234</span></div>
+    <p class="dampad liten">Komma räknas som en del av namnet, så
+    <i>Efternamn, Förnamn</i> fungerar. Numrering och streck i början av raden
+    (<i>1.</i> eller <i>-</i>) stryks.</p>
+    <label class="falt">Listan
+      <textarea id="importtext" rows="7" autocomplete="off" autocapitalize="none"
+        spellcheck="false"></textarea></label>
+    <div class="knapprad">
+      <button class="knapp liten" data-import="fil">Läs in fil…</button>
+      <button class="knapp liten" data-import="rensa">Rensa</button>
+    </div>
+    <div id="granskning"></div>
+    <input type="file" id="importfil" accept="text/plain,text/csv,.txt,.csv" hidden>`;
+  // Värdet sätts som egenskap och inte i markupen: en lista med "</textarea>"
+  // i sig skulle annars stänga fältet i förtid, och escaping av just det här
+  // fältet är en detalj som är lätt att tappa nästa gång vyn skrivs om.
+  app.querySelector('#importtext').value = text;
+
+  bottenrad.innerHTML = `
+    <button class="knapp primar" data-import="kor" disabled>Lägg till skyttarna</button>
+    <div class="knapprad">
+      <button class="knapp liten" data-import="ater">${vy.retur
+        ? 'Tillbaka till omgången' : 'Tillbaka till skyttarna'}</button>
+    </div>`;
+  uppdateraImportgranskning();
+}
+
+/** Ritar om granskningen och huvudknappen — men inte fältet man skriver i,
+ *  som skulle tappa både markör och tangentbord av en omritning. */
+function uppdateraImportgranskning() {
+  const falt = app.querySelector('#importtext');
+  if (!falt) return;
+  vy.text = falt.value;
+  const g = falt.value.trim() ? lager.granskaSkyttelista(falt.value) : null;
+  const rad = (p) => `<div class="forsokrad">
+    <span>${esc(p.namn)}</span>
+    <span class="dampad">${esc([p.forband, p.fmid].filter(Boolean).join(' · '))}</span>
+  </div>`;
+  // Meningarna byggs hela i stället för att radbrytas i markupen: en
+  // radbrytning mitt i "2 rader hoppas över" syns inte på skärmen, men gör
+  // texten svår att både läsa i källan och söka efter i ett prov.
+  const rader = (n) => `${n} ${n === 1 ? 'rad' : 'rader'}`;
+  const delar = [];
+  delar.push('<h2>Det här läggs till</h2>');
+  delar.push(g && g.nya.length
+    ? `<div class="historik">${g.nya.map(rad).join('')}</div>`
+    : '<p class="dampad liten">Ingenting — allt i listan finns redan,'
+      + ' eller gick inte att tolka.</p>');
+  if (g && g.dubbletter.length) {
+    const namn = esc(g.dubbletter.map((p) => p.namn).join(', '));
+    // Inifrån en omgång är en dubblett inget som hoppas över: skytten finns
+    // redan i registret, men ska självklart ändå stå på linjen.
+    delar.push(vy.retur
+      ? `<p class="dampad liten">${rader(g.dubbletter.length)} står redan i registret`
+        + ` och bockas bara i: ${namn}.</p>`
+      : `<p class="dampad liten"><b>${rader(g.dubbletter.length)} hoppas över</b>,`
+        + ` för att skytten redan står i registret: ${namn}.</p>`);
+  }
+  if (g && g.ogiltiga.length) {
+    delar.push(`<div class="varningsruta"><b>${rader(g.ogiltiga.length)} utan namn</b>`
+      + ` läses inte in: ${esc(g.ogiltiga.map((r) => `rad ${r.rad}`).join(', '))}.</div>`);
+  }
+  app.querySelector('#granskning').innerHTML = g ? delar.join('') : '';
+
+  // Inifrån en omgång räknas även dubbletterna: de ska bockas i även om de
+  // inte skapas. Från registret finns det däremot inget att göra åt dem, och
+  // en lista som bara innehåller kända namn ska ge en död knapp.
+  const antal = !g ? 0 : g.nya.length + (vy.retur ? g.dubbletter.length : 0);
+  const knapp = bottenrad.querySelector('[data-import="kor"]');
+  knapp.disabled = !antal;
+  const ord = `${antal} ${antal === 1 ? 'skytt' : 'skyttar'}`;
+  knapp.textContent = !antal ? 'Lägg till skyttarna'
+    : (vy.retur ? `Lägg till ${ord} i omgången` : `Lägg till ${ord}`);
 }
 
 /**
@@ -846,6 +973,7 @@ function rita() {
   else if (vy.namn === 'tid') ritaTid();
   else if (vy.namn === 'poang') ritaPoang();
   else if (vy.namn === 'register') ritaRegister();
+  else if (vy.namn === 'import') ritaImport();
   else if (vy.namn === 'installningar') ritaInstallningar();
   else if (vy.namn === 'export') ritaExportval();
   else if (vy.namn === 'anvisning') ritaAnvisning();
@@ -933,18 +1061,20 @@ function nastaSkytt(omgang, lage, efterId = null) {
 
 document.addEventListener('click', async (ev) => {
   const t = ev.target.closest('[data-vy], [data-oppna], [data-vaxla], [data-ny-skytt], ' +
-    '[data-starta], [data-skytt], [data-lage], [data-nasta], [data-siffra], [data-radera], ' +
-    '[data-spara-tid], [data-till-poang], [data-till-tid], [data-registrera], [data-export], ' +
-    '[data-stega], ' +
+    '[data-starta], [data-spara-ny], [data-skytt], [data-lage], [data-nasta], [data-siffra], ' +
+    '[data-radera], [data-spara-tid], [data-till-poang], [data-till-tid], [data-registrera], ' +
+    '[data-export], [data-stega], ' +
     '[data-format], [data-historik], [data-nytt-forsok], [data-soptunna], [data-kopia], ' +
     '[data-radera-allt], [data-radera-alla-skyttar], [data-skriv-ut], [data-anvisning], ' +
-    '[data-lagg-till], [data-lagg-in], [data-flyttlage], [data-dok], .zonknapp');
+    '[data-lagg-till], [data-lagg-in], [data-flyttlage], [data-dok], [data-import], ' +
+    '.zonknapp');
   if (!t) return;
   const d = t.dataset;
 
   // --- navigering ---
   if (d.vy === 'ny') return gaTill('ny', { valda: [] });
   if (d.vy === 'register') return gaTill('register');
+  if (d.vy === 'import') return gaTill('import', { text: '' });
   if (d.dok) return gaTill('dok', { dok: d.dok });
   if (d.vy === 'start') return gaTill('start', {}, true);
   if (d.vy === 'anvisning') {
@@ -1021,13 +1151,18 @@ document.addEventListener('click', async (ev) => {
     }
     return rita();
   }
-  if (d.starta) {
+  if (d.starta || d.sparaNy) {
     spegla();
     const o = lager.laggTillOmgang({
       gren: vy.gren || 'pist', datum: vy.datum, plats: vy.plats || '',
       instruktor: vy.instruktor || '', deltagare: vy.valda || [],
     });
-    return gaTill('omgang', { omgangId: o.id, lage: 'tid' }, true);
+    if (d.starta) return gaTill('omgang', { omgangId: o.id, lage: 'tid' }, true);
+    // Sparad utan att startas: tillbaka till startsidan, där den ligger och
+    // väntar. `ersatt` gör att bakåtknappen inte leder in i formuläret igen —
+    // omgången är redan skapad och ett andra tryck skulle ge en dubblett.
+    flash(`${PROV[o.gren].namn} ${o.datum} är sparad. Öppna den när ni börjar.`, 4);
+    return gaTill('start', {}, true);
   }
 
   // --- vallistan ---
@@ -1064,6 +1199,9 @@ document.addEventListener('click', async (ev) => {
     const o = lager.omgang(vy.omgangId);
     const id = nastaSkytt(o, d.nasta);
     if (!id) {
+      // En omgång som lagts upp i förväg står tom tills linjen fylls på, och
+      // "alla har en tid" vore obegripligt när ingen finns.
+      if (!o.deltagare.length) return flash('Inga deltagare ännu — lägg till skyttar först.');
       return flash(d.nasta === 'tid'
         ? 'Alla har en tid. Byt till POÄNG.'
         : 'Ingen väntar på poäng.');
@@ -1197,6 +1335,43 @@ document.addEventListener('click', async (ev) => {
     return;
   }
   if (d.kopia === 'in') return app.querySelector('#kopiafil').click();
+  if (d.import === 'oppna') {
+    // Öppnad från en halvt ifylld omgång: hela vyn följer med som `retur` och
+    // läggs tillbaka som den var, plus de skyttar listan pekade ut.
+    spegla();
+    return gaTill('import', { text: '', retur: { ...vy } });
+  }
+  if (d.import === 'ater') {
+    return vy.retur ? gaTill('ny', { ...vy.retur }, true) : gaTill('register', {}, true);
+  }
+  if (d.import === 'fil') return app.querySelector('#importfil').click();
+  if (d.import === 'rensa') {
+    app.querySelector('#importtext').value = '';
+    return uppdateraImportgranskning();
+  }
+  if (d.import === 'kor') {
+    // Läses om ur fältet i stället för att lita på det som ritades: texten kan
+    // ha ändrats efter sista granskningen, och det som läggs in ska vara det
+    // som står i rutan — inte det som råkade stå där när knappen fick sin text.
+    const g = lager.importeraSkyttar(app.querySelector('#importtext').value);
+    if (!vy.retur) {
+      if (!g.nya.length) return flash('Ingen ny skytt att lägga till.');
+      flash(`${g.nya.length} ${g.nya.length === 1 ? 'skytt tillagd' : 'skyttar tillagda'}.`
+        + (g.dubbletter.length ? ` ${g.dubbletter.length} fanns redan.` : ''), 4);
+      return gaTill('register', {}, true);
+    }
+    // Tillbaka till omgången med skyttarna ibockade i listans ordning. Den som
+    // redan stod på linjen behåller sin tavla — ordningen är ju tavelnumret,
+    // och ett omtag av importen får inte flytta någon som redan fått sitt.
+    const retur = { ...vy.retur };
+    const valda = [...(retur.valda || [])];
+    for (const id of g.idn) if (!valda.includes(id)) valda.push(id);
+    retur.valda = valda;
+    if (!g.idn.length) return flash('Ingen skytt i listan att bocka i.');
+    flash(`${g.idn.length} ${g.idn.length === 1 ? 'skytt' : 'skyttar'} ibockade.`
+      + (g.nya.length ? ` ${g.nya.length} är nya i registret.` : ''), 4);
+    return gaTill('ny', retur, true);
+  }
   if (d.raderaAllt) {
     const svar = prompt('Det här raderar alla skyttar, omgångar och resultat.\n' +
       'Skriv RADERA för att bekräfta:');
@@ -1384,7 +1559,25 @@ for (const h of ['pointerup', 'pointercancel', 'pointerleave']) {
   document.addEventListener(h, () => clearTimeout(hallTimer));
 }
 
+// Granskningen följer fältet medan man klistrar in och rättar. Den är billig
+// att räkna om — ett skjutlag är tiotals rader, inte tusentals.
+document.addEventListener('input', (ev) => {
+  if (ev.target.id === 'importtext') uppdateraImportgranskning();
+});
+
 document.addEventListener('change', (ev) => {
+  if (ev.target.id === 'importfil' && ev.target.files[0]) {
+    const lasare = new FileReader();
+    lasare.onload = () => {
+      app.querySelector('#importtext').value = lasare.result;
+      uppdateraImportgranskning();
+    };
+    // Filen läses som text i telefonen och laddas inte upp någonstans — den
+    // går aldrig utanför den här funktionen.
+    lasare.readAsText(ev.target.files[0]);
+    // Nollställs, annars ger samma fil vald två gånger i rad ingen händelse.
+    ev.target.value = '';
+  }
   if (ev.target.id === 'vapen') {
     const o = lager.omgang(vy.omgangId);
     const r = lager.pagaende(o.id, vy.personId);

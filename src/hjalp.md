@@ -37,6 +37,8 @@ Följden är att **du själv ansvarar för uppgifterna**:
 
 Delar du ett resultat via mail eller fil lämnar uppgifterna telefonen i det ögonblicket, och då gäller vanliga regler för hur en sådan lista får hanteras.
 
+Det gäller åt ena hållet. Åt andra hållet: läser du in en deltagarlista eller en säkerhetskopia öppnas filen **i telefonen** och laddas inte upp någonstans. Men uppgifterna finns då i appen, och omfattas därifrån av samma ansvar som allt annat du knappat in.
+
 ## Buggar och önskemål
 
 Fungerar något inte, eller saknas något? Skriv ett ärende:

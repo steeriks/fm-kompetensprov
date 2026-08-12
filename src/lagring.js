@@ -107,6 +107,127 @@ export function raderaPerson(id) {
   spara();
 }
 
+// ------------------------------------------------- importera en skyttelista
+//
+// Att knappa in tjugo namn på en telefon är ett halvtimmesarbete, och listan
+// finns nästan alltid redan — i ett mail, ett meddelande eller ett kalkylark.
+// Det här läser en sådan lista rakt av.
+
+/**
+ * Fälten skiljs med **semikolon eller tabb**, aldrig med komma.
+ *
+ * Kommatecknet är inte en avgränsare därför att svenska namnlistor skrivs
+ * "Efternamn, Förnamn". En lista där varje rad har precis ett komma är alltså
+ * långt vanligare än en komma-CSV, och att gissa mellan dem skulle göra
+ * "Ek, Anna" till en skytt vid namn Ek på förbandet Anna. Semikolonet är
+ * dessutom samma tecken som appens egen CSV-export använder.
+ *
+ * Ren funktion: rör varken lagret eller registret.
+ */
+export function tolkaSkyttelista(text) {
+  const poster = [];
+  const ogiltiga = [];
+  // BOM:en följer med varje fil svensk Excel sparar, och skulle annars sitta
+  // kvar i det första namnet där den syns som ingenting alls.
+  const rader = String(text).replace(/^\uFEFF/, '').split(/\r?\n/);
+
+  rader.forEach((raden, i) => {
+    const utan = raden.trim();
+    if (!utan) return;
+    // Numrerade och punktade listor är hur ett skjutlag brukar se ut när det
+    // kommer klistrat ur ett meddelande: "1. Ek, Anna" eller "- Ek, Anna".
+    const ren = utan.replace(/^(?:\d{1,3}\s*[.)]|[-–—*•])\s+/, '');
+    const falt = (ren.includes('\t') ? ren.split('\t') : ren.split(';'))
+      .map((cell) => {
+        const c = cell.trim();
+        // Excel citerar celler som innehåller avgränsaren, och fördubblar
+        // citattecken inuti — samma regel som appens egen CSV-export följer.
+        return /^".*"$/.test(c) ? c.slice(1, -1).replace(/""/g, '"') : c;
+      });
+
+    const post = {
+      namn: falt[0] || '', forband: falt[1] || '', fmid: falt[2] || '', rad: i + 1,
+    };
+    // Rubrikraden från ett kalkylark är inte en skytt. Bara den allra första
+    // raden får strykas så här — står "Namn" längre ner är det någon som
+    // faktiskt heter så. En skytt som verkligen heter Namn och råkar stå först
+    // faller alltså bort, men granskningen visar vilka som läggs till innan
+    // knappen trycks, så det syns.
+    if (!poster.length && !ogiltiga.length && /^namn$/i.test(post.namn)) return;
+    if (!post.namn) ogiltiga.push({ rad: i + 1, text: utan });
+    else poster.push(post);
+  });
+
+  return { poster, ogiltiga };
+}
+
+const jamforbart = (s) => String(s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+
+/**
+ * Samma person eller inte. Har båda ett Fmid är det Fmid som avgör och inget
+ * annat — två skyttar kan heta likadant, och då ska båda in. Saknas Fmid på
+ * någondera sidan finns bara namnet att gå på.
+ */
+function sammaSkytt(a, b) {
+  if (a.fmid && b.fmid) return jamforbart(a.fmid) === jamforbart(b.fmid);
+  return jamforbart(a.namn) === jamforbart(b.namn);
+}
+
+/**
+ * Tolkar listan och håller den mot registret, utan att skriva något. Samma
+ * löfte som säkerhetskopian ger: en import lägger till, den skriver aldrig
+ * över — och en lista som körs två gånger ger inte registret i dubbel upplaga.
+ *
+ * Vyn kallar den vid varje tangenttryck för att visa vad som faktiskt kommer
+ * att hända, och en gång till när knappen trycks.
+ */
+export function granskaSkyttelista(text) {
+  const { poster, ogiltiga } = tolkaSkyttelista(text);
+  const befintliga = las().personer;
+  const nya = [];
+  const dubbletter = [];
+  for (const post of poster) {
+    // Också mot dem som redan hunnit hamna i `nya`: en lista kan innehålla
+    // samma namn två gånger, och då ska den andra raden inte bli en skytt till.
+    if (befintliga.some((p) => sammaSkytt(post, p)) || nya.some((p) => sammaSkytt(post, p))) {
+      dubbletter.push(post);
+    } else {
+      nya.push(post);
+    }
+  }
+  return { nya, dubbletter, ogiltiga };
+}
+
+/** Lägger in de granskade posterna. Går via laggTillPerson, så att det bara
+ *  finns ett ställe som vet vad en skytt är för något. */
+export function laggTillSkyttar(poster) {
+  for (const p of poster) laggTillPerson(p.namn, p.forband, p.fmid);
+  return poster.length;
+}
+
+/**
+ * Hela importen i ett steg: granskar, lägger in det som är nytt, och svarar
+ * med **id:n för varje skytt listan pekade ut** — de nyss skapade och de som
+ * redan fanns, i den ordning de stod i listan.
+ *
+ * Ordningen är hela poängen när importen görs inifrån en omgång: en
+ * deltagarlista kommer nästan alltid i skjutordning, och då ska tavlorna
+ * delas ut i samma ordning. De som redan står i registret måste därför följa
+ * med i svaret, trots att de inte skapades här — annars hoppade omgången över
+ * dem och skjutordningen blev en annan än den man klistrade in.
+ */
+export function importeraSkyttar(text) {
+  const granskning = granskaSkyttelista(text);
+  laggTillSkyttar(granskning.nya);
+  const registret = las().personer;
+  const idn = [];
+  for (const post of tolkaSkyttelista(text).poster) {
+    const p = registret.find((x) => sammaSkytt(post, x));
+    if (p && !idn.includes(p.id)) idn.push(p.id);
+  }
+  return { ...granskning, idn };
+}
+
 // --------------------------------------------------------------- omgångar
 
 export function omgangar() {

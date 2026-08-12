@@ -134,6 +134,258 @@ test('en omgång läggs upp med valda deltagare i skjutordning', () => {
   assert.equal(d.omgangar[0].gren, 'pist');
 });
 
+test('en omgång kan sparas utan att startas och plockas fram sedan', () => {
+  klicka('+ Ny omgång');
+  doc.querySelector('#plats').value = 'Hätilä';
+  bockaIAlla();
+  klicka('Spara utan att starta');
+
+  // Sparad, men appen ska ha lämnat oss på startsidan i stället för i omgången
+  const d = lagret();
+  assert.equal(d.omgangar.length, 1, 'omgången ska ha skapats');
+  assert.equal(d.omgangar[0].deltagare.length, 3, 'skjutordningen följer med');
+  assert.equal(d.omgangar[0].plats, 'Hätilä');
+  assert.equal(d.resultat.length, 0, 'ingenting får ha börjat');
+  assert.match(doc.querySelector('#app').textContent, /Omgångar/);
+  assert.equal(rader().length, 1, 'startsidan visar den sparade omgången');
+  assert.match(rader()[0].textContent, /ej påbörjad/,
+    'en omgång utan resultat ska inte se ut som ett skjutlag där ingen klarade sig');
+  assert.doesNotMatch(rader()[0].textContent, /godkända/);
+
+  // Formuläret får inte ligga kvar i historiken: ett tryck på bakåt och sedan
+  // på Spara igen skulle ge en dubblett av omgången.
+  assert.equal(win.history.state.namn, 'start');
+  assert.equal(win.history.length, 2,
+    'startsidan ska ha ERSATT formuläret i historiken, inte lagts ovanpå');
+
+  // Och den öppnas som vilken omgång som helst, i tidläget
+  rader()[0].click();
+  nastaIListan();
+  assert.match(doc.querySelector('#underrubrik').textContent, /Tid/);
+  knappaTid('11,20');
+  klicka('Spara & nästa skytt');
+  assert.equal(lagret().omgangar.length, 1, 'fortfarande bara en omgång');
+
+  hem();
+  assert.match(rader()[0].textContent, /godkända/, 'nu är den påbörjad');
+});
+
+test('en omgång kan sparas tom och fyllas på när linjen står där', () => {
+  klicka('+ Ny omgång');
+  assert.ok(knapp('Starta omgången').disabled, 'utan deltagare finns inget att starta');
+  klicka('Spara utan att starta');
+  assert.equal(lagret().omgangar[0].deltagare.length, 0);
+
+  rader()[0].click();
+  assert.match(doc.querySelector('#app').textContent, /Inga deltagare i omgången/);
+  nastaIListan();
+  assert.match(doc.body.textContent, /Inga deltagare ännu/,
+    'huvudknappen ska säga vad som saknas, inte "alla har en tid"');
+
+  klicka('+ Lägg till skytt');
+  rader()[0].click();          // ur registret, hamnar på tavla 1
+  assert.equal(lagret().omgangar[0].deltagare.length, 1);
+  nastaIListan();
+  assert.equal(doc.querySelector('#rubrik .nr').textContent, '1.');
+});
+
+/** Klistrar in i importrutan — värdet plus den input-händelse ett riktigt
+ *  inklistrande utlöser, som är det granskningen lyssnar på. */
+function klistraIn(text) {
+  const falt = doc.querySelector('#importtext');
+  falt.value = text;
+  falt.dispatchEvent(new win.Event('input', { bubbles: true }));
+  return falt;
+}
+
+test('en lista klistras in, granskas och läggs till i registret', () => {
+  starta([]);                                   // tomt register
+  klicka('Lägg till & hantera skyttar');
+  klicka('Importera lista');
+  klistraIn('Ek, Anna\nBerg, Bo; 1. plut\nCraf, Cia; 2. plut; 850101-1234');
+
+  // Granskningen ska stå framme INNAN något skrivs, och knappen räkna
+  const granskning = doc.querySelector('#granskning').textContent;
+  assert.match(granskning, /Ek, Anna/);
+  assert.match(granskning, /850101-1234/);
+  assert.equal(lagret().personer.length, 0, 'granskningen får inte skriva något');
+
+  klicka('Lägg till 3 skyttar');
+  const p = lagret().personer;
+  assert.equal(p.length, 3);
+  assert.deepEqual(p.map((x) => x.namn).sort(), ['Berg, Bo', 'Craf, Cia', 'Ek, Anna']);
+  assert.equal(p.find((x) => x.namn === 'Craf, Cia').forband, '2. plut');
+  assert.equal(p.find((x) => x.namn === 'Craf, Cia').fmid, '850101-1234');
+  assert.equal(p.find((x) => x.namn === 'Ek, Anna').forband, '', 'bara namn är tillåtet');
+  assert.match(doc.querySelector('#app').textContent, /Berg, Bo/,
+    'appen ska ha gått tillbaka till registret där de nu står');
+});
+
+test('samma lista två gånger ger inte registret i dubbel upplaga', () => {
+  klicka('Lägg till & hantera skyttar');
+  klicka('Importera lista');
+  // PERSONER-registret finns redan; Ek och Berg är alltså dubbletter
+  klistraIn('Ek, Anna\nBerg, Bo\nDahl, Dan');
+
+  const granskning = doc.querySelector('#granskning').textContent;
+  assert.match(granskning, /2 rader hoppas över/);
+  assert.match(granskning, /Ek, Anna/);
+
+  klicka('Lägg till 1 skytt');
+  assert.equal(lagret().personer.length, 4, 'bara Dahl ska ha tillkommit');
+  assert.equal(lagret().personer.filter((p) => p.namn === 'Ek, Anna').length, 1);
+});
+
+test('en lista där allt redan finns går inte att lägga till', () => {
+  klicka('Lägg till & hantera skyttar');
+  klicka('Importera lista');
+  klistraIn('Ek, Anna\nBerg, Bo');
+  const knappen = doc.querySelector('#bottenrad .knapp.primar');
+  assert.ok(knappen.disabled, 'ingenting att lägga till ska betyda en död knapp');
+  assert.match(doc.querySelector('#granskning').textContent, /Ingenting/);
+
+  klistraIn('Dahl, Dan');
+  assert.ok(!knappen.disabled, 'och den ska vakna när något nytt kommer in');
+});
+
+test('rader utan namn pekas ut med radnummer i stället för att tigas ihjäl', () => {
+  starta([]);
+  klicka('Lägg till & hantera skyttar');
+  klicka('Importera lista');
+  klistraIn('Ek, Anna\n;1. plut\nBerg, Bo');
+  assert.match(doc.querySelector('#granskning').textContent, /1 rad utan namn/);
+  assert.match(doc.querySelector('#granskning').textContent, /rad 2/);
+
+  klicka('Lägg till 2 skyttar');
+  assert.equal(lagret().personer.length, 2, 'de dugliga raderna ska in ändå');
+});
+
+test('Rensa tömmer rutan och granskningen med den', () => {
+  klicka('Lägg till & hantera skyttar');
+  klicka('Importera lista');
+  klistraIn('Dahl, Dan');
+  assert.match(doc.querySelector('#granskning').textContent, /Dahl, Dan/);
+  klicka('Rensa');
+  assert.equal(doc.querySelector('#importtext').value, '');
+  assert.equal(doc.querySelector('#granskning').textContent.trim(), '');
+  assert.ok(doc.querySelector('#bottenrad .knapp.primar').disabled);
+});
+
+test('importerade skyttar går direkt att bocka i en omgång', () => {
+  starta([]);
+  klicka('Lägg till & hantera skyttar');
+  klicka('Importera lista');
+  klistraIn('1. Ek, Anna\n2. Berg, Bo');
+  klicka('Lägg till 2 skyttar');
+
+  klicka('+ Ny omgång');
+  assert.equal(rader().length, 2, 'de ska stå i ibockningslistan');
+  bockaIAlla();
+  klicka('Starta omgången');
+  assert.equal(lagret().omgangar[0].deltagare.length, 2);
+});
+
+test('en fil läses in i telefonen och hamnar i samma ruta som en inklistring', async () => {
+  starta([]);
+  klicka('Lägg till & hantera skyttar');
+  klicka('Importera lista');
+
+  // Filväljaren går inte att öppna från ett prov; filen läggs i stället direkt
+  // på fältet, vilket är precis vad väljaren gör när användaren valt.
+  const fil = new win.File(['Ek, Anna;1. plut\nBerg, Bo'], 'skjutlag.csv', { type: 'text/csv' });
+  const valjare = doc.querySelector('#importfil');
+  Object.defineProperty(valjare, 'files', { value: [fil], configurable: true });
+  valjare.dispatchEvent(new win.Event('change', { bubbles: true }));
+  // FileReader är asynkron — texten är inte framme förrän den läst klart
+  await new Promise((r) => setTimeout(r, 50));
+
+  assert.match(doc.querySelector('#importtext').value, /Ek, Anna/);
+  assert.match(doc.querySelector('#granskning').textContent, /1\. plut/,
+    'granskningen ska ha uppdaterats av inläsningen, inte bara fältet');
+  klicka('Lägg till 2 skyttar');
+  assert.equal(lagret().personer.length, 2);
+});
+
+// --- importen inifrån en omgång: listans ordning ÄR skjutordningen ---------
+
+test('en lista importerad i en omgång bockar i skyttarna i listans ordning', () => {
+  starta([]);
+  klicka('+ Ny omgång');
+  doc.querySelector('#plats').value = 'Hätilä';
+  doc.querySelector('#instruktor').value = 'S. Eriksson';
+  klicka('Importera lista');
+  // Baklänges mot bokstavsordningen, så att provet visar att det är LISTANS
+  // ordning som gäller och inte registrets sortering
+  klistraIn('Craf, Cia\nBerg, Bo\nEk, Anna');
+  klicka('Lägg till 3 skyttar i omgången');
+
+  // Tillbaka i omgången, med det ifyllda kvar
+  assert.equal(doc.querySelector('#plats').value, 'Hätilä',
+    'den halvt ifyllda omgången får inte tappas av en avstickare till importen');
+  assert.equal(doc.querySelector('#instruktor').value, 'S. Eriksson');
+
+  klicka('Starta omgången');
+  const namn = lagret().omgangar[0].deltagare.map((id) =>
+    lagret().personer.find((p) => p.id === id).namn);
+  assert.deepEqual(namn, ['Craf, Cia', 'Berg, Bo', 'Ek, Anna'],
+    'tavla 1 ska vara den som stod först i listan');
+});
+
+test('kända skyttar bockas i utan att skapas en gång till', () => {
+  klicka('+ Ny omgång');
+  klicka('Importera lista');
+  // Ek och Berg finns i registret, Dahl gör det inte
+  klistraIn('Ek, Anna\nDahl, Dan\nBerg, Bo');
+  assert.match(doc.querySelector('#granskning').textContent,
+    /2 rader står redan i registret och bockas bara i/);
+
+  klicka('Lägg till 3 skyttar i omgången');
+  assert.equal(lagret().personer.length, 4, 'bara Dahl ska ha tillkommit');
+
+  klicka('Starta omgången');
+  const namn = lagret().omgangar[0].deltagare.map((id) =>
+    lagret().personer.find((p) => p.id === id).namn);
+  assert.deepEqual(namn, ['Ek, Anna', 'Dahl, Dan', 'Berg, Bo']);
+});
+
+test('en lista med bara kända namn går att bocka i, till skillnad från i registret', () => {
+  klicka('+ Ny omgång');
+  klicka('Importera lista');
+  klistraIn('Ek, Anna\nBerg, Bo');
+  const knappen = () => doc.querySelector('#bottenrad .knapp.primar');
+  assert.ok(!knappen().disabled,
+    'inget nytt att skapa, men allt att bocka i — knappen ska leva');
+  assert.match(knappen().textContent, /2 skyttar i omgången/);
+});
+
+test('den som redan är ibockad behåller sin tavla när importen körs', () => {
+  klicka('+ Ny omgång');
+  rader()[0].click();                       // Berg först, för hand
+  klicka('Importera lista');
+  klistraIn('Craf, Cia\nBerg, Bo');
+  klicka('Lägg till 2 skyttar i omgången');
+
+  klicka('Starta omgången');
+  const namn = lagret().omgangar[0].deltagare.map((id) =>
+    lagret().personer.find((p) => p.id === id).namn);
+  assert.deepEqual(namn, ['Berg, Bo', 'Craf, Cia'],
+    'Berg satt redan på tavla 1 och ska inte flyttas av importen');
+});
+
+test('Tillbaka till omgången lämnar den ifyllda omgången orörd', () => {
+  klicka('+ Ny omgång');
+  doc.querySelector('#plats').value = 'Hätilä';
+  rader()[0].click();
+  klicka('Importera lista');
+  klistraIn('Dahl, Dan');
+  klicka('Tillbaka till omgången');
+
+  assert.equal(doc.querySelector('#plats').value, 'Hätilä');
+  assert.equal(lagret().personer.length, 3, 'inget får ha skapats på vägen');
+  assert.match(knapp('Starta omgången').textContent, /\(1 skytt\)/,
+    'ibockningen ska stå kvar');
+});
+
 test('pilarna vid namnet stegar en tavla åt vardera hållet', () => {
   klicka('+ Ny omgång');
   bockaIAlla();

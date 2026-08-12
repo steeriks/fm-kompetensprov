@@ -3,7 +3,7 @@
 **Ett stöd för instruktören** vid genomförandet av Försvarsmaktens kompetensprov för
 **pistol** (Delmoment 14, Kompetensprov BAS "PILEN") och **automatkarbin** (Delmoment 12,
 Kompetensprov Bas). En webbapp (PWA) som körs i telefonen, fungerar utan täckning och lagrar
-allt lokalt. 
+allt lokalt.
 
 > **Appen är inte utgiven av Försvarsmakten och är inget officiellt system.** Den är
 > privat gjord som ett hjälpmedel: den håller ordning på skjutordningen, räknar
@@ -20,12 +20,14 @@ nederkant, inget systemtangentbord, ingen inloggning och ingenting som behöver 
 ## Så används den
 
 Appen följer hur provet faktiskt går till. Skyttarna står uppställda på en linje,
-instruktören kommenderar och startar en skytt åt gången och registrerar tiderna; först när alla skjutit går omgången fram
-och poängen registreras in. Två svep genom samma lista.
+instruktören kommenderar och startar en skytt åt gången och registrerar tiderna; först när
+alla skjutit går omgången fram och poängen registreras in. Två svep genom samma lista.
 
 1. **Lägg upp en omgång** — prov, datum, plats, instruktör, och bocka i deltagarna i
    skjutordning. Numret de får är skyttens **tavelnummer** på banan och följer med hela
-   vägen ut i exporten.
+   vägen ut i exporten. *Starta omgången* går rakt in i den. *Spara utan att starta*
+   lägger den på startsidan märkt **ej påbörjad** — omgången kan alltså förberedas kvällen
+   innan, med eller utan skjutordning, och öppnas när gruppen står på plats.
 2. **TID-läget.** *Registrera tid för första skytt* öppnar tavla 1; därefter heter knappen
    *Nästa som saknar tid*, och växeln visar inom parentes hur många som väntar. Siffrorna
    knappas rakt av som de står på timern — **555** blir 5,55 och **6667** blir 66,67 — och
@@ -72,6 +74,30 @@ och zontabellen.
 *+ Ny skytt* öppnar en ruta med tre fält: **namn**, **förband** och **Fmid/Anstnr**. Bara
 namnet måste fyllas i — de andra två står grå med *valfritt* tills något skrivs in.
 Fmid/Anstnr följer med till exporten och står där **före namnet**, i alla fyra formaten.
+
+**Importera lista** tar hela skjutlaget på en gång. Klistra in listan eller läs in en fil,
+en rad per skytt:
+
+```
+Ek, Anna
+Berg, Bo; 1. plut
+Craf, Cia; 2. plut; 850101-1234
+```
+
+Fälten skiljs med **semikolon eller tabb — aldrig med komma.** Svenska namnlistor skrivs
+*Efternamn, Förnamn*, och en lista där varje rad har precis ett komma är långt vanligare än
+en komma-CSV; att gissa mellan dem hade gjort "Ek, Anna" till en skytt vid namn Ek på
+förbandet Anna. Numrering och streck i radens början stryks, rubrikraden från ett kalkylark
+hoppas över, och BOM, CRLF och citerade celler från Excel hanteras.
+
+Innan något skrivs visar appen vilka som blir nya, vilka som redan finns och vilka rader
+den inte kunde tolka. Dubbletter känns igen på **Fmid när båda har det, annars på namnet** —
+så två skyttar med samma namn men olika Fmid räknas som två personer, och samma lista kan
+köras två gånger utan att registret blir dubbelt.
+
+Knappen finns på två ställen och gör olika saker. Under *Lägg till & hantera skyttar* fyller
+den registret. Under *+ Ny omgång* fyller den dessutom linjen: **ordningen i listan blir
+skjutordningen**, och den som redan finns i registret bockas i utan att skapas på nytt.
 
 ### Radera
 
@@ -144,7 +170,7 @@ Inga beroenden i appen — ren HTML, CSS och JavaScript, ingen CDN, inget ramver
 npm install       # bara jsdom, och bara för testerna
 npm run serve     # http://localhost:8390 mot src/
 npm run bygg      # bakar ihop src/ till docs/index.html
-npm test          # 74 prov: regelmotor, export och hela flödet i jsdom
+npm test          # 109 prov: regelmotor, export, import och hela flödet i jsdom
 ```
 
 Testerna kör mot `docs/`, så **bygg innan du provar**.
@@ -152,7 +178,7 @@ Testerna kör mot `docs/`, så **bygg innan du provar**.
 | Fil | Ansvar |
 |---|---|
 | `src/regler.js` | Provtabellen, poängräkning och anvisningstexterna — allt som skiljer proven åt ligger som data. |
-| `src/lagring.js` | localStorage, säkerhetskopia, radering. |
+| `src/lagring.js` | localStorage, säkerhetskopia, radering och tolkningen av en inklistrad skyttelista. |
 | `src/export.js` | Text, CSV, XLSX och PDF — skrivna för hand, utan bibliotek. |
 | `src/app.js` | Vyer, flöde och inmatning. |
 | `src/anvandning.md` | Användarinstruktionen i appen; bakas in av bygget. |

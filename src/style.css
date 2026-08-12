@@ -108,12 +108,17 @@ button { font: inherit; }
 /* --------------------------------------------------------------- fält */
 
 label.falt { display: block; margin-bottom: 0.8rem; font-size: 0.9rem; color: var(--dampad); }
-label.falt input, label.falt select {
+label.falt input, label.falt select, label.falt textarea {
   display: block; width: 100%; margin-top: 0.25rem;
   font: 17px/1.4 var(--font); color: var(--ink);
   background: var(--kort); border: 1px solid var(--linje);
   border-radius: var(--radie); padding: 0.7rem 0.8rem; min-height: 50px;
 }
+
+/* Importrutan. Ingen radbrytning i mjukvara: en lista där en rad rinner över
+   till nästa ser ut som två skyttar, och det är precis den förväxling
+   granskningen under fältet finns för att undvika. */
+label.falt textarea { resize: vertical; white-space: pre; overflow-wrap: normal; overflow-x: auto; }
 
 /* Grått "valfritt" i de fält som får lämnas tomma — dämpat, så att ett ifyllt
    värde och en tom ruta går att skilja åt med en blick. */

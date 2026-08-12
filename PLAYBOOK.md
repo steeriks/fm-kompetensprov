@@ -124,7 +124,7 @@ skjutlaget.
 | Vy | Funktion | Vad den gör |
 |---|---|---|
 | `start` | `ritaStart` | Omgångarna. Långt tryck lägger fram soptunnan som raderar; raden säger med `data-hall-radera="typ:id"` vad den är. |
-| `ny` | `ritaNy` | Prov, datum, plats, ibockning i skjutordning. |
+| `ny` | `ritaNy` | Prov, datum, plats, ibockning i skjutordning. Två utgångar: *Starta omgången* och *Spara utan att starta*. |
 | `omgang` | `ritaOmgang` | Vallistan med lägesväljare — arbetsvyn. |
 | `tid` | `ritaTid` | Sifferknappsats. Pilarna i rubriken stegar en tavla åt vardera hållet. |
 | `poang` | `ritaPoang` | Zonknappar, summering, utfall. |
@@ -132,8 +132,44 @@ skjutlaget.
 | `anvisning` | `ritaAnvisning` | Regelverkets anvisning per prov. |
 | `export` | `ritaExportval` | Fyra format plus förhandsgranskning. |
 | `register` | `ritaRegister` | Skytteregistret. Långt tryck raderar, som på startsidan. |
+| `import` | `ritaImport` | Klistra in ett skjutlag. `vy.retur` avgör om den fyller registret eller också omgången. |
 | `installningar` | `ritaInstallningar` | Säkerhetskopia, nollställning, hjälp. |
 | `dok` | `ritaDokument` | `anvandning.md` eller `hjalp.md`, renderad. |
+
+**"Påbörjad" är inget fält, utan en fråga till lagret.** En omgång som sparats utan att
+startas skiljer sig inte i data från en som just öppnats — båda saknar resultat. Därför
+finns ingen status att hålla i synk: `ritaStart` frågar `lager.resultat(o.id).length` och
+skriver *ej påbörjad* när svaret är noll. Ett `startad`-fält vore en andra sanning som
+kunde hamna fel, och den enda som visste bättre vore ändå resultatlistan.
+
+Följden är att en omgång kan sparas **utan deltagare** — det är meningen, linjen fylls på
+med *+ Lägg till skytt* när gruppen står där. Vyer som svepen måste alltså tåla noll
+deltagare: `nastaSkytt` ger `null` och huvudknappen säger vad som saknas i stället för
+"alla har en tid".
+
+**Importen är en vy, inte en modal — och bär därför sin egen väg tillbaka.** `+ Ny skytt`
+öppnar en modal just för att den som håller på att bocka i deltagare inte ska tappa sin
+halvfyllda omgång. Importen behöver mer plats än en modal ger (fält, granskning, filknapp),
+så den är en riktig vy, och då måste omgången bäras med för hand: `vy.retur` håller hela
+`ny`-vyn som den såg ut, och läggs tillbaka med `gaTill('ny', retur, true)`. Går man ut
+utan att importera återställs den likadant. Samma fält får alltså inte lämnas oavspeglade —
+`spegla()` måste köras innan man går härifrån.
+
+`vy.retur` är också det som skiljer vyns två beteenden åt. Från registret hoppas kända namn
+över; från en omgång bockas de i ändå, eftersom de ska stå på linjen även om de inte behöver
+skapas. Räkningen på huvudknappen följer samma regel — se `uppdateraImportgranskning`.
+
+**Kommatecknet är inte en avgränsare i `tolkaSkyttelista`.** Det ser ut som en förenkling
+och är tvärtom det viktigaste beslutet i tolkaren: svenska listor skrivs *Efternamn,
+Förnamn*, så en komma-CSV och en vanlig namnlista går inte att skilja åt automatiskt. Går
+någon in och "förbättrar" det till att gissa separator blir "Ek, Anna" en skytt vid namn Ek
+på förbandet Anna, och det tysta felet syns först i exporten. Semikolon och tabb, inget
+annat — samma semikolon som appens CSV-export skriver.
+
+Granskningen som `ritaImport` visar innan knappen trycks är inte pynt. En förlåtande tolkare
+måste kunna granskas: den stryker rubrikrader, numrering och BOM, och det är rimligt bara
+så länge användaren ser resultatet innan det skrivs. `granskaSkyttelista` rör därför inte
+lagret, och `importeraSkyttar` är den enda som skriver.
 
 **Flyttläge** är ett tillstånd på vallistan (`vy.flyttlage`), inte en egen vy: ett långt
 tryck slår på det, varje rad får ett handtag (☰) och draget börjar när man tar i handtaget.
@@ -217,7 +253,7 @@ ingen markdown läcker ut som asterisker på skärmen.
 
 ```bash
 python3 bygg.py     # måste köras först — proven kör mot docs/
-npm test            # 79 prov: regelmotor, export, hela flödet, spärrarna mot utgående trafik
+npm test            # 109 prov: regler, export, import, hela flödet, spärrarna mot utgående trafik
 ```
 
 **Bygg före du provar.** Det här är den enklaste fällan i arkivet och den värsta, eftersom
