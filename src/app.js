@@ -704,8 +704,14 @@ function markdown(text) {
   const inline = (rad) => esc(rad)
     .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
     .replace(/\*([^*]+)\*/g, '<i>$1</i>')
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g,
-      '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    // Bara http(s) blir länk. Texterna är våra egna och byggs in vid bygget,
+    // så det här är inget öppet inflöde — men `[klick](javascript:…)` hade
+    // blivit en körbar länk, och den möjligheten finns ingen anledning att
+    // lämna kvar. Annat schema återges som text.
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (helaTraffen, text, url) =>
+      (/^https?:\/\//i.test(url)
+        ? `<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`
+        : helaTraffen));
 
   return text.trim().split(/\n\s*\n/).map((block) => {
     const rader = block.split('\n').map((r) => r.trim()).filter(Boolean);

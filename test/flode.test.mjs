@@ -1085,7 +1085,9 @@ test('hjälpen finns i appen, med installation, data, buggar och licens', () => 
 
   const lank = doc.querySelector('#app a');
   assert.match(lank.getAttribute('href'), /github\.com\/steeriks\/fm-kompetensprov\/issues/);
-  assert.equal(lank.getAttribute('rel'), 'noopener');
+  // noreferrer utöver noopener: trycker någon på länken ska GitHub inte få
+  // veta varifrån den trycktes.
+  assert.equal(lank.getAttribute('rel'), 'noopener noreferrer');
   assert.ok(doc.querySelectorAll('#app .dokument h2').length >= 4, 'fyra avsnitt');
 
   klicka('Tillbaka till inställningar');

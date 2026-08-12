@@ -2,6 +2,23 @@
 <html lang="sv">
 <head>
 <meta charset="utf-8">
+<!-- Löftet om en app utan utgående anrop, hävdat av webbläsaren i stället för
+     bara av bygg.py. connect-src 'none' stänger fetch, XMLHttpRequest,
+     WebSocket, EventSource och sendBeacon — alltså varje väg som kan skicka
+     iväg ett skytteregister utan att användaren ser det. Appen gör inga
+     sådana anrop i dag; direktivet finns för att den inte ska kunna börja
+     göra det obemärkt, vare sig genom ett misstag eller genom inklistrad kod.
+
+     form-action 'none' är samma sak för formulär: fönstret för att lägga till
+     en skytt har en submit-hanterare som anropar preventDefault(), men om den
+     någon gång slutar göra det ska webbläsaren stoppa POST:en i stället för
+     att skicka namn och Fmid till en okänd adress.
+
+     Medvetet INTE default-src 'none': appen ska också fungera öppnad som lös
+     fil (file://), där 'self' inte matchar likadant, och en för snäv policy
+     hade tagit ikonen och manifestet med sig. Direktiven här är valda för att
+     enbart stänga vägar ut. -->
+<meta http-equiv="Content-Security-Policy" content="connect-src 'none'; form-action 'none'; object-src 'none'; base-uri 'none'; frame-src 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>FM kompetensprov</title>
 <meta name="description" content="Instruktörsverktyg för Försvarsmaktens kompetensprov, pistol och automatkarbin.">

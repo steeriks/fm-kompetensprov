@@ -95,6 +95,89 @@ def bygg_html(js):
     return html
 
 
+# Adresser som får stå i filen, med skälet. Allt annat stoppar bygget.
+# Poängen med en lista med skäl i stället för ett tystare mönster: den som
+# lägger till en rad här måste skriva ner varför, och den som läser kan
+# ifrågasätta det.
+TILLATNA_URLER = {
+    # XML-namnrymder i xlsx-exporten. De är identifierare i filformatet —
+    # varken webbläsaren eller Excel hämtar något från dem.
+    'http://schemas.openxmlformats.org/spreadsheetml/2006/main',
+    'http://schemas.openxmlformats.org/package/2006/content-types',
+    'http://schemas.openxmlformats.org/package/2006/relationships',
+    'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
+    'http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument',
+    'http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet',
+    'http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles',
+    # Länk i hjälptexten. Öppnas bara om användaren trycker på den, i en ny
+    # flik, och hämtas aldrig av appen själv.
+    'https://github.com/steeriks/fm-kompetensprov/issues',
+}
+
+# API:er som skickar eller hämtar data över nätet. Inget av dem har något i
+# appen att göra: allt som ska ut går via delningsrutan, som användaren själv
+# öppnar. Står något av dem i den byggda filen har antingen ett beroende
+# smugit sig in eller någon börjat ringa hem.
+NATVERKS_API = [
+    (r'\bfetch\s*\(', 'fetch()'),
+    (r'\bXMLHttpRequest\b', 'XMLHttpRequest'),
+    (r'\bWebSocket\b', 'WebSocket'),
+    (r'\bEventSource\b', 'EventSource'),
+    (r'\bsendBeacon\b', 'navigator.sendBeacon'),
+    (r'\bimportScripts\s*\(', 'importScripts()'),
+]
+
+CSP_KRAV = ["connect-src 'none'", "form-action 'none'"]
+
+
+def kontrollera_inga_utgaende(html):
+    """Appen får inte hämta eller skicka något på egen hand.
+
+    Den gamla kontrollen läste bara `src="…"` och `href="…"` med dubbla
+    citattecken i markup. Ett `fetch('https://…')` inne i skriptet — alltså
+    just det som skulle vara allvarligt — gick rakt igenom. Den här läser hela
+    filen: adresser var de än står, och nätverks-API:erna vid namn.
+    """
+    fel = []
+
+    # HTML-kommentarer räknas inte: de kör inte, och kommentaren som förklarar
+    # CSP:n måste få nämna fetch och sendBeacon vid namn utan att stoppa sitt
+    # eget bygge. (Den gjorde det, första gången kontrollen kördes.)
+    granskad = re.sub(r'<!--.*?-->', '', html, flags=re.S)
+
+    adresser = {u.rstrip('.,;\'"<)') for u in re.findall(r'https?://[^\s"\'<>)]+', granskad)}
+    for adress in sorted(adresser - TILLATNA_URLER):
+        fel.append(f'Okänd adress i bygget: {adress}')
+
+    # Protokollrelativt (//värd) i ett attribut. Kravet på citattecken eller
+    # likhetstecken före är vad som skiljer en riktig adress från varje
+    # JS-kommentar i filen.
+    for traff in re.findall(r'''(?:=|["'])//[a-z0-9][a-z0-9.-]*\.[a-z]{2,}[^\s"'<>]*''', granskad, re.I):
+        fel.append(f'Protokollrelativ adress i bygget: {traff}')
+
+    for monster, namn in NATVERKS_API:
+        if re.search(monster, granskad):
+            fel.append(f'Nätverks-API i bygget: {namn}')
+
+    # CSP:n är en del av löftet och ska inte gå att tappa bort av misstag.
+    #
+    # Läs direktiven ur SJÄLVA TAGGEN, inte ur filen som helhet. Första
+    # versionen sökte i hela texten, och eftersom kommentaren ovanför taggen
+    # förklarar direktiven med deras egna namn var kontrollen uppfylld även
+    # när taggen var borttagen — en kontroll som inte kunde ge utslag.
+    tagg = re.search(
+        r'<meta\s+http-equiv="Content-Security-Policy"\s+content="([^"]*)"', html, re.I)
+    if not tagg:
+        fel.append('CSP-taggen saknas i index.html')
+    else:
+        for direktiv in CSP_KRAV:
+            if direktiv not in tagg.group(1):
+                fel.append(f'CSP saknar direktivet: {direktiv}')
+
+    if fel:
+        raise SystemExit('\n'.join(['Bygget stoppat:'] + [f'  - {f}' for f in fel]))
+
+
 def main():
     DIST.mkdir(exist_ok=True)
     js = bygg_js()
@@ -116,11 +199,7 @@ def main():
         encoding='utf-8',
     )
 
-    # En kontroll som är värd sitt underhåll: filen får inte hämta något
-    # utifrån, för då fungerar den inte på en skjutbana utan täckning.
-    yttre = re.findall(r'(?:src|href)="(https?://[^"]+)"', html)
-    if yttre:
-        raise SystemExit(f'Externa beroenden i bygget: {yttre}')
+    kontrollera_inga_utgaende(html)
 
     kb = len(html.encode()) / 1024
     print(f'dist/index.html — {kb:.0f} kB, allt inbakat')

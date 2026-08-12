@@ -26,15 +26,26 @@ before touching anything.
 
 ```bash
 python3 bygg.py     # bundles src/ into one self-contained file
-npm test            # 74 tests: rules, export, full flow
+npm test            # 79 tests: rules, export, full flow, outbound-traffic guards
 ```
 
 Editing `src/` and running `npm test` tests the *previous* build, which passes happily and tells
 you nothing.
 
-**The app must stay one file with zero external requests.** `bygg.py` refuses to build if an
-`http(s)` `src`/`href` slipped in, because a fetch at runtime means a blank app on a range without
-coverage. The same file is what GitHub Pages serves and what can be mailed as an attachment.
+**The app must stay one file with zero external requests.** A fetch at runtime means a blank app
+on a range without coverage — and the app holds names, units and service numbers of serving
+personnel, so nothing may leave the phone unless the instructor presses export. Three things
+enforce this together, and all three must stay:
+
+- `bygg.py` → `kontrollera_inga_utgaende()` fails the build on an unknown address anywhere in the
+  file (not just in `src=`/`href=`), a protocol-relative address, a network API by name, or a
+  missing/weakened CSP. Permitted addresses live in `TILLATNA_URLER`, each with its reason.
+- The CSP meta tag in `src/index.html` (`connect-src 'none'`, `form-action 'none'`) — the browser
+  closes the door even if the code tries.
+- `test/utgaende.test.mjs` repeats the checks against the built file, so they still hold if
+  `bygg.py` itself is changed.
+
+The same file is what GitHub Pages serves and what can be mailed as an attachment.
 
 ## Publishing
 

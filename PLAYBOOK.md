@@ -12,9 +12,32 @@ och de ska säga samma sak.
 
 **Appen är en fil.** `src/` är uppdelad för att gå att läsa och testa, men det som
 distribueras är `dist/index.html` med allt inbakat — CSS, JavaScript, favikon och
-hjälptexten. Samma fil serveras av GitHub Pages och kan mejlas som bilaga. `bygg.py` vägrar
-bygga om något externt smugit sig in (`src=`/`href=` mot `http`), för appen ska fungera på
-en skjutbana utan täckning.
+hjälptexten. Samma fil serveras av GitHub Pages och kan mejlas som bilaga.
+
+**Ingenting går ut ur appen, och det kontrolleras på tre ställen.** Skälet är dubbelt:
+appen ska fungera på en skjutbana utan täckning, och den bär namn, förband och Fmid på
+anställd personal.
+
+| var | vad |
+|---|---|
+| `bygg.py` → `kontrollera_inga_utgaende()` | stoppar bygget vid okänd adress (var som helst i filen, inte bara i `src=`/`href=`), protokollrelativ adress, nätverks-API vid namn, eller saknad/försvagad CSP |
+| CSP-taggen i `src/index.html` | `connect-src 'none'` och `form-action 'none'` — webbläsaren stänger vägen även om koden försöker |
+| `test/utgaende.test.mjs` | samma kontroller mot den byggda filen, så de gäller även om `bygg.py` ändras |
+
+Adresser som får finnas står i `TILLATNA_URLER` i `bygg.py`, var och en med skälet
+utskrivet: xlsx-formatets XML-namnrymder (identifierare, hämtas aldrig) och GitHub-länken i
+hjälptexten (öppnas bara om användaren trycker).
+
+Två fällor som redan kostat tid här, båda av samma sort — en kontroll som inte kan ge
+utslag:
+
+- Den **gamla** kontrollen läste bara `src="…"` och `href="…"` med dubbla citattecken i
+  markup. Ett `fetch('https://…')` inne i skriptet gick rakt igenom, alltså precis det fall
+  som varit allvarligt.
+- CSP-kontrollen sökte först i **hela filen**. Kommentaren som förklarar taggen innehåller
+  direktivens egna namn, så kontrollen var uppfylld även med taggen borttagen. Den läser nu
+  direktiven ur själva taggen. HTML-kommentarer stryks före granskningen — de kör inte, och
+  förklaringen måste få nämna `fetch` och `sendBeacon` utan att fälla sitt eget bygge.
 
 **Reglerna är data, inte kod.** `PROV` i `src/regler.js` beskriver varje delmoment:
 målytor, hur många träffar som räknas i varje målyta, kravet på poängkvot, hur många försök
@@ -220,6 +243,17 @@ enbart programmet självt. `LICENSE` följer med dit.
 
 `bygg.py` sätter `CACHE` i `dist/sw.js` till appens fingeravtryck, så en publicering slår
 igenom av sig själv. Rör inte värdet i `src/sw.js` — det skrivs över vid varje bygge.
+
+**Servicearbetaren frågar cachen först, nätet bara när filen saknas där.** Tidigare var det
+tvärtom, och då hörde varje start med täckning av sig till GitHub Pages. Ingen användardata
+följde med, men en utgående förbindelse per start avslöjar IP, tidpunkt och telefonmodell
+för den som serverar filen — och det är inte gratis för en app som ska gå att använda utan
+att lämna spår. Uppdateringar tappas inte: webbläsaren jämför `sw.js` mot serverns kopia på
+egen hand, och eftersom cachenamnet bär appens fingeravtryck hämtar en ny version sina filer
+i `install`-steget. Priset är att en ny version kan dröja en start extra.
+
+Arbetaren släpper också bara igenom appens egen värd (`url.origin !== self.location.origin`
+→ passera). En begäran till någon annan ska inte cachas som om den hörde hemma.
 
 GitHub Pages ligger ofta en halv minut efter pushen. Jämför checksummor innan du drar
 slutsatser om att en ändring inte kom med:

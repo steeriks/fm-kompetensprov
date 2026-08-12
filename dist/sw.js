@@ -5,7 +5,7 @@
 // vilket gör att en ny version verkligen slår igenom i stället för att den
 // gamla ligger kvar i cachen.
 
-const CACHE = 'fm-kompetensprov-402bd06117e4';   // byts av bygg.py till appens fingeravtryck
+const CACHE = 'fm-kompetensprov-87c35a845912';   // byts av bygg.py till appens fingeravtryck
 const FILER = ['./', './index.html', './manifest.webmanifest', './ikon-180.png', './ikon-512.png'];
 
 self.addEventListener('install', (e) => {
@@ -22,15 +22,29 @@ self.addEventListener('activate', (e) => {
 
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
-  // Nätet först när det finns, cachen annars: du ska få senaste versionen
-  // hemma på wifi, men appen ska starta även utan täckning.
+
+  // Bara appens egna filer. En begäran till någon annan värd har appen ingen
+  // anledning att göra — går den ändå iväg ska den inte passera här och bli
+  // cachad som om den hörde hemma.
+  const url = new URL(e.request.url);
+  if (url.origin !== self.location.origin) return;
+
+  // Cachen först, nätet bara när filen inte finns där. Det omvända (nätet
+  // först) innebar att varje start med täckning hörde av sig till GitHub
+  // Pages — ingen användardata, men en utgående förbindelse per start som
+  // avslöjar IP, tidpunkt och telefonmodell för den som serverar filen. En
+  // app som ska kunna användas utan att lämna spår ska inte göra det.
+  //
+  // Uppdateringar tappas inte: webbläsaren jämför sw.js mot serverns kopia på
+  // egen hand, och eftersom bygg.py stämplar CACHE med appens fingeravtryck
+  // hämtar en ny version sina filer i install-steget.
   e.respondWith(
-    fetch(e.request)
+    caches.match(e.request).then((traff) => traff || fetch(e.request)
       .then((svar) => {
         const kopia = svar.clone();
         caches.open(CACHE).then((c) => c.put(e.request, kopia)).catch(() => {});
         return svar;
       })
-      .catch(() => caches.match(e.request).then((traff) => traff || caches.match('./index.html'))),
+      .catch(() => caches.match('./index.html'))),
   );
 });

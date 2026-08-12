@@ -111,6 +111,18 @@ som bedöms; en app som visar 1,00 och säger underkänt vore obegriplig i fält
 I telefonen, ingen annanstans. Ingen server, inget konto, ingen som kan se listorna.
 Ingenting lämnar enheten förrän du själv trycker på *Dela resultat*.
 
+Appen kan inte skicka iväg något på egen hand: den saknar kod för det, och webbläsaren är
+dessutom instruerad att stänga varje sådan väg. Den hör inte heller av sig till servern när
+den startar — en gång installerad startar den ur telefonens eget minne.
+
+Två saker att veta, eftersom de ligger utanför vad appen rår över:
+
+- **Delningsrutan är din.** Trycker du *Dela resultat* och väljer Mail, iCloud eller en
+  chattapp så går uppgifterna dit. Det är meningen med knappen — men det är där de lämnar
+  telefonen, så välj mottagare med samma omsorg som du hade valt för en papperslista.
+- **Enhetens säkerhetskopia tar med appens data.** Har du iCloud-säkerhetskopiering påslagen
+  följer registret med dit, precis som för andra appar i telefonen.
+
 Följden är att **du ansvarar för uppgifterna**: skyttarnas namn ligger kvar tills du
 raderar dem. Under *Appinställningar* finns **Radera allt innehåll**, och **Spara kopia** /
 **Läs in kopia** — en JSON-fil som också är vägen att flytta ett register till en annan

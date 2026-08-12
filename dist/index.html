@@ -2,6 +2,23 @@
 <html lang="sv">
 <head>
 <meta charset="utf-8">
+<!-- Löftet om en app utan utgående anrop, hävdat av webbläsaren i stället för
+     bara av bygg.py. connect-src 'none' stänger fetch, XMLHttpRequest,
+     WebSocket, EventSource och sendBeacon — alltså varje väg som kan skicka
+     iväg ett skytteregister utan att användaren ser det. Appen gör inga
+     sådana anrop i dag; direktivet finns för att den inte ska kunna börja
+     göra det obemärkt, vare sig genom ett misstag eller genom inklistrad kod.
+
+     form-action 'none' är samma sak för formulär: fönstret för att lägga till
+     en skytt har en submit-hanterare som anropar preventDefault(), men om den
+     någon gång slutar göra det ska webbläsaren stoppa POST:en i stället för
+     att skicka namn och Fmid till en okänd adress.
+
+     Medvetet INTE default-src 'none': appen ska också fungera öppnad som lös
+     fil (file://), där 'self' inte matchar likadant, och en för snäv policy
+     hade tagit ikonen och manifestet med sig. Direktiven här är valda för att
+     enbart stänga vägar ut. -->
+<meta http-equiv="Content-Security-Policy" content="connect-src 'none'; form-action 'none'; object-src 'none'; base-uri 'none'; frame-src 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>FM kompetensprov</title>
 <meta name="description" content="Instruktörsverktyg för Försvarsmaktens kompetensprov, pistol och automatkarbin.">
@@ -2249,8 +2266,14 @@ function markdown(text) {
   const inline = (rad) => esc(rad)
     .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
     .replace(/\*([^*]+)\*/g, '<i>$1</i>')
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g,
-      '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    // Bara http(s) blir länk. Texterna är våra egna och byggs in vid bygget,
+    // så det här är inget öppet inflöde — men `[klick](javascript:…)` hade
+    // blivit en körbar länk, och den möjligheten finns ingen anledning att
+    // lämna kvar. Annat schema återges som text.
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (helaTraffen, text, url) =>
+      (/^https?:\/\//i.test(url)
+        ? `<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`
+        : helaTraffen));
 
   return text.trim().split(/\n\s*\n/).map((block) => {
     const rader = block.split('\n').map((r) => r.trim()).filter(Boolean);
