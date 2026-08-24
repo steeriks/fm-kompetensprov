@@ -155,6 +155,22 @@ test('provtabellen har kraven ur reglerna', () => {
   assert.equal(PROV.pist.maxForsok, 3);
   assert.equal(PROV.ak.grupper[0].antal, 9);
   assert.deepEqual(PROV.pist.grupper.map((g) => g.antal), [4, 2]);
+  // 30-metersvarianten är samma delmoment: samma målyta och samma antal
+  // träffar, men kortare avstånd och därför högre krav på poängkvot.
+  assert.equal(PROV.ak30.pkKrav, 1.3);
+  assert.equal(PROV.ak30.avstand, '30 m');
+  assert.equal(PROV.ak30.maxForsok, 3);
+  assert.deepEqual(PROV.ak30.grupper, PROV.ak.grupper);
+  assert.deepEqual(PROV.ak30.anvisning.genomforande, PROV.ak.anvisning.genomforande,
+    'genomförandet skiljer sig inte åt mellan avstånden');
+});
+
+test('30-metersprovet bedöms mot sitt eget krav', () => {
+  const traffar = { B: 5, C: 4 };                 // 32 poäng
+  assert.equal(bedom('ak', traffar, 26).godkand, true, '1,23 räcker på 50 m');
+  assert.equal(bedom('ak30', traffar, 26).godkand, false, 'men inte på 30 m');
+  assert.match(bedom('ak30', traffar, 26).brister[0], /Poängkvot 1,23 — kravet är 1,30/);
+  assert.equal(bedom('ak30', traffar, 24.5).godkand, true);
 });
 
 // --- taket på antalet träffar --------------------------------------------

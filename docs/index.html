@@ -243,6 +243,11 @@ label.falt input.saknas { border-color: var(--underkand); }
   background: none; color: var(--dampad); font-weight: 700; letter-spacing: 0.03em;
 }
 .lagesvaljare button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+/* Anvisningarna har tre prov att välja mellan — pistol och automatkarbin på
+   50 respektive 30 m. Knapparna ryms bredvid varandra så länge texten hålls
+   kort; blir det fler prov får raden brytas i stället. */
+.lagesvaljare.tre { grid-template-columns: repeat(3, 1fr); }
+.lagesvaljare.tre button { font-size: 0.95rem; }
 
 /* -------------------------------------------------------- sifferknappsats */
 
@@ -586,6 +591,38 @@ Den lämnas som den är, utan garantier. Ansvaret för bedömningen, för att kr
 // (1 p), medan X är bröstet (2 p). Zonerna delas i två målytor på pistol.
 const ZONPOANG = { A: 5, B: 4, C: 3, D: 3, X: 2, H: 1 };
 
+// Automatkarbinens delmoment 12 skjuts normalt på 50 m. Finns ingen
+// 50-metersbana att tillgå får provet skjutas på 30 m i stället, och då höjs
+// kravet på poängkvot till 1,3. Genomförandet är detsamma på båda avstånden,
+// så anvisningens gemensamma delar står EN gång och delas av de två proven:
+// texterna är citat ur handboken, och ett citat som skrivs av på två ställen
+// hinner bli olika.
+const AK_RUBRIK = 'Kompetensprov Bas — liggande med stöd, knästående/sittande, stående';
+
+const AK_STALLNING = 'Stående grundställning → valfri liggande skjutställning (stöd är tillåtet) '
+  + '→ valfri knästående/sittande skjutställning → stående skjutställning';
+
+const AK_MATNING = [
+  'Skjuttiden mäts med skjuttimer. Tiden mäts mellan startsignal och sista skott.',
+  'Skytten får bättra missar eller dåliga träffar genom att skjuta fler än tre skott i '
+    + 'stående ställning efter att ha genomfört omladdning. De nio bästa träffarna räknas.',
+  'Det är inte meningen att skyttarna ska utnyttja reglerna genom att skjuta orimligt '
+    + 'många skott väldigt fort — bättringen ska komma som en konsekvens av att skytten '
+    + 'tolkar siktbilden.',
+];
+
+const AK_GENOMFORANDE = [
+  'Startposition: stående grundställning bakom eldställningen. Vapnet laddat med sex '
+    + 'patroner. Ett fullt magasin i en stängd magasinsficka.',
+  'På startsignal inta valfri liggande ställning, skjut tre skott.',
+  'Inta därefter valfri knästående/sittande ställning och skjut tre skott.',
+  'Genomför därefter omladdning och skjut tre träff från stående ställning. Totalt antal '
+    + 'träff för att vara godkänd är nio; eventuella bättringar genomförs efter omladdning '
+    + 'och i stående ställning.',
+  '”Har skytten några frågor?”',
+  '”Grundställning” — ge startsignal med timer.',
+];
+
 const PROV = {
   ak: {
     kod: 'ak',
@@ -600,34 +637,43 @@ const PROV = {
       { id: 'alla', namn: 'Träffar', zoner: ['A', 'B', 'C', 'D', 'X', 'H'], antal: 9 },
     ],
     anvisning: {
-      rubrik: 'Kompetensprov Bas — liggande med stöd, knästående/sittande, stående',
+      rubrik: AK_RUBRIK,
       fakta: [
         ['Avstånd', '50 m'],
         ['Mål', '1/1-figur'],
-        ['Ställning', 'Stående grundställning → valfri liggande skjutställning (stöd är tillåtet) '
-          + '→ valfri knästående/sittande skjutställning → stående skjutställning'],
+        ['Ställning', AK_STALLNING],
         ['Antal', '9 träff'],
         ['Krav', '9 träff, poängkvot minst 1,0'],
       ],
-      matning: [
-        'Skjuttiden mäts med skjuttimer. Tiden mäts mellan startsignal och sista skott.',
-        'Skytten får bättra missar eller dåliga träffar genom att skjuta fler än tre skott i '
-          + 'stående ställning efter att ha genomfört omladdning. De nio bästa träffarna räknas.',
-        'Det är inte meningen att skyttarna ska utnyttja reglerna genom att skjuta orimligt '
-          + 'många skott väldigt fort — bättringen ska komma som en konsekvens av att skytten '
-          + 'tolkar siktbilden.',
+      matning: AK_MATNING,
+      genomforande: AK_GENOMFORANDE,
+    },
+  },
+  ak30: {
+    kod: 'ak30',
+    namn: 'Automatkarbin 30 m',
+    delmoment: 'Delmoment 12 – Kompetensprov Bas (30 m)',
+    avstand: '30 m',
+    mal: '1/1-figur',
+    // Kortare avstånd ger tätare träffbild, och kravet höjs därefter: samma
+    // nio träffar ska sitta på kortare tid för att räcka till godkänt.
+    pkKrav: 1.3,
+    maxForsok: 3,
+    grupper: [
+      { id: 'alla', namn: 'Träffar', zoner: ['A', 'B', 'C', 'D', 'X', 'H'], antal: 9 },
+    ],
+    anvisning: {
+      rubrik: AK_RUBRIK,
+      fakta: [
+        ['Avstånd', '30 m — används endast i undantagsfall, när det inte finns en '
+          + '50-metersbana att tillgå'],
+        ['Mål', '1/1-figur'],
+        ['Ställning', AK_STALLNING],
+        ['Antal', '9 träff'],
+        ['Krav', '9 träff, poängkvot minst 1,3'],
       ],
-      genomforande: [
-        'Startposition: stående grundställning bakom eldställningen. Vapnet laddat med sex '
-          + 'patroner. Ett fullt magasin i en stängd magasinsficka.',
-        'På startsignal inta valfri liggande ställning, skjut tre skott.',
-        'Inta därefter valfri knästående/sittande ställning och skjut tre skott.',
-        'Genomför därefter omladdning och skjut tre träff från stående ställning. Totalt antal '
-          + 'träff för att vara godkänd är nio; eventuella bättringar genomförs efter omladdning '
-          + 'och i stående ställning.',
-        '”Har skytten några frågor?”',
-        '”Grundställning” — ge startsignal med timer.',
-      ],
+      matning: AK_MATNING,
+      genomforande: AK_GENOMFORANDE,
     },
   },
   pist: {
@@ -1866,7 +1912,10 @@ function ritaNy() {
     <label class="falt">Prov
       <select id="gren">
         <option value="pist">Pistol — Delmoment 14, BAS (PILEN)</option>
-        <option value="ak">Automatkarbin — Delmoment 12, Bas</option>
+        <option value="ak">Automatkarbin — Delmoment 12, Bas (50 m)</option>
+        <!-- 30 m är undantaget: det skjuts när ingen 50-metersbana finns att
+             tillgå, och kravet på poängkvot är då 1,3 i stället för 1,0. -->
+        <option value="ak30">Automatkarbin — Delmoment 12, Bas (30 m)</option>
       </select>
     </label>
     <div class="knapprad">
@@ -2338,9 +2387,10 @@ function ritaAnvisning() {
   // Vägen ut ska finnas i nederkant på båda provens sidor, inte bara som den
   // lilla ikonen i huvudet — hit kommer man ofta mitt i något annat.
   bottenrad.innerHTML = `
-    <div class="lagesvaljare">
+    <div class="lagesvaljare tre">
       <button data-anvisning="pist" aria-pressed="${gren === 'pist'}">PISTOL</button>
-      <button data-anvisning="ak" aria-pressed="${gren === 'ak'}">AUTOMATKARBIN</button>
+      <button data-anvisning="ak" aria-pressed="${gren === 'ak'}">AK 50 M</button>
+      <button data-anvisning="ak30" aria-pressed="${gren === 'ak30'}">AK 30 M</button>
     </div>
     <div class="knapprad">
       ${vy.omgangId
@@ -2642,7 +2692,8 @@ function ritaInstallningar() {
     <div class="knapprad"><button class="knapp fara" data-radera-allt="1">Radera allt innehåll</button></div>
     <p class="dampad liten" style="margin-top:2rem">
       Poängzoner enligt Helfigur 2020: A 5, B 4, C 3, D 3, X 2, H 1.
-      Krav enligt respektive delmoment — pistol PK 2,0, automatkarbin PK 1,0.
+      Krav enligt respektive delmoment — pistol PK 2,0, automatkarbin PK 1,0 på
+      50 m och 1,3 på 30 m.
       Allt du knappar in stannar i telefonen tills du delar det själv.</p>
     <input type="file" id="kopiafil" accept="application/json,.json" hidden>`;
   bottenrad.innerHTML = '';

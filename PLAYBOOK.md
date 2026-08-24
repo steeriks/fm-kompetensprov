@@ -52,6 +52,13 @@ något innehåll; båda läser tabellen. Ett nytt delmoment läggs till genom at
 `PROV`, inte genom att skriva om vare sig räkningen eller vyn. Det som är gemensamt för
 delmomenten står i `BEDOMNING`.
 
+Tabellen har tre prov, inte två: `ak` (automatkarbin, 50 m, PK 1,0), `ak30` (samma
+delmoment på 30 m — skjuts bara när ingen 50-metersbana finns att tillgå, och kravet är
+då PK 1,3) och `pist`. De två automatkarbinsproven är samma övning på olika avstånd, så
+rubrik, ställning, mätregler och genomförande står som konstanter (`AK_RUBRIK`,
+`AK_STALLNING`, `AK_MATNING`, `AK_GENOMFORANDE`) ovanför `PROV` och delas av båda. Det är
+med flit: texterna är citat, och ett citat som skrivs av på två ställen hinner bli olika.
+
 **Anvisningstexterna är citat, inte appens egen prosa — rätta dem inte.** `anvisning` och
 `BEDOMNING` är återgivna ur handboken, vilket vyn också säger i klartext. Fyra ställen ser
 ut som språkfel och är kontrollerade mot handboken 2026-08-12; de står som de står:
@@ -274,7 +281,7 @@ ingen markdown läcker ut som asterisker på skärmen.
 
 ```bash
 python3 bygg.py     # måste köras först — proven kör mot docs/
-npm test            # 109 prov: regler, export, import, hela flödet, spärrarna mot utgående trafik
+npm test            # 114 prov: regler, export, import, hela flödet, spärrarna mot utgående trafik
 ```
 
 **Bygg före du provar.** Det här är den enklaste fällan i arkivet och den värsta, eftersom

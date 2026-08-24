@@ -604,6 +604,40 @@ test('automatkarbin har en enda målyta med nio träff', () => {
   assert.equal(doc.querySelector('#pkvarde').textContent, '1,31');
 });
 
+test('automatkarbin på 30 m är samma prov med kravet 1,3', () => {
+  klicka('+ Ny omgång');
+  doc.querySelector('#gren').value = 'ak30';
+  rader()[0].click();
+  klicka('Starta omgången');
+  assert.match(doc.querySelector('#underrubrik').textContent, /Delmoment 12.*30 m.*krav PK 1,30/);
+  nastaIListan();
+  knappaTid('24,50');
+  klicka('Poäng för');
+  assert.equal(doc.querySelectorAll('.zongrupp').length, 1, 'samma enda målyta som på 50 m');
+  knappaZon('B', 5);
+  knappaZon('C', 4);
+  // 32 p / 24,50 s = 1,31 — hade räckt med marginal på 50 m, och räcker
+  // precis på 30 m.
+  assert.equal(doc.querySelector('#pkvarde').textContent, '1,31');
+  klicka('Registrera');
+  assert.match(doc.querySelector('#app').textContent, /godkänd/i);
+});
+
+test('30-metersprovet underkänner en tid som hade godkänts på 50 m', () => {
+  klicka('+ Ny omgång');
+  doc.querySelector('#gren').value = 'ak30';
+  rader()[0].click();
+  klicka('Starta omgången');
+  nastaIListan();
+  knappaTid('26,00');
+  klicka('Poäng för');
+  knappaZon('B', 5);
+  knappaZon('C', 4);
+  assert.equal(doc.querySelector('#pkvarde').textContent, '1,23');   // ≥ 1,0 men < 1,3
+  klicka('Registrera');
+  assert.match(doc.querySelector('#app').textContent, /underkänd/i);
+});
+
 test('en ny skytt läggs upp i en ruta där två av tre fält är valfria', async () => {
   klicka('Lägg till & hantera skyttar');
   klicka('+ Ny skytt');
@@ -823,7 +857,7 @@ test('anvisningen finns för båda proven, med avstånd och genomförande', () =
   assert.match(text(), /Vid osäker eller felaktig vapenhantering/);
   assert.match(text(), /Övningen får skjutas tre gånger/);
 
-  klicka('AUTOMATKARBIN');
+  klicka('AK 50 M');
   assert.match(doc.querySelector('#underrubrik').textContent, /Automatkarbin · Delmoment 12/);
   assert.equal(fakta()['Avstånd'], '50 m');
   assert.equal(fakta()['Krav'], '9 träff, poängkvot minst 1,0');
@@ -832,6 +866,14 @@ test('anvisningen finns för båda proven, med avstånd och genomförande', () =
   assert.match(text(), /Grundställning/);
   assert.match(text(), /Kravet är 1,00 för automatkarbin/);
   assert.equal(doc.querySelectorAll('.steg li').length, 6, 'sex punkter i genomförandet');
+
+  // Undantaget: samma delmoment på 30 m, med högre krav på poängkvot.
+  klicka('AK 30 M');
+  assert.match(doc.querySelector('#underrubrik').textContent, /Automatkarbin 30 m · Delmoment 12/);
+  assert.match(fakta()['Avstånd'], /^30 m — används endast i undantagsfall/);
+  assert.equal(fakta()['Krav'], '9 träff, poängkvot minst 1,3');
+  assert.match(text(), /Kravet är 1,30 för automatkarbin 30 m/);
+  assert.match(text(), /Vapnet laddat med sex patroner/, 'genomförandet är detsamma som på 50 m');
 });
 
 test('anvisningen nås mitt i en omgång och visar rätt prov', () => {
@@ -1504,7 +1546,7 @@ test('anvisningssidan heter Anvisningar och har vägen hem på båda proven', ()
   assert.ok(knappar().includes('Tillbaka till startsidan'), 'pistolsidan: ' + knappar());
   assert.equal(doc.querySelector('#hem').hidden, false, 'ikonen i huvudet finns också');
 
-  klicka('AUTOMATKARBIN');
+  klicka('AK 50 M');
   assert.equal(rubrik(), 'Anvisningar');
   assert.ok(knappar().includes('Tillbaka till startsidan'), 'ak-sidan: ' + knappar());
 

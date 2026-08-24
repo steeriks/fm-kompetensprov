@@ -9,6 +9,38 @@
 // (1 p), medan X är bröstet (2 p). Zonerna delas i två målytor på pistol.
 export const ZONPOANG = { A: 5, B: 4, C: 3, D: 3, X: 2, H: 1 };
 
+// Automatkarbinens delmoment 12 skjuts normalt på 50 m. Finns ingen
+// 50-metersbana att tillgå får provet skjutas på 30 m i stället, och då höjs
+// kravet på poängkvot till 1,3. Genomförandet är detsamma på båda avstånden,
+// så anvisningens gemensamma delar står EN gång och delas av de två proven:
+// texterna är citat ur handboken, och ett citat som skrivs av på två ställen
+// hinner bli olika.
+const AK_RUBRIK = 'Kompetensprov Bas — liggande med stöd, knästående/sittande, stående';
+
+const AK_STALLNING = 'Stående grundställning → valfri liggande skjutställning (stöd är tillåtet) '
+  + '→ valfri knästående/sittande skjutställning → stående skjutställning';
+
+const AK_MATNING = [
+  'Skjuttiden mäts med skjuttimer. Tiden mäts mellan startsignal och sista skott.',
+  'Skytten får bättra missar eller dåliga träffar genom att skjuta fler än tre skott i '
+    + 'stående ställning efter att ha genomfört omladdning. De nio bästa träffarna räknas.',
+  'Det är inte meningen att skyttarna ska utnyttja reglerna genom att skjuta orimligt '
+    + 'många skott väldigt fort — bättringen ska komma som en konsekvens av att skytten '
+    + 'tolkar siktbilden.',
+];
+
+const AK_GENOMFORANDE = [
+  'Startposition: stående grundställning bakom eldställningen. Vapnet laddat med sex '
+    + 'patroner. Ett fullt magasin i en stängd magasinsficka.',
+  'På startsignal inta valfri liggande ställning, skjut tre skott.',
+  'Inta därefter valfri knästående/sittande ställning och skjut tre skott.',
+  'Genomför därefter omladdning och skjut tre träff från stående ställning. Totalt antal '
+    + 'träff för att vara godkänd är nio; eventuella bättringar genomförs efter omladdning '
+    + 'och i stående ställning.',
+  '”Har skytten några frågor?”',
+  '”Grundställning” — ge startsignal med timer.',
+];
+
 export const PROV = {
   ak: {
     kod: 'ak',
@@ -23,34 +55,43 @@ export const PROV = {
       { id: 'alla', namn: 'Träffar', zoner: ['A', 'B', 'C', 'D', 'X', 'H'], antal: 9 },
     ],
     anvisning: {
-      rubrik: 'Kompetensprov Bas — liggande med stöd, knästående/sittande, stående',
+      rubrik: AK_RUBRIK,
       fakta: [
         ['Avstånd', '50 m'],
         ['Mål', '1/1-figur'],
-        ['Ställning', 'Stående grundställning → valfri liggande skjutställning (stöd är tillåtet) '
-          + '→ valfri knästående/sittande skjutställning → stående skjutställning'],
+        ['Ställning', AK_STALLNING],
         ['Antal', '9 träff'],
         ['Krav', '9 träff, poängkvot minst 1,0'],
       ],
-      matning: [
-        'Skjuttiden mäts med skjuttimer. Tiden mäts mellan startsignal och sista skott.',
-        'Skytten får bättra missar eller dåliga träffar genom att skjuta fler än tre skott i '
-          + 'stående ställning efter att ha genomfört omladdning. De nio bästa träffarna räknas.',
-        'Det är inte meningen att skyttarna ska utnyttja reglerna genom att skjuta orimligt '
-          + 'många skott väldigt fort — bättringen ska komma som en konsekvens av att skytten '
-          + 'tolkar siktbilden.',
+      matning: AK_MATNING,
+      genomforande: AK_GENOMFORANDE,
+    },
+  },
+  ak30: {
+    kod: 'ak30',
+    namn: 'Automatkarbin 30 m',
+    delmoment: 'Delmoment 12 – Kompetensprov Bas (30 m)',
+    avstand: '30 m',
+    mal: '1/1-figur',
+    // Kortare avstånd ger tätare träffbild, och kravet höjs därefter: samma
+    // nio träffar ska sitta på kortare tid för att räcka till godkänt.
+    pkKrav: 1.3,
+    maxForsok: 3,
+    grupper: [
+      { id: 'alla', namn: 'Träffar', zoner: ['A', 'B', 'C', 'D', 'X', 'H'], antal: 9 },
+    ],
+    anvisning: {
+      rubrik: AK_RUBRIK,
+      fakta: [
+        ['Avstånd', '30 m — används endast i undantagsfall, när det inte finns en '
+          + '50-metersbana att tillgå'],
+        ['Mål', '1/1-figur'],
+        ['Ställning', AK_STALLNING],
+        ['Antal', '9 träff'],
+        ['Krav', '9 träff, poängkvot minst 1,3'],
       ],
-      genomforande: [
-        'Startposition: stående grundställning bakom eldställningen. Vapnet laddat med sex '
-          + 'patroner. Ett fullt magasin i en stängd magasinsficka.',
-        'På startsignal inta valfri liggande ställning, skjut tre skott.',
-        'Inta därefter valfri knästående/sittande ställning och skjut tre skott.',
-        'Genomför därefter omladdning och skjut tre träff från stående ställning. Totalt antal '
-          + 'träff för att vara godkänd är nio; eventuella bättringar genomförs efter omladdning '
-          + 'och i stående ställning.',
-        '”Har skytten några frågor?”',
-        '”Grundställning” — ge startsignal med timer.',
-      ],
+      matning: AK_MATNING,
+      genomforande: AK_GENOMFORANDE,
     },
   },
   pist: {

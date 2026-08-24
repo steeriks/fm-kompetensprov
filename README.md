@@ -2,7 +2,7 @@
 
 **Ett stöd för instruktören** vid genomförandet av Försvarsmaktens kompetensprov för
 **pistol** (Delmoment 14, Kompetensprov BAS "PILEN") och **automatkarbin** (Delmoment 12,
-Kompetensprov Bas). En webbapp (PWA) som körs i telefonen, fungerar utan täckning och lagrar
+Kompetensprov Bas, på 50 m eller — i undantagsfall — 30 m). En webbapp (PWA) som körs i telefonen, fungerar utan täckning och lagrar
 allt lokalt.
 
 > **Appen är inte utgiven av Försvarsmakten och är inget officiellt system.** Den är
@@ -113,12 +113,17 @@ under *Lägg till & hantera skyttar*, där alla också går att ta bort på en g
 
 Målet är **Helfigur 2020**: A 5, B 4, C 3, D 3, X 2, H 1 poäng.
 
-| | Automatkarbin, Dm 12 Bas | Pistol, Dm 14 BAS (PILEN) |
-|---|---|---|
-| Avstånd | 50 m | 10 m |
-| Träffar som räknas | 9 | 4 i XBCD + 2 i AH |
-| Poängkvot | minst 1,0 | minst 2,0 |
-| Försök | 3 | 3 |
+| | Automatkarbin, Dm 12 Bas | Automatkarbin, Dm 12 Bas (30 m) | Pistol, Dm 14 BAS (PILEN) |
+|---|---|---|---|
+| Avstånd | 50 m | 30 m | 10 m |
+| Träffar som räknas | 9 | 9 | 4 i XBCD + 2 i AH |
+| Poängkvot | minst 1,0 | minst 1,3 | minst 2,0 |
+| Försök | 3 | 3 | 3 |
+
+**30 m är undantaget.** Automatkarbinens delmoment 12 skjuts på 50 m; finns ingen
+50-metersbana att tillgå får det skjutas på 30 m i stället, och kravet på poängkvot är då
+1,3. Genomförandet är detsamma. Provet väljs för sig när omgången läggs upp, så protokollet
+visar vilket avstånd som gällde.
 
 Poängkvoten är räknade poäng delat med tiden mellan startsignal och sista skott.
 

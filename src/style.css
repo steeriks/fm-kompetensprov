@@ -211,6 +211,11 @@ label.falt input.saknas { border-color: var(--underkand); }
   background: none; color: var(--dampad); font-weight: 700; letter-spacing: 0.03em;
 }
 .lagesvaljare button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+/* Anvisningarna har tre prov att välja mellan — pistol och automatkarbin på
+   50 respektive 30 m. Knapparna ryms bredvid varandra så länge texten hålls
+   kort; blir det fler prov får raden brytas i stället. */
+.lagesvaljare.tre { grid-template-columns: repeat(3, 1fr); }
+.lagesvaljare.tre button { font-size: 0.95rem; }
 
 /* -------------------------------------------------------- sifferknappsats */
 

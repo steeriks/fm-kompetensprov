@@ -166,7 +166,10 @@ function ritaNy() {
     <label class="falt">Prov
       <select id="gren">
         <option value="pist">Pistol — Delmoment 14, BAS (PILEN)</option>
-        <option value="ak">Automatkarbin — Delmoment 12, Bas</option>
+        <option value="ak">Automatkarbin — Delmoment 12, Bas (50 m)</option>
+        <!-- 30 m är undantaget: det skjuts när ingen 50-metersbana finns att
+             tillgå, och kravet på poängkvot är då 1,3 i stället för 1,0. -->
+        <option value="ak30">Automatkarbin — Delmoment 12, Bas (30 m)</option>
       </select>
     </label>
     <div class="knapprad">
@@ -638,9 +641,10 @@ function ritaAnvisning() {
   // Vägen ut ska finnas i nederkant på båda provens sidor, inte bara som den
   // lilla ikonen i huvudet — hit kommer man ofta mitt i något annat.
   bottenrad.innerHTML = `
-    <div class="lagesvaljare">
+    <div class="lagesvaljare tre">
       <button data-anvisning="pist" aria-pressed="${gren === 'pist'}">PISTOL</button>
-      <button data-anvisning="ak" aria-pressed="${gren === 'ak'}">AUTOMATKARBIN</button>
+      <button data-anvisning="ak" aria-pressed="${gren === 'ak'}">AK 50 M</button>
+      <button data-anvisning="ak30" aria-pressed="${gren === 'ak30'}">AK 30 M</button>
     </div>
     <div class="knapprad">
       ${vy.omgangId
@@ -942,7 +946,8 @@ function ritaInstallningar() {
     <div class="knapprad"><button class="knapp fara" data-radera-allt="1">Radera allt innehåll</button></div>
     <p class="dampad liten" style="margin-top:2rem">
       Poängzoner enligt Helfigur 2020: A 5, B 4, C 3, D 3, X 2, H 1.
-      Krav enligt respektive delmoment — pistol PK 2,0, automatkarbin PK 1,0.
+      Krav enligt respektive delmoment — pistol PK 2,0, automatkarbin PK 1,0 på
+      50 m och 1,3 på 30 m.
       Allt du knappar in stannar i telefonen tills du delar det själv.</p>
     <input type="file" id="kopiafil" accept="application/json,.json" hidden>`;
   bottenrad.innerHTML = '';
