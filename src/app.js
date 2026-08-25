@@ -23,6 +23,7 @@ const bottenrad = document.getElementById('bottenrad');
 const rubrikText = document.getElementById('rubriktext');
 const underrubrik = document.getElementById('underrubrik');
 const hemKnapp = document.getElementById('hem');
+document.getElementById('utgava').textContent = `v${UTGAVA}`;
 const stegaKnappar = [document.getElementById('stegabak'), document.getElementById('stegafram')];
 
 // Vy, och vad vyn handlar om. Ingen router — appen är en enda skärm i taget
@@ -920,8 +921,11 @@ function ritaDokument() {
   underrubrik.textContent = dok.under;
   hemKnapp.hidden = false;
   const kalla = document.getElementById(`dok-${vy.dok}`);
-  const text = (kalla && kalla.textContent.trim())
-    || 'Texten bakas in av bygg.py — kör `python3 bygg.py` och ladda om.';
+  // {{utgava}} i markdownen byts mot numret här och inte i bygget: texterna
+  // ska gå att läsa som de är i src/, och bygget bakar in dem oförändrade.
+  const text = ((kalla && kalla.textContent.trim())
+    || 'Texten bakas in av bygg.py — kör `python3 bygg.py` och ladda om.')
+    .replaceAll('{{utgava}}', UTGAVA);
   app.innerHTML = `<div class="dokument">${markdown(text)}</div>`;
   bottenrad.innerHTML =
     `<button class="knapp liten" data-vy="${dok.ater.vy}">${esc(dok.ater.text)}</button>`;

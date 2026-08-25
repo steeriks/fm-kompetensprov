@@ -1178,15 +1178,40 @@ test('inställningarna har ingen utskriftsknapp', () => {
   assert.ok(knappar.some((t) => /Spara kopia/.test(t)), 'säkerhetskopian ska finnas kvar');
 });
 
-test('inställningarna visar vilken utgåva som körs', () => {
+test('utgåvan syns i huvudet, i Om appen och under inställningarna', () => {
   const paket = JSON.parse(
     fs.readFileSync(path.join(import.meta.dirname, '..', 'package.json'), 'utf8'));
   assert.equal(doc.querySelector('meta[name="version"]').content, paket.version,
     'bygget ska baka in numret ur package.json, inte lämna platshållaren');
 
+  // 1. Huvudet, längst ut till höger — syns i varje vy utan att man letar.
+  assert.equal(doc.querySelector('#utgava').textContent, `v${paket.version}`);
+  assert.doesNotMatch(doc.querySelector('#rubrik').textContent, /v\d/,
+    'numret står utanför rubriken och får inte följa med skyttens namn');
+
+  // 2. Under Appinställningar.
   klicka('Appinställningar');
   assert.match(doc.querySelector('#app').textContent, new RegExp(`Version ${paket.version}`),
     'den som ringer om ett fel ska kunna säga vilken utgåva hen kör');
+
+  // 3. I Om appen — platshållaren {{utgava}} ska vara utbytt, inte utskriven.
+  klicka('Om appen');
+  const text = doc.querySelector('.dokument').textContent;
+  assert.match(text, new RegExp(`version ${paket.version}`));
+  assert.ok(!text.includes('{{utgava}}'), 'platshållaren ska bytas mot numret');
+
+  // Och kvar i huvudet hela vägen — det är poängen med att den står där.
+  assert.equal(doc.querySelector('#utgava').textContent, `v${paket.version}`);
+});
+
+test('kroken som höjer versionen ligger i arkivet och är körbar', () => {
+  const krok = path.join(import.meta.dirname, '..', '.githooks', 'pre-commit');
+  const stat = fs.statSync(krok);
+  assert.ok(stat.mode & 0o111, 'kroken måste vara körbar för att git ska ta den');
+  const kalla = fs.readFileSync(krok, 'utf8');
+  assert.match(kalla, /python3 bygg\.py/, 'kroken ska bygga om docs/ i samma commit');
+  assert.match(kalla, /git add package\.json docs\/index\.html docs\/sw\.js/,
+    'höjningen och bygget ska med i commiten, annars ligger arbetsträdet smutsigt');
 });
 
 test('knappsatsen byggs inte om vid varje siffra', () => {

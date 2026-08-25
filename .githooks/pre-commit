@@ -1,0 +1,49 @@
+#!/bin/sh
+# Höjer appens version, bygger om och lägger med resultatet i commiten.
+#
+# Varje commit blir en egen utgåva. Skälet är att versionen står i appen på
+# tre ställen och är det första man frågar efter när något krånglar i fält:
+# "vilken version kör du?" ska gå att svara på, och svaret ska peka på en
+# bestämd commit. Höjs numret för hand blir det glömt precis de gånger det
+# behövs.
+#
+# Bygget ligger här av samma skäl: docs/ är det som publiceras, och en commit
+# där docs/ inte motsvarar src/ publicerar fel app. Kroken stänger arkivets
+# äldsta fälla — att bygga är inte längre något man kan glömma.
+#
+# Kroken är tracked och aktiveras med:
+#     git config core.hooksPath .githooks
+#
+# Kör med --no-verify för att hoppa över den (t.ex. en ren dokumentationsfix
+# som inte ska bli en egen utgåva).
+set -e
+
+gitdir=$(git rev-parse --git-dir)
+
+# Sammanslagningar och ombaseringar skriver om commits som redan har sitt
+# nummer. Att höja då ger en ny utgåva per commit som spelas om.
+if [ -e "$gitdir/MERGE_HEAD" ] || [ -d "$gitdir/rebase-merge" ] || [ -d "$gitdir/rebase-apply" ] \
+   || [ -e "$gitdir/CHERRY_PICK_HEAD" ] || [ -e "$gitdir/REVERT_HEAD" ]; then
+  exit 0
+fi
+
+# Inget iscensatt: git avbryter ändå strax. Utan den här raden hade en tom
+# commit blivit en utgåvehöjning helt utan innehåll.
+git diff --cached --quiet && exit 0
+
+ny=$(python3 - <<'PY'
+import json, pathlib
+fil = pathlib.Path('package.json')
+paket = json.loads(fil.read_text(encoding='utf-8'))
+stor, liten, rattning = (int(d) for d in paket['version'].split('.'))
+# Rättningssiffran höjs automatiskt. Större steg — en ny funktion, ett brutet
+# format — sätts för hand i package.json, och kroken räknar vidare därifrån.
+paket['version'] = f'{stor}.{liten}.{rattning + 1}'
+fil.write_text(json.dumps(paket, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
+print(paket['version'])
+PY
+)
+
+python3 bygg.py >/dev/null
+git add package.json docs/index.html docs/sw.js
+echo "Version $ny — docs/ ombyggt och med i commiten."

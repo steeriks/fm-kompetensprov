@@ -186,7 +186,7 @@ Inga beroenden i appen — ren HTML, CSS och JavaScript, ingen CDN, inget ramver
 npm install       # bara jsdom, och bara för testerna
 npm run serve     # http://localhost:8390 mot src/
 npm run bygg      # bakar ihop src/ till docs/index.html
-npm test          # 119 prov: regelmotor, export, import och hela flödet i jsdom
+npm test          # 120 prov: regelmotor, export, import och hela flödet i jsdom
 ```
 
 Testerna kör mot `docs/`, så **bygg innan du provar**.
@@ -205,9 +205,19 @@ Testerna kör mot `docs/`, så **bygg innan du provar**.
 `docs/index.html` är både det som publiceras och det som kan mejlas — samma fil, så det
 aldrig råder tvivel om vilken version någon kör.
 
-**Versionsnumret skrivs på ett enda ställe: `package.json`.** Bygget bakar in det i den
-byggda filen, och appen visar det under *Appinställningar* — så den som anmäler ett fel kan
-säga vilken utgåva det gäller.
+**Varje commit är en egen utgåva.** En git-krok i `.githooks/pre-commit` höjer
+rättningssiffran i `package.json`, bygger om `docs/` och lägger med båda i commiten. Aktivera
+den en gång efter en klon:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+Numret bakas in i den byggda filen och visas på tre ställen i appen: längst upp till höger i
+varje vy, i *Om appen* och under *Appinställningar* — så den som anmäler ett fel kan säga
+vilken utgåva det gäller, och svaret pekar på en bestämd commit. Större steg än en
+rättningssiffra sätts för hand i `package.json`; kroken räknar vidare därifrån.
+`git commit --no-verify` hoppar över den.
 
 Se **[PLAYBOOK.md](PLAYBOOK.md)** för hur delarna hänger ihop, vilka fällor som redan
 kostat tid, och vad som gäller vid publicering.

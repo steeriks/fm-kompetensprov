@@ -311,7 +311,7 @@ ingen markdown läcker ut som asterisker på skärmen.
 
 ```bash
 python3 bygg.py     # måste köras först — proven kör mot docs/
-npm test            # 119 prov: regler, export, import, hela flödet, spärrarna mot utgående trafik
+npm test            # 120 prov: regler, export, import, hela flödet, spärrarna mot utgående trafik
 ```
 
 **Bygg före du provar.** Det här är den enklaste fällan i arkivet och den värsta, eftersom
@@ -334,10 +334,13 @@ radbrytning och om något är svårt att träffa med tummen i mörker måste ses
 ## Publicering
 
 ```bash
-python3 bygg.py
+python3 bygg.py && npm test                       # bygg först, prova sedan
 git commit -am "vad du gjorde" && git push        # det är hela publiceringen
 cp docs/index.html ~/Desktop/"FM kompetensprov.html"   # den mejlbara filen
 ```
+
+Kroken höjer versionen och bygger om i commiten, så bygget ovan är till för *proven* —
+publiceringen sköter sitt eget bygge.
 
 **Ett arkiv.** Källan och den byggda appen bor i `steeriks/fm-kompetensprov`, och Pages
 serverar `main` + `/docs`. Att bygga och pusha *är* att publicera — det finns inget andra
@@ -357,13 +360,33 @@ Appen innehåller inga hemligheter och inga resultat lämnar telefonen, så det 
 `bygg.py` sätter `CACHE` i `docs/sw.js` till appens fingeravtryck, så en publicering slår
 igenom av sig själv. Rör inte värdet i `src/sw.js` — det skrivs över vid varje bygge.
 
-**Versionsnumret skrivs på ett enda ställe: `package.json`.** Höj det när en publicering
-ändrar något användaren märker. `bygg.py` bakar in numret i `<meta name="version">` i den
-byggda filen, `app.js` läser taggen och visar det i fotnoten under Appinställningar — så den
-som anmäler ett fel kan säga vilken utgåva det gäller. Samma regel som för `sw.js`: rör inte
-värdet i `src/index.html`, det ska stå kvar på `utveckling`, vilket är sanningen för den som
-kör `npm run serve` mot `src/`. Ett prov i `test/flode.test.mjs` jämför taggen i den byggda
-filen mot `package.json`, så numret kan inte glida isär med det som visas.
+**Versionsnumret skrivs på ett enda ställe: `package.json`, och höjs av en krok.**
+`.githooks/pre-commit` höjer rättningssiffran, kör `python3 bygg.py` och lägger
+`package.json`, `docs/index.html` och `docs/sw.js` i commiten. Varje commit blir därmed en
+egen utgåva, och `docs/` kan aldrig hamna efter `src/` i det som publiceras — kroken stänger
+arkivets äldsta fälla. Aktivera den en gång per klon; kroken är versionerad, men var den
+ligger är en lokal inställning:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+Kroken avstår när en sammanslagning, ombasering, cherry-pick eller revert pågår — de skriver
+om commits som redan har sitt nummer — och när ingenting är iscensatt, så en tom commit inte
+blir en utgåvehöjning utan innehåll. `git commit --no-verify` hoppar över den helt. Större
+steg än en rättningssiffra sätts för hand i `package.json`; kroken räknar vidare därifrån.
+
+`bygg.py` bakar in numret i `<meta name="version">`, `app.js` läser taggen som `UTGAVA` och
+visar den på tre ställen: `#utgava` i huvudets högerkant, `{{utgava}}` i `src/hjalp.md` (byts
+i `ritaDokument()`, inte i bygget — texterna ska gå att läsa som de är i `src/`) och fotnoten
+under Appinställningar. Samma regel som för `sw.js`: rör inte värdet i `src/index.html`, det
+ska stå kvar på `utveckling`, vilket är sanningen för den som kör `npm run serve` mot `src/`.
+Ett prov i `test/flode.test.mjs` jämför taggen i den byggda filen mot `package.json` och
+kontrollerar alla tre ställena, så numret kan inte glida isär med det som visas.
+
+**Kroken ersätter inte `python3 bygg.py` innan du provar.** Den bygger vid *commit*, inte vid
+provkörning — proven läser fortfarande `docs/`, och en ändring i `src/` som inte byggts provas
+mot den förra filen. Fällan nedan står kvar precis som förut.
 
 **Servicearbetaren frågar cachen först, nätet bara när filen saknas där.** Tidigare var det
 tvärtom, och då hörde varje start med täckning av sig till GitHub Pages. Ingen användardata

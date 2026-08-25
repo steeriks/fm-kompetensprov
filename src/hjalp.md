@@ -2,6 +2,8 @@
 
 Ett **stöd för instruktören** vid genomförandet av kompetensproven: den håller ordning på skjutordningen, räknar poängkvoten och samlar resultaten i en lista som går att dela.
 
+Du kör **version {{utgava}}**. Numret står också längst upp till höger i appen och under Appinställningar — ha det till hands om du anmäler ett fel.
+
 **Appen är inte utgiven av Försvarsmakten** och är inget officiellt system. Den är privat gjord, och kraven den räknar med är hämtade ur handböckerna för respektive delmoment. Kontrollera alltid mot gällande utgåva — det är instruktören som bedömer, inte appen.
 
 ## Installera på hemskärmen

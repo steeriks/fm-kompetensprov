@@ -75,6 +75,16 @@ header h1 .nr { color: var(--accent); }
 .stega:disabled { color: var(--linje); cursor: default; }
 .stega:disabled:active { transform: none; }
 
+/* Utgåvan i huvudets högerkant. margin-left: auto skjuter den ut till kanten
+   utan att röra ordningen på det som står före — huset, pilarna och rubriken
+   packas som förut. Dämpad och liten: den ska gå att läsa av när någon
+   frågar, inte konkurrera med skyttens namn. */
+.utgava {
+  flex: 0 0 auto; align-self: flex-start;
+  font-size: 0.7rem; color: var(--dampad); font-variant-numeric: tabular-nums;
+  margin-left: auto;
+}
+
 /* Nedre marginalen följer bottenradens verkliga höjd (sätts av mätBottenrad).
    Reservvärdet gäller innan första mätningen och i lägen utan JS-mätning. */
 main {

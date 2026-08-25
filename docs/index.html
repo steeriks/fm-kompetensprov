@@ -24,7 +24,7 @@
 <!-- Versionen skrivs bara i package.json; bygg.py byter innehållet här mot
      numret därifrån, precis som cachenamnet i sw.js. Lämna "utveckling"
      stående i src/ — den som serverar src/ direkt kör inte en utgåva. -->
-<meta name="version" content="1.1.0">
+<meta name="version" content="1.1.1">
 <meta name="description" content="Instruktörsverktyg för Försvarsmaktens kompetensprov, pistol och automatkarbin.">
 <meta name="theme-color" content="#0b0d0c">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -110,6 +110,16 @@ header h1 .nr { color: var(--accent); }
 .stega:active { transform: scale(0.9); }
 .stega:disabled { color: var(--linje); cursor: default; }
 .stega:disabled:active { transform: none; }
+
+/* Utgåvan i huvudets högerkant. margin-left: auto skjuter den ut till kanten
+   utan att röra ordningen på det som står före — huset, pilarna och rubriken
+   packas som förut. Dämpad och liten: den ska gå att läsa av när någon
+   frågar, inte konkurrera med skyttens namn. */
+.utgava {
+  flex: 0 0 auto; align-self: flex-start;
+  font-size: 0.7rem; color: var(--dampad); font-variant-numeric: tabular-nums;
+  margin-left: auto;
+}
 
 /* Nedre marginalen följer bottenradens verkliga höjd (sätts av mätBottenrad).
    Reservvärdet gäller innan första mätningen och i lägen utan JS-mätning. */
@@ -457,6 +467,10 @@ label.falt input.saknas { border-color: var(--underkand); }
       <path d="M8.6 4.6 16 12l-7.4 7.4-2.1-2.1L11.8 12 6.5 6.7z"/>
     </svg>
   </button>
+  <!-- Utgåvan, längst ut till höger i varje vy. Fylls av app.js ur metataggen
+       ovan. Den ska gå att läsa av utan att leta i inställningarna — frågan
+       "vilken version kör du?" ställs oftast när något redan krånglar. -->
+  <span class="utgava" id="utgava"></span>
 </header>
 <main id="app"></main>
 <!-- Texterna bor som .md-filer i src/ och bakas in hit av bygg.py, som läser
@@ -534,6 +548,8 @@ Kraven för respektive delmoment — avstånd, ställning, träffkrav och poäng
 ## Vad appen är
 
 Ett **stöd för instruktören** vid genomförandet av kompetensproven: den håller ordning på skjutordningen, räknar poängkvoten och samlar resultaten i en lista som går att dela.
+
+Du kör **version {{utgava}}**. Numret står också längst upp till höger i appen och under Appinställningar — ha det till hands om du anmäler ett fel.
 
 **Appen är inte utgiven av Försvarsmakten** och är inget officiellt system. Den är privat gjord, och kraven den räknar med är hämtade ur handböckerna för respektive delmoment. Kontrollera alltid mot gällande utgåva — det är instruktören som bedömer, inte appen.
 
@@ -1796,6 +1812,7 @@ const bottenrad = document.getElementById('bottenrad');
 const rubrikText = document.getElementById('rubriktext');
 const underrubrik = document.getElementById('underrubrik');
 const hemKnapp = document.getElementById('hem');
+document.getElementById('utgava').textContent = `v${UTGAVA}`;
 const stegaKnappar = [document.getElementById('stegabak'), document.getElementById('stegafram')];
 
 // Vy, och vad vyn handlar om. Ingen router — appen är en enda skärm i taget
@@ -2693,8 +2710,11 @@ function ritaDokument() {
   underrubrik.textContent = dok.under;
   hemKnapp.hidden = false;
   const kalla = document.getElementById(`dok-${vy.dok}`);
-  const text = (kalla && kalla.textContent.trim())
-    || 'Texten bakas in av bygg.py — kör `python3 bygg.py` och ladda om.';
+  // {{utgava}} i markdownen byts mot numret här och inte i bygget: texterna
+  // ska gå att läsa som de är i src/, och bygget bakar in dem oförändrade.
+  const text = ((kalla && kalla.textContent.trim())
+    || 'Texten bakas in av bygg.py — kör `python3 bygg.py` och ladda om.')
+    .replaceAll('{{utgava}}', UTGAVA);
   app.innerHTML = `<div class="dokument">${markdown(text)}</div>`;
   bottenrad.innerHTML =
     `<button class="knapp liten" data-vy="${dok.ater.vy}">${esc(dok.ater.text)}</button>`;
