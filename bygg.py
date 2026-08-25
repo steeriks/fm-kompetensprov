@@ -13,6 +13,7 @@ skrivas som vanlig modulkod utan att bygget behöver en bundler.
 """
 import base64
 import hashlib
+import json
 import re
 import shutil
 from pathlib import Path
@@ -63,6 +64,11 @@ def bygg_js():
     return js
 
 
+def version():
+    """Utgåvans nummer, skrivet på ett enda ställe: package.json."""
+    return json.loads((HAR / 'package.json').read_text(encoding='utf-8'))['version']
+
+
 def bygg_html(js):
     html = (SRC / 'index.html').read_text(encoding='utf-8')
     css = (SRC / 'style.css').read_text(encoding='utf-8')
@@ -77,6 +83,13 @@ def bygg_html(js):
             raise SystemExit(f'{filnamn} innehåller </script och kan inte bäddas in')
         html = html.replace(taggen, taggen.replace('></script>', f'>\n{text}</script>'))
 
+    # Versionen bakas in i metataggen. Appen läser den därifrån och visar den
+    # under Inställningar, så att den som ringer om ett fel kan säga vilken
+    # utgåva hen kör. src/ behåller sitt "utveckling".
+    html = html.replace(
+        '<meta name="version" content="utveckling">',
+        f'<meta name="version" content="{version()}">',
+    )
     html = html.replace(
         '<link rel="stylesheet" href="style.css">',
         f'<style>\n{css}\n</style>',
@@ -202,7 +215,7 @@ def main():
     kontrollera_inga_utgaende(html)
 
     kb = len(html.encode()) / 1024
-    print(f'docs/index.html — {kb:.0f} kB, allt inbakat')
+    print(f'docs/index.html — version {version()}, {kb:.0f} kB, allt inbakat')
     print('docs/ innehåller även ' + ', '.join(MEDFOLJANDE))
 
 

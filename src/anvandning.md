@@ -27,7 +27,7 @@ Appen följer hur provet genomförs: alla tiderna först, poängen när gruppen 
 - **1. Lägg upp omgången.** *+ Ny omgång* — välj prov, datum, plats och instruktör, och bocka i deltagarna **i skjutordning**. Numret de får är skyttens tavelnummer på banan. *Starta omgången* går rakt in i den; *Spara utan att starta* lägger den åt sidan till senare.
 - **2. Ta tiderna.** *Registrera tid för första skytt* öppnar tavla 1. Knappa tiden rakt av som den står på timern — **555** blir 5,55 — och tryck *Spara & nästa skytt*. Under knappen står vem som står på tur.
 - **3. Gå fram till tavlorna.** När sista tiden är inne heter knappen *Spara & börja med poängen*, och appen står på tavla 1 i poängläget.
-- **4. För in träffarna.** En tryckning per träff på respektive zon. Målytan tar bara emot de träffar som räknas, så det är de **bästa** träffarna du knappar in. Poängkvoten och utfallet — **Godkänd** eller **Underkänd** — räknas medan du knappar.
+- **4. För in träffarna.** En tryckning per träff på respektive zon — **bättringsskotten med**. Knappa av hålen som de sitter; appen väljer ut de bästa träffarna åt dig, och räknaren i målytans rubrik säger vad som gäller: *4 av 4 — klart*, eller *6 av 4 — de 4 bästa räknas*. Poängkvoten och utfallet — **Godkänd** eller **Underkänd** — räknas medan du knappar.
 - **5. Registrera.** *Registrera & nästa skytt* låser försöket och går vidare. Efter sista skytten summeras omgången: *"Omgången klar — 2 av 3 godkända."*
 
 Växeln **TID | POÄNG** visar inom parentes hur många som väntar i respektive läge, och listan står alltid i det läge som har något kvar att göra. Du behöver alltså inte hålla reda på var i omgången ni är — och en avstickare till anvisningen eller delningen tappar inte bort dig.
@@ -38,7 +38,7 @@ Vid osäker eller felaktig vapenhantering: kryssa rutan på poängskärmen, så 
 
 - **Fylla på:** *+ Lägg till skytt* under listan — ur registret eller en helt ny. Hen hamnar på nästa lediga tavla.
 - **Byta plats:** håll in en rad tills handtagen (**☰**) visas, dra skytten dit hen ska, och tryck *Klar med ordningen*. Numret följer tavlan, inte personen.
-- **Rätta en träff:** håll in zonknappen för att nolla den, och knappa in rätt.
+- **Rätta en träff:** håll in zonknappen för att nolla den, och knappa in rätt. Har det blivit orimligt många träffar i en målyta säger appen till — den spärrar inget, men ett tryck för mycket ska upptäckas innan det följer med in i protokollet.
 - **Byta skytt i tidfönstret:** pilarna på var sida om namnet stegar en tavla fram eller tillbaka, om något gått snett på linjen. Den påbörjade tiden sparas på vägen, och pilen slocknar när linjen är slut åt det hållet.
 - **Nytt försök:** *+ Nytt försök* på skyttens rad. Provet får skjutas tre gånger; ett omtag startas alltid med flit.
 - **⌂** längst upp till vänster går alltid hem. En påbörjad tid sparas på vägen.

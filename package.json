@@ -1,6 +1,6 @@
 {
   "name": "fm-kompetensprov",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "Instruktörsverktyg för FM kompetensprov pistol och automatkarbin",
   "type": "module",

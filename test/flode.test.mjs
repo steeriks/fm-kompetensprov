@@ -730,7 +730,7 @@ test('hemikonen går hem från vilken vy som helst, och sparar tiden på vägen'
     '"Spara & tillbaka" ska lämna till vallistan');
 });
 
-test('fler träffar än de som räknas går inte att knappa in', () => {
+test('bättringsskott knappas in, och appen väljer ut de bästa', () => {
   klicka('+ Ny omgång');
   rader()[0].click();
   klicka('Starta omgången');
@@ -738,21 +738,48 @@ test('fler träffar än de som räknas går inte att knappa in', () => {
   knappaTid('10,00');
   klicka('Poäng för');
 
-  knappaZon('B', 4);                      // kroppen full
-  knappaZon('C', 3);                      // ska studsa
-  assert.match(doc.body.textContent, /XBCD har sina 4 träffar/,
-    'appen ska säga varför trycket inte tog');
-  assert.equal(doc.querySelector('#poangsumma').textContent, '16 p',
-    'inga fler kroppsträffar får läggas in');
-  assert.ok(doc.querySelector('[data-grupp="xbcd"]').classList.contains('full'));
+  const raknare = (id) => doc.querySelector(`[data-grupp="${id}"] .raknare`).textContent;
 
-  knappaZon('A', 2);                      // huvudet är en egen yta
-  assert.equal(doc.querySelector('#poangsumma').textContent, '26 p');
-  knappaZon('H', 1);
-  assert.equal(doc.querySelector('#poangsumma').textContent, '26 p', 'även AH har sitt tak');
+  knappaZon('D', 4);                      // fyra svaga kroppsträffar
+  assert.equal(doc.querySelector('#poangsumma').textContent, '12 p');
+  assert.equal(raknare('xbcd'), '4 av 4 — klart');
+
+  knappaZon('B', 2);                      // två bättringsskott, bättre än D
+  assert.equal(doc.querySelector('#poangsumma').textContent, '14 p',
+    'de fyra bästa är 4, 4, 3, 3 — de två sämsta D-träffarna faller bort');
+  assert.equal(raknare('xbcd'), '6 av 4 — de 4 bästa räknas');
+  assert.ok(!doc.querySelector('[data-grupp="xbcd"]').classList.contains('full'),
+    'knapparna dämpas inte längre — målytan har inget tak');
+
+  knappaZon('A', 3);                      // huvudet är en egen yta, ett skott över
+  assert.equal(doc.querySelector('#poangsumma').textContent, '24 p',
+    'AH räknar sina två bästa, inte tre');
+  assert.equal(raknare('ah'), '3 av 2 — de 2 bästa räknas');
+  assert.equal(doc.querySelector('#brister').textContent, '',
+    'överskott är ingen brist');
 
   const d = lagret().resultat[0];
-  assert.deepEqual(d.traffar, { B: 4, A: 2 }, 'bara de räknande träffarna lagras');
+  assert.deepEqual(d.traffar, { D: 4, B: 2, A: 3 },
+    'alla hål i tavlan lagras, inte bara de räknande');
+});
+
+test('orimligt många träff i en målyta påpekas, men spärras inte', () => {
+  klicka('+ Ny omgång');
+  rader()[0].click();
+  klicka('Starta omgången');
+  nastaIListan();
+  knappaTid('10,00');
+  klicka('Poäng för');
+
+  const varning = () => doc.querySelector('[data-grupp="xbcd"] .gruppvarning');
+
+  knappaZon('B', 8);                      // dubbla antalet räknande träffar
+  assert.ok(varning().hidden, 'dubbelt upp är ännu inte orimligt');
+  knappaZon('B', 1);
+  assert.ok(!varning().hidden, 'nionde träffen i en yta som räknar fyra är det');
+  assert.match(varning().textContent, /9 träff inlagda/);
+  assert.equal(doc.querySelector('#poangsumma').textContent, '16 p',
+    'påpekandet ändrar ingenting i räkningen');
 });
 
 test('en träff kan bytas ut: nolla zonen först', async () => {
@@ -773,7 +800,7 @@ test('en träff kan bytas ut: nolla zonen först', async () => {
   assert.equal(doc.querySelector('#poangsumma').textContent, '16 p');
 });
 
-test('automatkarbin tar emot nio träffar, inte fler', () => {
+test('automatkarbin tar emot fler än nio träffar och räknar de nio bästa', () => {
   klicka('+ Ny omgång');
   doc.querySelector('#gren').value = 'ak';
   rader()[0].click();
@@ -782,12 +809,22 @@ test('automatkarbin tar emot nio träffar, inte fler', () => {
   knappaTid('30,00');
   klicka('Poäng för');
 
-  knappaZon('B', 5);
-  knappaZon('C', 4);                      // nu nio
-  assert.equal(doc.querySelector('#poangsumma').textContent, '32 p');
-  knappaZon('A', 1);
-  assert.equal(doc.querySelector('#poangsumma').textContent, '32 p', 'den tionde ska studsa');
-  assert.match(doc.body.textContent, /9 träffar inlagda/);
+  const raknare = () => doc.querySelector('[data-grupp="alla"] .raknare').textContent;
+
+  knappaZon('C', 9);                      // nio svaga träffar
+  assert.equal(doc.querySelector('#poangsumma').textContent, '27 p');
+  assert.equal(raknare(), '9 av 9 — klart');
+
+  knappaZon('B', 2);                      // två bättringsskott efter omladdning
+  assert.equal(doc.querySelector('#poangsumma').textContent, '29 p',
+    'de nio bästa är 4, 4 och sju treor');
+  assert.equal(raknare(), '11 av 9 — de 9 bästa räknas');
+
+  knappaZon('H', 3);                      // sämre än allt annat — ska inte synas
+  assert.equal(doc.querySelector('#poangsumma').textContent, '29 p',
+    'en träff sämre än den sämsta räknande får inte höja poängen');
+
+  assert.deepEqual(lagret().resultat[0].traffar, { C: 9, B: 2, H: 3 });
 });
 
 test('utfallet skrivs i klartext bredvid kvoten', () => {
@@ -1134,6 +1171,17 @@ test('inställningarna har ingen utskriftsknapp', () => {
   assert.ok(!knappar.some((t) => /skriv ut/i.test(t)),
     'utskrift hör hemma på exportskärmen, inte här: ' + knappar.join(', '));
   assert.ok(knappar.some((t) => /Spara kopia/.test(t)), 'säkerhetskopian ska finnas kvar');
+});
+
+test('inställningarna visar vilken utgåva som körs', () => {
+  const paket = JSON.parse(
+    fs.readFileSync(path.join(import.meta.dirname, '..', 'package.json'), 'utf8'));
+  assert.equal(doc.querySelector('meta[name="version"]').content, paket.version,
+    'bygget ska baka in numret ur package.json, inte lämna platshållaren');
+
+  klicka('Appinställningar');
+  assert.match(doc.querySelector('#app').textContent, new RegExp(`Version ${paket.version}`),
+    'den som ringer om ett fel ska kunna säga vilken utgåva hen kör');
 });
 
 test('knappsatsen byggs inte om vid varje siffra', () => {

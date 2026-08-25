@@ -173,21 +173,31 @@ test('30-metersprovet bedöms mot sitt eget krav', () => {
   assert.equal(bedom('ak30', traffar, 24.5).godkand, true);
 });
 
-// --- taket på antalet träffar --------------------------------------------
+// --- bättringsskott utöver kravet ----------------------------------------
 
-test('målytan är full när den har sina räknande träffar', async () => {
-  const { arFull, gruppFor, antalIGrupp } = await import('../src/regler.js');
-  // Pistol: fyra i kroppen, två i huvudet
-  assert.equal(arFull('pist', 'B', { B: 3 }), false);
-  assert.equal(arFull('pist', 'B', { B: 4 }), true);
-  assert.equal(arFull('pist', 'C', { B: 2, C: 2 }), true, 'ytan räknas ihop, inte per zon');
-  assert.equal(arFull('pist', 'A', { B: 4 }), false, 'huvudet är en egen målyta');
-  assert.equal(arFull('pist', 'A', { A: 1, H: 1 }), true);
-  // Automatkarbin: nio i en enda målyta
-  assert.equal(arFull('ak', 'C', { C: 8 }), false);
-  assert.equal(arFull('ak', 'C', { B: 5, C: 4 }), true);
+test('bättringsskott räknas inte med bara för att de är inknappade', () => {
+  // Tolv träff på automatkarbin: 5 × B (4), 4 × C (3), 3 × D (3). De nio
+  // bästa är 5 × 4 + 4 × 3 = 32; D:na faller bort.
+  const b = bedom('ak', { B: 5, C: 4, D: 3 }, 25);
+  assert.equal(b.poang, 32, 'de tre sämsta träffarna får inte höja poängen');
+  assert.equal(b.grupper[0].antal, 12, 'alla hål i tavlan är kvar i underlaget');
+  assert.equal(b.grupper[0].kravAntal, 9);
+  assert.equal(b.grupper[0].over, 3, 'tre bättringsskott utöver de räknande');
+  assert.deepEqual(b.brister, [], 'överskott är ingen brist');
+  assert.equal(b.komplett, true);
+  assert.equal(b.godkand, true);
+});
 
-  assert.equal(gruppFor('pist', 'X').id, 'xbcd');
-  assert.equal(gruppFor('pist', 'H').id, 'ah');
-  assert.equal(antalIGrupp(gruppFor('ak', 'A'), { A: 2, D: 3 }), 5);
+test('pistolens målytor räknar sina bättringsskott var för sig', () => {
+  // XBCD: 4 × D (3) och 2 × B (4) → de fyra bästa är 4, 4, 3, 3 = 14.
+  // AH: 3 × A (5) → de två bästa är 10. Överskottet räknas per målyta.
+  const b = bedom('pist', { D: 4, B: 2, A: 3 }, 10);
+  assert.equal(b.poang, 24);
+  const [xbcd, ah] = b.grupper;
+  assert.equal(xbcd.poang, 14, 'de två B-träffarna tränger undan två D-träffar');
+  assert.equal(xbcd.antal, 6);
+  assert.equal(xbcd.over, 2);
+  assert.equal(ah.poang, 10);
+  assert.equal(ah.over, 1);
+  assert.deepEqual(b.brister, []);
 });

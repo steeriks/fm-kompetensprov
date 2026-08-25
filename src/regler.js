@@ -161,27 +161,6 @@ export function tvaDecimaler(n) {
   return Math.round(n * 100) / 100;
 }
 
-/** Gruppen en zon tillhör (XBCD eller AH på pistol, den enda på ak). */
-export function gruppFor(provKod, zon) {
-  return PROV[provKod].grupper.find((g) => g.zoner.includes(zon)) || null;
-}
-
-/** Antal träffar som lagts in i en målyta. */
-export function antalIGrupp(grupp, traffar = {}) {
-  return grupp.zoner.reduce((n, z) => n + (traffar[z] || 0), 0);
-}
-
-/**
- * Sant när målytan har sitt fulla antal träffar. Målytan tar emot exakt så
- * många träffar som räknas — nio på automatkarbin, fyra plus två på pistol.
- * Skjuter skytten bättringsskott är det de RÄKNANDE träffarna som knappas in,
- * inte alla hål i tavlan.
- */
-export function arFull(provKod, zon, traffar = {}) {
-  const g = gruppFor(provKod, zon);
-  return g ? antalIGrupp(g, traffar) >= g.antal : false;
-}
-
 /**
  * Bedömer ett försök.
  *
@@ -200,9 +179,9 @@ export function bedom(provKod, traffar = {}, tid = null, vapenhanteringUnderkand
   let poang = 0;
 
   const grupper = prov.grupper.map((g) => {
-    // Träffarna som en lista poängvärden, bästa först. Formuläret släpper bara
-    // in så många träffar som räknas, men avhuggningen står kvar som skydd:
-    // en inläst säkerhetskopia från en äldre version kan bära fler.
+    // Träffarna som en lista poängvärden, bästa först. Alla hål i tavlan
+    // knappas in, bättringsskotten med, och urvalet görs här: de N bästa i
+    // varje målyta räknas, resten faller bort.
     const varden = [];
     for (const zon of g.zoner) {
       for (let i = 0; i < (traffar[zon] || 0); i++) varden.push(ZONPOANG[zon]);

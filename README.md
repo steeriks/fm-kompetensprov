@@ -127,10 +127,19 @@ visar vilket avstånd som gällde.
 
 Poängkvoten är räknade poäng delat med tiden mellan startsignal och sista skott.
 
-**Appen tar emot exakt så många träffar som räknas.** Har skytten skjutit bättringsskott
-är det de *räknande* träffarna du knappar in, alltså de bästa. När en målyta är full
-dämpas dess knappar och fler tryck studsar; vill du byta ut en träff mot en bättre, håll
-in knappen och nolla zonen först.
+**Knappa in varje hål i tavlan — appen väljer ut de bästa.** Bättringsskotten knappas in
+som alla andra träffar, och målytan har inget tak. Räknaren i målytans rubrik säger vad som
+gäller: *4 av 4 — klart*, eller *6 av 4 — de 4 bästa räknas*. Instruktören behöver alltså
+inte sortera träffar i huvudet framme vid tavlan. Ett feltryck rättas som förut: håll in
+zonknappen så nollas den, och knappa in rätt.
+
+Blir antalet orimligt — mer än dubbelt så många träffar som målytan räknar — påpekar appen
+det utan att spärra något, så att ett tryck för mycket upptäcks i stället för att följa med
+in i protokollet.
+
+I exporten står **alla** träff i zonkolumnerna, medan poäng och poängkvot räknas på de
+bästa. Summerar man kolumnerna för hand kan man alltså få fler träff än poängen bygger på —
+det är bättringsskotten, och det är avsiktligt.
 
 Osäker eller felaktig vapenhantering underkänner provet — kryssrutan finns på poängskärmen.
 
@@ -175,7 +184,7 @@ Inga beroenden i appen — ren HTML, CSS och JavaScript, ingen CDN, inget ramver
 npm install       # bara jsdom, och bara för testerna
 npm run serve     # http://localhost:8390 mot src/
 npm run bygg      # bakar ihop src/ till docs/index.html
-npm test          # 109 prov: regelmotor, export, import och hela flödet i jsdom
+npm test          # 117 prov: regelmotor, export, import och hela flödet i jsdom
 ```
 
 Testerna kör mot `docs/`, så **bygg innan du provar**.
@@ -193,6 +202,10 @@ Testerna kör mot `docs/`, så **bygg innan du provar**.
 
 `docs/index.html` är både det som publiceras och det som kan mejlas — samma fil, så det
 aldrig råder tvivel om vilken version någon kör.
+
+**Versionsnumret skrivs på ett enda ställe: `package.json`.** Bygget bakar in det i den
+byggda filen, och appen visar det under *Appinställningar* — så den som anmäler ett fel kan
+säga vilken utgåva det gäller.
 
 Se **[PLAYBOOK.md](PLAYBOOK.md)** för hur delarna hänger ihop, vilka fällor som redan
 kostat tid, och vad som gäller vid publicering.

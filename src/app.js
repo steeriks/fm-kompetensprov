@@ -8,10 +8,15 @@
 
 import {
   PROV, BEDOMNING, ZONPOANG, ZONORDNING, bedom, komma, taltolk,
-  gruppFor, antalIGrupp, arFull,
 } from './regler.js';
 import * as lager from './lagring.js';
 import { underlag, somText, somCsv, somXlsx, somPdf, dela } from './export.js';
+
+// Versionen bakas in i metataggen av bygg.py. Serveras src/ direkt står det
+// "utveckling" där, vilket är sanningen i det läget. Namnet är UTGAVA och inte
+// VERSION: bygget lägger alla moduler i EN scope, och lagring.js har redan en
+// VERSION för lagringsformatet — kollisionen ger ett rått SyntaxError i appen.
+const UTGAVA = document.querySelector('meta[name="version"]')?.content || 'utveckling';
 
 const app = document.getElementById('app');
 const bottenrad = document.getElementById('bottenrad');
@@ -485,6 +490,7 @@ function ritaPoang() {
   const grupper = prov.grupper.map((g) => `
     <div class="zongrupp" data-grupp="${g.id}">
       <h3><span>${esc(g.namn)}</span><span class="raknare"></span></h3>
+      <p class="gruppvarning" hidden></p>
       <div class="zoner">
         ${g.zoner.map((z) => `
           <button class="zonknapp" data-zon="${z}" data-poang="${ZONPOANG[z]}">
@@ -497,7 +503,8 @@ function ritaPoang() {
 
   app.innerHTML = `
     ${r.tid === null ? '<div class="varningsruta">Ingen tid inlagd ännu — utan tid går ingen poängkvot att räkna.</div>' : ''}
-    <p class="dampad liten">Tryck en gång per träff. Håll in en knapp för att nolla den.</p>
+    <p class="dampad liten">Tryck en gång per träff — bättringsskotten med.
+    Appen räknar de bästa. Håll in en knapp för att nolla den.</p>
     ${grupper}
     <div class="summering">
       <span>Tid <b>${r.tid === null ? '–' : komma(r.tid) + ' s'}</b> · <span id="poangsumma">0 p</span></span>
@@ -531,15 +538,23 @@ function uppdateraPoang() {
   const r = lager.pagaende(o.id, vy.personId);
   const b = bedom(o.gren, r.traffar, r.tid, r.vapenhanteringUnderkand);
 
-  for (const g of PROV[o.gren].grupper) {
+  // Räknaren säger tre olika saker: hur långt det är kvar, att målytan är
+  // klar, och — när bättringsskotten knappats in — att appen väljer ut de
+  // bästa. Siffrorna kommer ur bedom() ovan, som redan gjort urvalet.
+  for (const g of b.grupper) {
     const ruta = app.querySelector(`[data-grupp="${g.id}"]`);
-    const antal = antalIGrupp(g, r.traffar);
-    const full = antal >= g.antal;
+    const klar = g.antal >= g.kravAntal;
     const del = ruta.querySelector('.raknare');
-    del.textContent = `${antal} av ${g.antal}${full ? ' — full' : ''}`;
-    del.classList.toggle('klar', full);
-    // Full målyta märks ut: knapparna dämpas så att det syns utan att läsa.
-    ruta.classList.toggle('full', full);
+    del.textContent = `${g.antal} av ${g.kravAntal}`
+      + (g.over > 0 ? ` — de ${g.kravAntal} bästa räknas` : klar ? ' — klart' : '');
+    del.classList.toggle('klar', klar);
+    // Dubbla antalet räknande träffar är ingen regelgräns utan ett rimlighets-
+    // mått: så många bättringsskott skjuter ingen, så då är det troligen ett
+    // tryck för mycket. Appen spärrar inte — den påpekar.
+    const varning = ruta.querySelector('.gruppvarning');
+    varning.hidden = g.over <= g.kravAntal;
+    varning.textContent = varning.hidden ? ''
+      : `${g.antal} träff inlagda — kontrollera att inget tryck blivit fel.`;
   }
   app.querySelector('#poangsumma').textContent = `${b.poang} p`;
   // Ingen bedömning innan det finns något att bedöma: en tom serie med tid
@@ -945,6 +960,7 @@ function ritaInstallningar() {
     <h2>Nollställ</h2>
     <div class="knapprad"><button class="knapp fara" data-radera-allt="1">Radera allt innehåll</button></div>
     <p class="dampad liten" style="margin-top:2rem">
+      Version ${esc(UTGAVA)}.
       Poängzoner enligt Helfigur 2020: A 5, B 4, C 3, D 3, X 2, H 1.
       Krav enligt respektive delmoment — pistol PK 2,0, automatkarbin PK 1,0 på
       50 m och 1,3 på 30 m.
@@ -1295,17 +1311,9 @@ document.addEventListener('click', async (ev) => {
   // --- zonknappar ---
   if (t.classList.contains('zonknapp')) {
     if (t.dataset.hollsIn === '1') { delete t.dataset.hollsIn; return; }
-    const o = lager.omgang(vy.omgangId);
-    const r = lager.pagaende(o.id, vy.personId);
-    // Målytan tar bara emot så många träffar som räknas. Knappa in de bästa;
-    // vill du byta ut en, håll in knappen och nolla den först.
-    if (arFull(o.gren, t.dataset.zon, r.traffar)) {
-      const g = gruppFor(o.gren, t.dataset.zon);
-      vibrera(80);
-      return flash(PROV[o.gren].grupper.length > 1
-        ? `${g.namn} har sina ${g.antal} träffar. Håll in en knapp för att ändra.`
-        : `${g.antal} träffar inlagda. Håll in en knapp för att ändra.`);
-    }
+    // Varje hål i tavlan knappas in, bättringsskotten med. Målytan har inget
+    // tak: urvalet av de räknande träffarna görs av bedom(), inte av handen
+    // som knappar. Ett feltryck rättas med ett långt tryck som nollar zonen.
     vibrera(15);
     const nu = Number(t.querySelector('.antal').textContent) || 0;
     return sattZon(t, nu + 1);

@@ -74,15 +74,25 @@ En språkgenomgång som "jämnar ut" dem gör appen otrogen mot källan. Ska nå
 är det handboken som avgör, inte språkkänslan — och då ska gällande utgåva kontrolleras
 först.
 
-**Målytan har ett tak, inte ett urval.** Både pistol och Ak tillåter bättringsskott efter
-omladdning, men bara de räknande träffarna förs in: nio på Ak, fyra plus två på pistol.
-`arFull()` avgör när en målyta är full, och knapptrycket studsar med en förklaring i
-stället för att räkna upp. Ska en träff bytas mot en bättre nollas zonen med ett långt
-tryck först.
+**Målytan har ett urval, inte ett tak.** Både pistol och Ak tillåter bättringsskott efter
+omladdning, och alla hål i tavlan knappas in — även de som inte räknas. Urvalet görs på ett
+enda ställe: `bedom()` sorterar målytans träffar och tar `slice(0, g.antal)`, alltså de nio
+bästa på Ak och de fyra plus två bästa på pistol. Handen som knappar behöver inte sortera
+någonting, och lagret bär hela träffbilden.
 
-Avhuggningen "de N bästa" står ändå kvar i `bedom()`. Den är inte längre ett urval utan ett
-skydd: en säkerhetskopia från en äldre version kan bära fler träffar än taket, och då ska
-poängen bli rätt i stället för för hög.
+`grupper[i].over` ur `bedom()` är antalet bättringsskott utöver de räknande. Räknaren i
+målytans rubrik läser det: *4 av 4 — klart*, *6 av 4 — de 4 bästa räknas*.
+
+**Fram till 1.1.0 var det tvärtom.** En spärr (`arFull()`) lät målytan ta emot exakt så många
+träffar som räknades, och trycket studsade när den var full. Det tvingade instruktören att
+välja ut de bästa träffarna i huvudet framme vid tavlan — precis det appen är till för att
+slippa — och det stred mot anvisningstexten i appen, som hela tiden har sagt att de bästa
+träffarna räknas. Spärren är borta, och med den `arFull()`, `gruppFor()` och `antalIGrupp()`.
+
+Ett hårt tak finns alltså inte längre. I stället påpekar poängskärmen när en målyta fått mer
+än dubbelt så många träffar som den räknar — 19 på Ak, 9 i XBCD, 5 i AH. Det är ett
+rimlighetsmått mot feltryck, inte en regel, och därför står tröskeln i `uppdateraPoang()`
+och inte i `PROV`. Ett feltryck rättas som förut: långt tryck nollar zonen.
 
 **Numret sitter på tavlan, inte på personen.** Skyttens nummer är hens plats i
 `omgang.deltagare` — flyttas hen numreras alla om. Numret följer med till rubriken, till
@@ -242,6 +252,11 @@ antingen bakom knapparna eller slösar skärm.
   kör.
 - **Proven ska trycka på knappar, inte på deras text.** Ett namnbyte välte tjugo prov som
   handlade om annat. Huvudknappen hämtas som element; orden provas för sig.
+- **Bygget lägger alla moduler i EN scope.** Två moduler får inte ha samma namn på toppnivå,
+  hur privata de än ser ut i sin egen fil. `const VERSION` i `app.js` krockade med
+  `lagring.js` egen `VERSION` och gav ett `SyntaxError` som välte hela appen i jsdom — men
+  först i den *byggda* filen, aldrig när `src/` kördes som moduler. Appens utgåva heter
+  därför `UTGAVA`.
 
 ## Exporten
 
@@ -281,7 +296,7 @@ ingen markdown läcker ut som asterisker på skärmen.
 
 ```bash
 python3 bygg.py     # måste köras först — proven kör mot docs/
-npm test            # 114 prov: regler, export, import, hela flödet, spärrarna mot utgående trafik
+npm test            # 117 prov: regler, export, import, hela flödet, spärrarna mot utgående trafik
 ```
 
 **Bygg före du provar.** Det här är den enklaste fällan i arkivet och den värsta, eftersom
@@ -291,7 +306,7 @@ ingenting om det du nyss skrev. `npm run bygg` finns som genväg.
 
 Flödesproven kör **den byggda filen** i jsdom, alltså samma artefakt som telefonen får. De
 går igenom hela arbetsgången: tider på tre skyttar, poäng på samma tre, andra försök,
-vapenhanteringsspärren, taket på antalet träffar, långt tryck som nollar, flyttläget,
+vapenhanteringsspärren, urvalet av de bästa träffarna, långt tryck som nollar, flyttläget,
 raderingarna och att en färdig skytt inte får försök påhittade åt sig.
 
 Exportproven skriver riktiga filer till en temporär katalog. XLSX kontrolleras genom att
@@ -326,6 +341,14 @@ Appen innehåller inga hemligheter och inga resultat lämnar telefonen, så det 
 
 `bygg.py` sätter `CACHE` i `docs/sw.js` till appens fingeravtryck, så en publicering slår
 igenom av sig själv. Rör inte värdet i `src/sw.js` — det skrivs över vid varje bygge.
+
+**Versionsnumret skrivs på ett enda ställe: `package.json`.** Höj det när en publicering
+ändrar något användaren märker. `bygg.py` bakar in numret i `<meta name="version">` i den
+byggda filen, `app.js` läser taggen och visar det i fotnoten under Appinställningar — så den
+som anmäler ett fel kan säga vilken utgåva det gäller. Samma regel som för `sw.js`: rör inte
+värdet i `src/index.html`, det ska stå kvar på `utveckling`, vilket är sanningen för den som
+kör `npm run serve` mot `src/`. Ett prov i `test/flode.test.mjs` jämför taggen i den byggda
+filen mot `package.json`, så numret kan inte glida isär med det som visas.
 
 **Servicearbetaren frågar cachen först, nätet bara när filen saknas där.** Tidigare var det
 tvärtom, och då hörde varje start med täckning av sig till GitHub Pages. Ingen användardata

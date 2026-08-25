@@ -262,11 +262,12 @@ label.falt input.saknas { border-color: var(--underkand); }
 .zonknapp.har .antal { color: var(--accent); }
 .zonknapp:active { transform: scale(0.96); }
 
-/* Full målyta: knappar utan träffar dämpas, för de tar inte emot fler.
-   De som HAR träffar behåller sin färg — de går fortfarande att hålla in
-   för att nolla, vilket är vägen att byta ut en träff mot en bättre. */
-.zongrupp.full .zonknapp { opacity: 0.4; }
-.zongrupp.full .zonknapp.har { opacity: 1; }
+/* Rimlighetspåpekandet när det knappats in orimligt många träffar i en
+   målyta. Gul och inte röd: ingenting är fel, det är en uppmaning att titta
+   efter ett tryck för mycket. */
+.gruppvarning {
+  margin: 0 0 0.4rem; font-size: 0.8rem; color: var(--varning);
+}
 
 .summering {
   display: flex; justify-content: space-between; align-items: baseline;
