@@ -47,10 +47,10 @@ Fungerar något inte, eller saknas något? Skriv ett ärende:
 
 [github.com/steeriks/fm-kompetensprov/issues](https://github.com/steeriks/fm-kompetensprov/issues)
 
-Skriv gärna vilken telefon och webbläsare det gäller, vad du gjorde, och vad som hände i stället för det du väntade dig.
+Skriv gärna vilken **version** det gäller — den står överst till höger i appen — vilken telefon och webbläsare du har, vad du gjorde, och vad som hände i stället för det du väntade dig.
 
 ## Licens och ansvar
 
-Appen är **fri att använda**, kopiera och ändra under MIT-licens.
+Appen är **fri att använda**, kopiera och ändra under MIT-licens. Koden ligger öppen — knappen *Koden på GitHub* står bredvid den här texten under Appinställningar, för den som vill läsa efter vad appen gör med uppgifterna.
 
 Den lämnas som den är, utan garantier. Ansvaret för bedömningen, för att kraven stämmer med gällande utgåva och för hur uppgifterna hanteras ligger hos den som använder appen.

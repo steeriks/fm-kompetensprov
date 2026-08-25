@@ -35,9 +35,10 @@ alla skjutit går omgången fram och poängen registreras in. Två svep genom sa
    står på tur står under knappen.
 3. **Gå fram till tavlorna.** När sista tiden är inne heter knappen *Spara & börja med
    poängen* och lämnar över till tavla 1 i **POÄNG-läget**.
-4. **Knappa in träffarna** — en tryckning per träff på respektive zon. Poängen står under
-   varje knapp, summan och poängkvoten räknas medan du knappar, och utfallet skrivs ut i
-   klartext: **Godkänd** i grönt, **Underkänd** i rött. Håll in en knapp för att nolla den.
+4. **Knappa in träffarna** — en tryckning per träff på respektive zon, bättringsskotten
+   med; appen väljer ut de bästa. Poängen står under varje knapp, summan och poängkvoten
+   räknas medan du knappar, och utfallet skrivs ut i klartext: **Godkänd** i grönt,
+   **Underkänd** i rött. Håll in en knapp för att nolla den.
 5. **Registrera & nästa skytt** låser försöket och går vidare. På sista skytten heter den
    *Registrera sista resultatet*, och då summeras omgången: *"Omgången klar — 2 av 3
    godkända."*
@@ -129,10 +130,10 @@ Poängkvoten är räknade poäng delat med tiden mellan startsignal och sista sk
 
 **Knappa in varje hål i tavlan — appen väljer ut de bästa.** Bättringsskotten knappas in
 som alla andra träffar, och målytan har inget tak. Räknaren i målytans rubrik säger vad som
-gäller: *4 av 4 — klart*, eller *(6 av 4) — de 4 bästa räknas*, där siffrorna inom röd
-parentes är fler än de som räknas. Instruktören behöver alltså
-inte sortera träffar i huvudet framme vid tavlan. Ett feltryck rättas som förut: håll in
-zonknappen så nollas den, och knappa in rätt.
+gäller: *4 av 4 — klart* i grönt, eller *(6 av 4) — de 4 bästa räknas* där siffrorna inom
+röd parentes är fler än de som räknas. Instruktören behöver alltså inte sortera träffar i
+huvudet framme vid tavlan. Ett feltryck rättas med ett långt tryck på zonknappen, som
+nollar den.
 
 Blir antalet orimligt — mer än dubbelt så många träffar som målytan räknar — påpekar appen
 det utan att spärra något, så att ett tryck för mycket upptäcks i stället för att följa med
@@ -202,6 +203,7 @@ Testerna kör mot `docs/`, så **bygg innan du provar**.
 | `src/anvandning.md` | Användarinstruktionen i appen; bakas in av bygget. |
 | `src/hjalp.md` | *Om appen* — installation, data och licens; bakas in av bygget. |
 | `bygg.py` | Slår ihop `src/` till en enda `docs/index.html` — den mapp GitHub Pages serverar. |
+| `.githooks/pre-commit` | Höjer versionen och bygger om `docs/` i varje commit. |
 | `gen_ikon.py` | Genererar ikonerna, ren stdlib. |
 
 `docs/index.html` är både det som publiceras och det som kan mejlas — samma fil, så det

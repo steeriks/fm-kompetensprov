@@ -30,8 +30,11 @@ anställd personal.
 | `test/utgaende.test.mjs` | samma kontroller mot den byggda filen, så de gäller även om `bygg.py` ändras |
 
 Adresser som får finnas står i `TILLATNA_URLER` i `bygg.py`, var och en med skälet
-utskrivet: xlsx-formatets XML-namnrymder (identifierare, hämtas aldrig) och GitHub-länken i
-hjälptexten (öppnas bara om användaren trycker).
+utskrivet: xlsx-formatets XML-namnrymder (identifierare, hämtas aldrig) och de två
+GitHub-länkarna — ärendena i hjälptexten och koden under Appinställningar. Båda är `<a>`
+som ligger stilla tills användaren trycker; appen hämtar aldrig något från dem. Listan
+finns i **två exemplar**, här och i `test/utgaende.test.mjs`, och en ny adress måste in på
+båda: bygget stoppar sig självt, och provet fäller ett bygge som inte gjorde det.
 
 Två fällor som redan kostat tid här, båda av samma sort — en kontroll som inte kan ge
 utslag:
@@ -75,10 +78,9 @@ En språkgenomgång som "jämnar ut" dem gör appen otrogen mot källan. Ska nå
 först.
 
 **Målytan har ett urval, inte ett tak.** Både pistol och Ak tillåter bättringsskott efter
-omladdning, och alla hål i tavlan knappas in — även de som inte räknas. Urvalet görs på ett
-enda ställe: `bedom()` sorterar målytans träffar och tar `slice(0, g.antal)`, alltså de nio
-bästa på Ak och de fyra plus två bästa på pistol. Handen som knappar behöver inte sortera
-någonting, och lagret bär hela träffbilden.
+omladdning, och alla hål i tavlan knappas in — även de som inte räknas. Appen väljer sedan
+de nio bästa på Ak och de fyra plus två bästa på pistol. Handen som knappar behöver inte
+sortera någonting, och lagret bär hela träffbilden.
 
 `grupper[i].over` ur `bedom()` är antalet bättringsskott utöver de räknande. Räknaren i
 målytans rubrik läser det: *4 av 4 — klart*, *(6 av 4) — de 4 bästa räknas*. Parentesen och
@@ -113,9 +115,13 @@ och inte i `PROV`. Ett feltryck rättas som förut: långt tryck nollar zonen.
 `omgang.deltagare` — flyttas hen numreras alla om. Numret följer med till rubriken, till
 listan och till exportens `Nr`-kolumn, så att protokollet går att matcha mot banan.
 
-**`person.fmid` är valfritt och kan saknas helt.** Fältet kom till efter version 1, så
-poster som lades upp innan dess har det inte alls — läs det alltid som `p.fmid || ''`.
+**`person.fmid` är valfritt och kan saknas helt.** Fältet kom till efter lagringsversion 1,
+så poster som lades upp innan dess har det inte alls. Läs det alltid som `p.fmid || ''`.
 Lagringsversionen bumpades inte: ett fält som får vara tomt behöver ingen migrering.
+
+Lagringsversionen är `VERSION` i `src/lagring.js` och har **inget** med appens utgåva att
+göra. Den ena beskriver formen på det som ligger i telefonen, den andra vilken kod som
+kör; de höjs av olika skäl och vid olika tillfällen.
 I exporten står kolumnen `Fmid/Anstnr` **före** namnet, i alla fyra formaten.
 
 **Exempelvärdena är formade `TreTre` plus löpnummer** — tre bokstäver ur förnamnet, tre ur
@@ -186,7 +192,7 @@ skjutlaget.
 | `export` | `ritaExportval` | Fyra format plus förhandsgranskning. |
 | `register` | `ritaRegister` | Skytteregistret. Långt tryck raderar, som på startsidan. |
 | `import` | `ritaImport` | Klistra in ett skjutlag. `vy.retur` avgör om den fyller registret eller också omgången. |
-| `installningar` | `ritaInstallningar` | Säkerhetskopia, nollställning, hjälp. |
+| `installningar` | `ritaInstallningar` | Säkerhetskopia, nollställning, hjälp, versionen och länken till koden. |
 | `dok` | `ritaDokument` | `anvandning.md` eller `hjalp.md`, renderad. |
 
 **"Påbörjad" är inget fält, utan en fråga till lagret.** En omgång som sparats utan att
@@ -307,6 +313,9 @@ Renderaren klarar rubriker, stycken, punktlistor, **fet**, *kursiv* och länkar 
 inte annat i filerna utan att utöka den, och skriv aldrig `</script`. Ett prov ser till att
 ingen markdown läcker ut som asterisker på skärmen.
 
+`{{utgava}}` i texten byts mot versionsnumret när dokumentet ritas, i `ritaDokument()` och
+inte i bygget — filerna ska gå att läsa som de är i `src/`. `src/hjalp.md` använder den.
+
 ## Prov
 
 ```bash
@@ -386,7 +395,7 @@ kontrollerar alla tre ställena, så numret kan inte glida isär med det som vis
 
 **Kroken ersätter inte `python3 bygg.py` innan du provar.** Den bygger vid *commit*, inte vid
 provkörning — proven läser fortfarande `docs/`, och en ändring i `src/` som inte byggts provas
-mot den förra filen. Fällan nedan står kvar precis som förut.
+mot den förra filen. Fällan under **Prov** ovan står kvar precis som förut.
 
 **Servicearbetaren frågar cachen först, nätet bara när filen saknas där.** Tidigare var det
 tvärtom, och då hörde varje start med täckning av sig till GitHub Pages. Ingen användardata
