@@ -178,8 +178,9 @@ utan att veta adressen i förväg.
 
 **Uppdateringar sköter sig själva.** Appen letar efter en ny version när den startas — och
 bara då; den hör inte av sig i bakgrunden. Har den hittat en dyker en rad upp i nederkant:
-*Ny version finns — tryck för att uppdatera*. Ett tryck laddar om. Appen laddar aldrig om av
-sig själv, så en pågående registrering avbryts inte. Versionen du kör står överst till höger.
+*Ny version finns — tryck för att uppdatera*. Ett tryck laddar om — allt inknappat ligger kvar,
+men appen landar på startsidan. Den laddar aldrig om av sig själv, så en pågående registrering
+avbryts inte. Versionen du kör står överst till höger.
 
 > Appen går även att skicka som **en enda HTML-fil** och öppna direkt ur mailet. Då saknar
 > den egen säker adress och lagringen är opålitlig — Android kan neka den helt. Den vägen

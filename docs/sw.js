@@ -5,7 +5,7 @@
 // vilket gör att en ny version verkligen slår igenom i stället för att den
 // gamla ligger kvar i cachen.
 
-const CACHE = 'fm-kompetensprov-c0cac6bac862';   // byts av bygg.py till appens fingeravtryck
+const CACHE = 'fm-kompetensprov-a13cdfb55c59';   // byts av bygg.py till appens fingeravtryck
 const FILER = ['./', './index.html', './manifest.webmanifest', './ikon-180.png', './ikon-512.png'];
 
 // cache: 'reload' förbi HTTP-cachen. GitHub Pages skickar max-age=600 på allt,

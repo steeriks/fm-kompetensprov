@@ -24,7 +24,7 @@
 <!-- Versionen skrivs bara i package.json; bygg.py byter innehållet här mot
      numret därifrån, precis som cachenamnet i sw.js. Lämna "utveckling"
      stående i src/ — den som serverar src/ direkt kör inte en utgåva. -->
-<meta name="version" content="1.1.4">
+<meta name="version" content="1.1.5">
 <meta name="description" content="Instruktörsverktyg för Försvarsmaktens kompetensprov, pistol och automatkarbin.">
 <meta name="theme-color" content="#0b0d0c">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -541,6 +541,7 @@ Vid osäker eller felaktig vapenhantering: kryssa rutan på poängskärmen, så 
 - **Byta skytt i tidfönstret:** pilarna på var sida om namnet stegar en tavla fram eller tillbaka, om något gått snett på linjen. Den påbörjade tiden sparas på vägen, och pilen slocknar när linjen är slut åt det hållet.
 - **Nytt försök:** *+ Nytt försök* på skyttens rad. Provet får skjutas tre gånger; ett omtag startas alltid med flit.
 - **⌂** längst upp till vänster går alltid hem. En påbörjad tid sparas på vägen.
+- **Grön rad i nederkant?** Då väntar en ny version av appen. Den stör ingenting och kan stå kvar hela omgången ut — appen laddar aldrig om av sig själv. Trycker du på den laddas appen om: allt inknappat ligger kvar, men du landar på startsidan och får öppna omgången igen. Vänta hellre tills gruppen är klar.
 
 ## Dela resultatet
 
@@ -591,7 +592,7 @@ Installerad startar appen som vilken app som helst och **fungerar utan täckning
 
 Öppnar du i stället appen som en fristående HTML-fil ur ett mail fungerar den för ett enstaka tillfälle, men lagringen är opålitlig — Android kan neka den helt. Ska resultaten sparas: installera från länken.
 
-**Uppdateringar sköter sig själva.** Appen letar efter en ny version när du startar den, och hittar den en dyker en rad upp i nederkant: *Ny version finns — tryck för att uppdatera*. Appen laddar aldrig om av sig själv — en pågående registrering avbryts alltså inte, och du väljer själv när det passar.
+**Uppdateringar sköter sig själva.** Appen letar efter en ny version när du startar den, och hittar den en dyker en rad upp i nederkant: *Ny version finns — tryck för att uppdatera*. Appen laddar aldrig om av sig själv — en pågående registrering avbryts alltså inte, och du väljer själv när det passar. Trycket laddar om appen: allt du knappat in ligger kvar, men du landar på startsidan.
 
 Hur appen används steg för steg står under **Så använder du appen** på startsidan.
 

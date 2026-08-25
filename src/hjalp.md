@@ -24,7 +24,7 @@ Installerad startar appen som vilken app som helst och **fungerar utan täckning
 
 Öppnar du i stället appen som en fristående HTML-fil ur ett mail fungerar den för ett enstaka tillfälle, men lagringen är opålitlig — Android kan neka den helt. Ska resultaten sparas: installera från länken.
 
-**Uppdateringar sköter sig själva.** Appen letar efter en ny version när du startar den, och hittar den en dyker en rad upp i nederkant: *Ny version finns — tryck för att uppdatera*. Appen laddar aldrig om av sig själv — en pågående registrering avbryts alltså inte, och du väljer själv när det passar.
+**Uppdateringar sköter sig själva.** Appen letar efter en ny version när du startar den, och hittar den en dyker en rad upp i nederkant: *Ny version finns — tryck för att uppdatera*. Appen laddar aldrig om av sig själv — en pågående registrering avbryts alltså inte, och du väljer själv när det passar. Trycket laddar om appen: allt du knappat in ligger kvar, men du landar på startsidan.
 
 Hur appen används steg för steg står under **Så använder du appen** på startsidan.
 
