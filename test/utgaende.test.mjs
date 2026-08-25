@@ -46,10 +46,12 @@ test('CSP:n stänger vägarna ut', () => {
 
 test('inga okända adresser i den byggda filen', () => {
   // Namnrymderna är identifierare i xlsx-formatet, inte något som hämtas.
-  // GitHub-länken står i hjälptexten och öppnas bara om användaren trycker.
+  // GitHub-länkarna — ärendena i hjälptexten och koden under Appinställningar
+  // — är <a>-taggar som ligger stilla tills användaren trycker på dem.
   const tillatna = [
     /^http:\/\/schemas\.openxmlformats\.org\//,
     /^https:\/\/github\.com\/steeriks\/fm-kompetensprov\/issues$/,
+    /^https:\/\/github\.com\/steeriks\/fm-kompetensprov$/,
   ];
   const adresser = [...new Set((kod.match(/https?:\/\/[^\s"'<>)]+/g) || [])
     .map((u) => u.replace(/[.,;'"<)]+$/, '')))];

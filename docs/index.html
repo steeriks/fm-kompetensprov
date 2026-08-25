@@ -24,7 +24,7 @@
 <!-- Versionen skrivs bara i package.json; bygg.py byter innehållet här mot
      numret därifrån, precis som cachenamnet i sw.js. Lämna "utveckling"
      stående i src/ — den som serverar src/ direkt kör inte en utgåva. -->
-<meta name="version" content="1.1.1">
+<meta name="version" content="1.1.2">
 <meta name="description" content="Instruktörsverktyg för Försvarsmaktens kompetensprov, pistol och automatkarbin.">
 <meta name="theme-color" content="#0b0d0c">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -148,6 +148,10 @@ button { font: inherit; }
    egna rader, som hade ätit en fjärdedel av skärmen. */
 .knapp.smal { padding: 0.35rem 0.45rem; font-size: 0.78rem; line-height: 1.15; }
 .knapp:active { transform: scale(0.98); }
+/* Klassen bärs också av en <a> — länken till koden under Appinställningar.
+   Utan det här arvet hade den fått webbläsarens blå understrukna länkstil
+   mitt i en rad med knappar. */
+a.knapp { text-decoration: none; }
 .knapprad { display: flex; gap: 0.5rem; margin: 0.6rem 0; }
 .knapprad .knapp { width: auto; flex: 1; }
 
@@ -538,7 +542,7 @@ En skytt räknas som godkänd i sammanställningen om **något** av försöken v
 
 Under **Appinställningar**: *Spara kopia* ger en fil med allt, *Läs in kopia* läser tillbaka den. Det är också vägen att flytta registret till en annan telefon. Inläsning lägger till — den skriver aldrig över det som redan finns.
 
-Kom ihåg att allt bara finns i den här telefonen. Se *Om appen* under Appinställningar.
+Kom ihåg att allt bara finns i den här telefonen. Se *Om appen* under Appinställningar — där står också *Koden på GitHub*, för den som vill läsa efter vad appen gör.
 
 ## Om reglerna
 
@@ -2756,6 +2760,12 @@ function ritaInstallningar() {
     <h2>Om appen</h2>
     <div class="knapprad">
       <button class="knapp liten" data-dok="hjalp">Om appen</button>
+      <!-- Koden är öppen, och det är en del av löftet: den som undrar vad
+           appen gör med uppgifterna ska kunna gå och läsa efter. Ny flik, och
+           noreferrer utöver noopener — trycker någon på länken ska GitHub inte
+           få veta varifrån den trycktes. -->
+      <a class="knapp liten" href="https://github.com/steeriks/fm-kompetensprov"
+         target="_blank" rel="noopener noreferrer">Koden på GitHub</a>
     </div>
 
     <h2>Nollställ</h2>

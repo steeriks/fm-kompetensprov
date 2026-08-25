@@ -1204,6 +1204,19 @@ test('utgåvan syns i huvudet, i Om appen och under inställningarna', () => {
   assert.equal(doc.querySelector('#utgava').textContent, `v${paket.version}`);
 });
 
+test('inställningarna länkar till koden på GitHub', () => {
+  klicka('Appinställningar');
+  const lank = [...doc.querySelectorAll('#app a')]
+    .find((a) => /github\.com\/steeriks\/fm-kompetensprov$/.test(a.getAttribute('href')));
+  assert.ok(lank, 'länken till koden ska finnas under Appinställningar');
+  assert.equal(lank.textContent.trim(), 'Koden på GitHub');
+  assert.equal(lank.getAttribute('target'), '_blank', 'appen ska inte lämnas i samma flik');
+  // noreferrer utöver noopener: trycker någon på länken ska GitHub inte få
+  // veta varifrån den trycktes.
+  assert.equal(lank.getAttribute('rel'), 'noopener noreferrer');
+  assert.ok(lank.classList.contains('knapp'), 'den ska se ut som knapparna den står bredvid');
+});
+
 test('kroken som höjer versionen ligger i arkivet och är körbar', () => {
   const krok = path.join(import.meta.dirname, '..', '.githooks', 'pre-commit');
   const stat = fs.statSync(krok);

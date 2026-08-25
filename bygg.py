@@ -125,6 +125,10 @@ TILLATNA_URLER = {
     # Länk i hjälptexten. Öppnas bara om användaren trycker på den, i en ny
     # flik, och hämtas aldrig av appen själv.
     'https://github.com/steeriks/fm-kompetensprov/issues',
+    # Länken till koden under Appinställningar. Samma sak: en <a> som ligger
+    # stilla tills någon trycker på den. Att den finns är en del av löftet —
+    # den som undrar vad appen gör med uppgifterna ska kunna läsa efter.
+    'https://github.com/steeriks/fm-kompetensprov',
 }
 
 # API:er som skickar eller hämtar data över nätet. Inget av dem har något i

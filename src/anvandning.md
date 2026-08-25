@@ -59,7 +59,7 @@ En skytt räknas som godkänd i sammanställningen om **något** av försöken v
 
 Under **Appinställningar**: *Spara kopia* ger en fil med allt, *Läs in kopia* läser tillbaka den. Det är också vägen att flytta registret till en annan telefon. Inläsning lägger till — den skriver aldrig över det som redan finns.
 
-Kom ihåg att allt bara finns i den här telefonen. Se *Om appen* under Appinställningar.
+Kom ihåg att allt bara finns i den här telefonen. Se *Om appen* under Appinställningar — där står också *Koden på GitHub*, för den som vill läsa efter vad appen gör.
 
 ## Om reglerna
 

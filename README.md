@@ -171,7 +171,9 @@ raderar dem. Under *Appinställningar* finns **Radera allt innehåll**, och **Sp
 telefon. Inläsning lägger till, den skriver aldrig över.
 
 Samma text, och hur appen installeras på iOS och Android, finns i appen under
-*Appinställningar → Om appen*.
+*Appinställningar → Om appen*. Bredvid den knappen står **Koden på GitHub**, som leder hit:
+den som undrar vad appen gör med uppgifterna ska kunna gå och läsa efter, från telefonen och
+utan att veta adressen i förväg.
 
 > Appen går även att skicka som **en enda HTML-fil** och öppna direkt ur mailet. Då saknar
 > den egen säker adress och lagringen är opålitlig — Android kan neka den helt. Den vägen
@@ -186,7 +188,7 @@ Inga beroenden i appen — ren HTML, CSS och JavaScript, ingen CDN, inget ramver
 npm install       # bara jsdom, och bara för testerna
 npm run serve     # http://localhost:8390 mot src/
 npm run bygg      # bakar ihop src/ till docs/index.html
-npm test          # 120 prov: regelmotor, export, import och hela flödet i jsdom
+npm test          # 121 prov: regelmotor, export, import och hela flödet i jsdom
 ```
 
 Testerna kör mot `docs/`, så **bygg innan du provar**.

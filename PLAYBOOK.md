@@ -311,7 +311,7 @@ ingen markdown läcker ut som asterisker på skärmen.
 
 ```bash
 python3 bygg.py     # måste köras först — proven kör mot docs/
-npm test            # 120 prov: regler, export, import, hela flödet, spärrarna mot utgående trafik
+npm test            # 121 prov: regler, export, import, hela flödet, spärrarna mot utgående trafik
 ```
 
 **Bygg före du provar.** Det här är den enklaste fällan i arkivet och den värsta, eftersom

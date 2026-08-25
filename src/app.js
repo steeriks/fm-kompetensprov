@@ -967,6 +967,12 @@ function ritaInstallningar() {
     <h2>Om appen</h2>
     <div class="knapprad">
       <button class="knapp liten" data-dok="hjalp">Om appen</button>
+      <!-- Koden är öppen, och det är en del av löftet: den som undrar vad
+           appen gör med uppgifterna ska kunna gå och läsa efter. Ny flik, och
+           noreferrer utöver noopener — trycker någon på länken ska GitHub inte
+           få veta varifrån den trycktes. -->
+      <a class="knapp liten" href="https://github.com/steeriks/fm-kompetensprov"
+         target="_blank" rel="noopener noreferrer">Koden på GitHub</a>
     </div>
 
     <h2>Nollställ</h2>
