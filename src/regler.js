@@ -162,6 +162,42 @@ export function tvaDecimaler(n) {
 }
 
 /**
+ * Träffarna som RÄKNAS i en målyta, som antal per zon.
+ *
+ * Bästa poäng först, och vid lika poäng — C och D är båda 3 p — i zonordning.
+ * Summan blir densamma hur man än väljer mellan två likvärdiga träffar, men
+ * urvalet ska vara förutsägbart: samma försök ska ge samma protokoll varje
+ * gång det exporteras.
+ */
+function raknadeIGrupp(grupp, traffar = {}) {
+  const ordning = grupp.zoner
+    .filter((z) => (traffar[z] || 0) > 0)
+    .sort((a, b) => ZONPOANG[b] - ZONPOANG[a]
+      || ZONORDNING.indexOf(a) - ZONORDNING.indexOf(b));
+  const raknade = {};
+  let kvar = grupp.antal;
+  for (const zon of ordning) {
+    if (kvar <= 0) break;
+    raknade[zon] = Math.min(traffar[zon], kvar);
+    kvar -= raknade[zon];
+  }
+  return raknade;
+}
+
+/**
+ * Hela försökets räknande träffar, per zon — målytorna var för sig och sedan
+ * hopslagna. Zonerna tillhör en enda målyta var, så de kan inte krocka.
+ *
+ * Det här är formen som går ut i protokollet: bättringsskotten knappas in i
+ * appen, men det som lämnar telefonen är de träffar bedömningen vilar på.
+ */
+export function raknadeTraffar(provKod, traffar = {}) {
+  const ut = {};
+  for (const g of PROV[provKod].grupper) Object.assign(ut, raknadeIGrupp(g, traffar));
+  return ut;
+}
+
+/**
  * Bedömer ett försök.
  *
  * traffar: { A: 2, C: 4, ... } — antal träffar per zon, som de knappats in.
@@ -179,27 +215,24 @@ export function bedom(provKod, traffar = {}, tid = null, vapenhanteringUnderkand
   let poang = 0;
 
   const grupper = prov.grupper.map((g) => {
-    // Träffarna som en lista poängvärden, bästa först. Alla hål i tavlan
-    // knappas in, bättringsskotten med, och urvalet görs här: de N bästa i
-    // varje målyta räknas, resten faller bort.
-    const varden = [];
-    for (const zon of g.zoner) {
-      for (let i = 0; i < (traffar[zon] || 0); i++) varden.push(ZONPOANG[zon]);
-    }
-    varden.sort((a, b) => b - a);
-    const raknade = varden.slice(0, g.antal);
-    const summa = raknade.reduce((a, b) => a + b, 0);
+    // Alla hål i tavlan knappas in, bättringsskotten med. Urvalet görs av
+    // raknadeIGrupp() — samma funktion som exporten läser, så protokollet och
+    // poängen aldrig kan bygga på olika träffar.
+    const antal = g.zoner.reduce((n, z) => n + (traffar[z] || 0), 0);
+    const raknade = raknadeIGrupp(g, traffar);
+    const summa = Object.entries(raknade)
+      .reduce((s, [zon, n]) => s + ZONPOANG[zon] * n, 0);
     poang += summa;
-    if (varden.length < g.antal) {
+    if (antal < g.antal) {
       brister.push(
         prov.grupper.length > 1
-          ? `${g.namn}: ${varden.length} av ${g.antal} träff`
-          : `${varden.length} av ${g.antal} träff`,
+          ? `${g.namn}: ${antal} av ${g.antal} träff`
+          : `${antal} av ${g.antal} träff`,
       );
     }
     return {
-      id: g.id, namn: g.namn, antal: varden.length, kravAntal: g.antal,
-      poang: summa, over: Math.max(0, varden.length - g.antal),
+      id: g.id, namn: g.namn, antal, kravAntal: g.antal,
+      poang: summa, over: Math.max(0, antal - g.antal),
     };
   });
 

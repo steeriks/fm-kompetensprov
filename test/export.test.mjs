@@ -123,3 +123,43 @@ test('automatkarbin ger nio zonkolumner och rätt krav i huvudet', () => {
   fs.writeFileSync(path.join(UT, 'prov-ak.pdf'), somPdf(au));
   fs.writeFileSync(path.join(UT, 'prov-ak.xlsx'), somXlsx(au));
 });
+
+// --- protokollet bär bara de räknande träffarna --------------------------
+
+test('bättringsskotten följer inte med ut i exporten', () => {
+  const akOmgang = { ...omgang, gren: 'ak', id: 'o3' };
+  // Elva träff: 5 × B (4 p), 4 × C (3 p), 2 × D (3 p). De nio bästa är alla
+  // B:na och alla C:na — D:na faller bort, och ska inte stå i protokollet.
+  const akResultat = [{
+    id: 'r10', omgangId: 'o3', personId: 'p1', forsok: 1, tid: 24.5,
+    traffar: { B: 5, C: 4, D: 2 }, vapenhanteringUnderkand: false,
+    registrerad: '2026-08-11T11:00:00Z',
+  }];
+  const au = underlag(akOmgang, personer, akResultat);
+  const rad = au.rader[0];
+  assert.deepEqual(rad.traffar, { B: 5, C: 4 }, 'de två D-träffarna räknas inte');
+  assert.deepEqual(rad.forsok.traffar, { B: 5, C: 4, D: 2 },
+    'det lagrade försöket är orört — appen visar fortfarande allt som knappats in');
+
+  const zonKolumner = au.kolumner.map((k, i) => [k, i])
+    .filter(([k]) => /^[ABCDXH] \(/.test(k));
+  const varden = Object.fromEntries(zonKolumner.map(([k, i]) => [k[0], rad.celler[i]]));
+  assert.deepEqual(varden, { A: 0, B: 5, C: 4, D: 0, X: 0, H: 0 });
+  assert.equal(varden.B + varden.C, 9, 'kolumnerna summerar till de nio som räknas');
+
+  assert.match(somText(au), /B5 C4 · 32 p/, 'textformen visar samma träffar');
+  assert.ok(!somCsv(au).includes(',2,'), 'ingen D-tvåa på vägen ut');
+});
+
+test('pistolens två målytor väljer var för sig i exporten', () => {
+  // XBCD: 4 × D (3) och 2 × B (4) → de fyra bästa är B, B, D, D.
+  // AH: 3 × A (5) → två av dem räknas. H-träffen har ingen plats kvar.
+  const resultatet = [{
+    id: 'r11', omgangId: 'o1', personId: 'p1', forsok: 1, tid: 10,
+    traffar: { D: 4, B: 2, A: 3, H: 1 }, vapenhanteringUnderkand: false,
+    registrerad: '2026-08-11T10:00:00Z',
+  }];
+  const pu = underlag({ ...omgang, deltagare: ['p1'] }, personer, resultatet);
+  assert.deepEqual(pu.rader[0].traffar, { B: 2, D: 2, A: 2 });
+  assert.match(somText(pu), /A2 B2 D2 · 24 p/);
+});

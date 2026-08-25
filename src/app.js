@@ -545,9 +545,17 @@ function uppdateraPoang() {
     const ruta = app.querySelector(`[data-grupp="${g.id}"]`);
     const klar = g.antal >= g.kravAntal;
     const del = ruta.querySelector('.raknare');
-    del.textContent = `${g.antal} av ${g.kravAntal}`
-      + (g.over > 0 ? ` — de ${g.kravAntal} bästa räknas` : klar ? ' — klart' : '');
-    del.classList.toggle('klar', klar);
+    if (g.over > 0) {
+      // Fler träffar inknappade än målytan räknar: siffrorna inom parentes och
+      // i rött. Parentesen säger att talet inte är det protokollet bygger på,
+      // och färgen fångar ögat utan att texten behöver läsas — texten bredvid
+      // säger sedan vad som gäller.
+      del.innerHTML = `<span class="over">(${g.antal} av ${g.kravAntal})</span>`
+        + ` — de ${g.kravAntal} bästa räknas`;
+    } else {
+      del.textContent = `${g.antal} av ${g.kravAntal}${klar ? ' — klart' : ''}`;
+    }
+    del.classList.toggle('klar', klar && g.over === 0);
     // Dubbla antalet räknande träffar är ingen regelgräns utan ett rimlighets-
     // mått: så många bättringsskott skjuter ingen, så då är det troligen ett
     // tryck för mycket. Appen spärrar inte — den påpekar.

@@ -747,14 +747,19 @@ test('bättringsskott knappas in, och appen väljer ut de bästa', () => {
   knappaZon('B', 2);                      // två bättringsskott, bättre än D
   assert.equal(doc.querySelector('#poangsumma').textContent, '14 p',
     'de fyra bästa är 4, 4, 3, 3 — de två sämsta D-träffarna faller bort');
-  assert.equal(raknare('xbcd'), '6 av 4 — de 4 bästa räknas');
+  assert.equal(raknare('xbcd'), '(6 av 4) — de 4 bästa räknas');
+  const over = doc.querySelector('[data-grupp="xbcd"] .raknare .over');
+  assert.equal(over.textContent, '(6 av 4)',
+    'det inknappade antalet står inom parentes och i rött, se .over i style.css');
+  assert.ok(!doc.querySelector('[data-grupp="xbcd"] .raknare').classList.contains('klar'),
+    'grönt betyder klart — överskottet ska inte se ut som ett kvitto');
   assert.ok(!doc.querySelector('[data-grupp="xbcd"]').classList.contains('full'),
     'knapparna dämpas inte längre — målytan har inget tak');
 
   knappaZon('A', 3);                      // huvudet är en egen yta, ett skott över
   assert.equal(doc.querySelector('#poangsumma').textContent, '24 p',
     'AH räknar sina två bästa, inte tre');
-  assert.equal(raknare('ah'), '3 av 2 — de 2 bästa räknas');
+  assert.equal(raknare('ah'), '(3 av 2) — de 2 bästa räknas');
   assert.equal(doc.querySelector('#brister').textContent, '',
     'överskott är ingen brist');
 
@@ -818,7 +823,7 @@ test('automatkarbin tar emot fler än nio träffar och räknar de nio bästa', (
   knappaZon('B', 2);                      // två bättringsskott efter omladdning
   assert.equal(doc.querySelector('#poangsumma').textContent, '29 p',
     'de nio bästa är 4, 4 och sju treor');
-  assert.equal(raknare(), '11 av 9 — de 9 bästa räknas');
+  assert.equal(raknare(), '(11 av 9) — de 9 bästa räknas');
 
   knappaZon('H', 3);                      // sämre än allt annat — ska inte synas
   assert.equal(doc.querySelector('#poangsumma').textContent, '29 p',

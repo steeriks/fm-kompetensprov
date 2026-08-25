@@ -129,7 +129,8 @@ Poängkvoten är räknade poäng delat med tiden mellan startsignal och sista sk
 
 **Knappa in varje hål i tavlan — appen väljer ut de bästa.** Bättringsskotten knappas in
 som alla andra träffar, och målytan har inget tak. Räknaren i målytans rubrik säger vad som
-gäller: *4 av 4 — klart*, eller *6 av 4 — de 4 bästa räknas*. Instruktören behöver alltså
+gäller: *4 av 4 — klart*, eller *(6 av 4) — de 4 bästa räknas*, där siffrorna inom röd
+parentes är fler än de som räknas. Instruktören behöver alltså
 inte sortera träffar i huvudet framme vid tavlan. Ett feltryck rättas som förut: håll in
 zonknappen så nollas den, och knappa in rätt.
 
@@ -137,9 +138,10 @@ Blir antalet orimligt — mer än dubbelt så många träffar som målytan räkn
 det utan att spärra något, så att ett tryck för mycket upptäcks i stället för att följa med
 in i protokollet.
 
-I exporten står **alla** träff i zonkolumnerna, medan poäng och poängkvot räknas på de
-bästa. Summerar man kolumnerna för hand kan man alltså få fler träff än poängen bygger på —
-det är bättringsskotten, och det är avsiktligt.
+**Exporten bär bara de träffar som räknas.** Bättringsskotten hör hemma i appen, där de
+knappas in; protokollet som lämnar telefonen visar de nio — eller fyra plus två — träffar
+bedömningen vilar på. Zonkolumnerna summerar därför till det antal som krävs, och poängen
+går att räkna efter för hand.
 
 Osäker eller felaktig vapenhantering underkänner provet — kryssrutan finns på poängskärmen.
 
@@ -184,7 +186,7 @@ Inga beroenden i appen — ren HTML, CSS och JavaScript, ingen CDN, inget ramver
 npm install       # bara jsdom, och bara för testerna
 npm run serve     # http://localhost:8390 mot src/
 npm run bygg      # bakar ihop src/ till docs/index.html
-npm test          # 117 prov: regelmotor, export, import och hela flödet i jsdom
+npm test          # 119 prov: regelmotor, export, import och hela flödet i jsdom
 ```
 
 Testerna kör mot `docs/`, så **bygg innan du provar**.

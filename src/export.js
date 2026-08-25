@@ -5,7 +5,7 @@
 // okomprimerad (STORED) — giltigt, och ingen deflate behöver implementeras.
 // PDF:en byggs för hand med inbyggd Helvetica och WinAnsi, som täcker å ä ö.
 
-import { PROV, bedom, komma, ZONORDNING } from './regler.js';
+import { PROV, bedom, komma, raknadeTraffar, ZONORDNING } from './regler.js';
 
 // ------------------------------------------------------------- underlaget
 
@@ -43,11 +43,16 @@ export function underlag(omgang, personer, resultat) {
     }
     for (const r of forsok) {
       const b = bedom(omgang.gren, r.traffar, r.tid, r.vapenhanteringUnderkand);
+      // Protokollet visar de träffar bedömningen vilar på, inte varje hål i
+      // tavlan. Bättringsskotten hör hemma i appen, där instruktören knappar;
+      // det som lämnar telefonen ska gå att lägga bredvid poängen och summera
+      // utan att någon behöver veta vilka träffar som föll bort.
+      const traffar = raknadeTraffar(omgang.gren, r.traffar);
       rader.push({
-        person: p, nr, forsok: r, bedomning: b,
+        person: p, nr, forsok: r, bedomning: b, traffar,
         celler: [
           nr, p.fmid || '', p.namn, p.forband, r.forsok, r.tid === null ? '' : komma(r.tid),
-          ...zoner.map((z) => r.traffar[z] || 0),
+          ...zoner.map((z) => traffar[z] || 0),
           b.poang, b.pk === null ? '' : komma(b.pk),
           b.godkand ? 'Godkänd' : 'Underkänd',
           b.godkand ? '' : b.brister.join('; '),
@@ -104,8 +109,8 @@ export function somText(u) {
       continue;
     }
     const b = rad.bedomning;
-    const traffar = ZONORDNING.filter((z) => rad.forsok.traffar[z])
-      .map((z) => `${z}${rad.forsok.traffar[z]}`).join(' ');
+    const traffar = ZONORDNING.filter((z) => rad.traffar[z])
+      .map((z) => `${z}${rad.traffar[z]}`).join(' ');
     rader.push(
       `   Försök ${rad.forsok.forsok}: ${komma(rad.forsok.tid)} s · ${traffar || 'inga träffar'}` +
       ` · ${b.poang} p · PK ${komma(b.pk)} · ${b.godkand ? 'GODKÄND' : 'UNDERKÄND'}` +

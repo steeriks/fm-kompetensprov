@@ -245,6 +245,10 @@ label.falt input.saknas { border-color: var(--underkand); }
 }
 .zongrupp h3 .raknare { font-variant-numeric: tabular-nums; }
 .zongrupp h3 .raknare.klar { color: var(--godkand); }
+/* Överskottet: röda siffror inom parentes, för att skilja det inknappade
+   antalet från det som räknas. Röd som i underkänt — inte för att något är
+   fel, utan för att det är den färg som fångar ögat i den här appen. */
+.zongrupp h3 .raknare .over { color: var(--underkand); font-weight: 700; }
 .zoner { display: grid; grid-template-columns: repeat(auto-fit, minmax(4.6rem, 1fr)); gap: 0.5rem; }
 .zonknapp {
   display: flex; flex-direction: column; align-items: center; justify-content: center;

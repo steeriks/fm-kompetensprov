@@ -81,7 +81,22 @@ bästa på Ak och de fyra plus två bästa på pistol. Handen som knappar behöv
 någonting, och lagret bär hela träffbilden.
 
 `grupper[i].over` ur `bedom()` är antalet bättringsskott utöver de räknande. Räknaren i
-målytans rubrik läser det: *4 av 4 — klart*, *6 av 4 — de 4 bästa räknas*.
+målytans rubrik läser det: *4 av 4 — klart*, *(6 av 4) — de 4 bästa räknas*. Parentesen och
+den röda färgen (`.raknare .over`) skiljer det inknappade antalet från det som räknas —
+grönt betyder klart, och ett överskott ska inte se ut som ett kvitto.
+
+**Urvalet görs på ETT ställe: `raknadeIGrupp()`.** Den ger målytans räknande träffar som
+antal per zon — bästa poäng först, och vid lika poäng (C och D är båda 3 p) i zonordning, så
+att samma försök ger samma protokoll varje gång. `bedom()` summerar poängen ur den, och
+`underlag()` i `src/export.js` läser den genom `raknadeTraffar()`. Två skilda uträkningar av
+"vilka träffar räknas" hade förr eller senare glidit isär, och då hade protokollet visat
+träffar som poängen inte byggde på.
+
+**Exporten bär bara de räknande träffarna.** Appen visar allt som knappats in — det är där
+instruktören arbetar — men protokollet som lämnar telefonen visar de nio, eller fyra plus
+två, träffar bedömningen vilar på. Zonkolumnerna summerar därmed till kravet, och den som
+läser protokollet kan räkna efter poängen utan att känna till vilka bättringsskott som föll
+bort. Det lagrade försöket (`resultat[i].traffar`) är orört och bär hela träffbilden.
 
 **Fram till 1.1.0 var det tvärtom.** En spärr (`arFull()`) lät målytan ta emot exakt så många
 träffar som räknades, och trycket studsade när den var full. Det tvingade instruktören att
@@ -296,7 +311,7 @@ ingen markdown läcker ut som asterisker på skärmen.
 
 ```bash
 python3 bygg.py     # måste köras först — proven kör mot docs/
-npm test            # 117 prov: regler, export, import, hela flödet, spärrarna mot utgående trafik
+npm test            # 119 prov: regler, export, import, hela flödet, spärrarna mot utgående trafik
 ```
 
 **Bygg före du provar.** Det här är den enklaste fällan i arkivet och den värsta, eftersom

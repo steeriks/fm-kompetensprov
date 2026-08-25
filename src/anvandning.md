@@ -27,7 +27,7 @@ Appen följer hur provet genomförs: alla tiderna först, poängen när gruppen 
 - **1. Lägg upp omgången.** *+ Ny omgång* — välj prov, datum, plats och instruktör, och bocka i deltagarna **i skjutordning**. Numret de får är skyttens tavelnummer på banan. *Starta omgången* går rakt in i den; *Spara utan att starta* lägger den åt sidan till senare.
 - **2. Ta tiderna.** *Registrera tid för första skytt* öppnar tavla 1. Knappa tiden rakt av som den står på timern — **555** blir 5,55 — och tryck *Spara & nästa skytt*. Under knappen står vem som står på tur.
 - **3. Gå fram till tavlorna.** När sista tiden är inne heter knappen *Spara & börja med poängen*, och appen står på tavla 1 i poängläget.
-- **4. För in träffarna.** En tryckning per träff på respektive zon — **bättringsskotten med**. Knappa av hålen som de sitter; appen väljer ut de bästa träffarna åt dig, och räknaren i målytans rubrik säger vad som gäller: *4 av 4 — klart*, eller *6 av 4 — de 4 bästa räknas*. Poängkvoten och utfallet — **Godkänd** eller **Underkänd** — räknas medan du knappar.
+- **4. För in träffarna.** En tryckning per träff på respektive zon — **bättringsskotten med**. Knappa av hålen som de sitter; appen väljer ut de bästa träffarna åt dig, och räknaren i målytans rubrik säger vad som gäller: *4 av 4 — klart*, eller *(6 av 4) — de 4 bästa räknas* med siffrorna i rött när du knappat in fler än som räknas. Poängkvoten och utfallet — **Godkänd** eller **Underkänd** — räknas medan du knappar.
 - **5. Registrera.** *Registrera & nästa skytt* låser försöket och går vidare. Efter sista skytten summeras omgången: *"Omgången klar — 2 av 3 godkända."*
 
 Växeln **TID | POÄNG** visar inom parentes hur många som väntar i respektive läge, och listan står alltid i det läge som har något kvar att göra. Du behöver alltså inte hålla reda på var i omgången ni är — och en avstickare till anvisningen eller delningen tappar inte bort dig.
@@ -51,7 +51,7 @@ Tryck *Dela resultat* i omgången och välj form:
 - **PDF** — protokoll att skriva ut eller bifoga.
 - **Excel** eller **CSV** — för vidare bearbetning.
 
-Telefonen öppnar sin vanliga delningsruta, så resultatet kan mejlas, skickas som meddelande eller sparas i Filer. Listan innehåller tavelnummer, Fmid/Anstnr, namn, förband, försök, tid, träffar per zon, poäng, poängkvot och utfall — plus en summering av hur många som blev godkända.
+Telefonen öppnar sin vanliga delningsruta, så resultatet kan mejlas, skickas som meddelande eller sparas i Filer. Listan innehåller tavelnummer, Fmid/Anstnr, namn, förband, försök, tid, träffar per zon, poäng, poängkvot och utfall — plus en summering av hur många som blev godkända. **Bättringsskotten följer inte med ut:** protokollet visar de träffar bedömningen vilar på, så zonkolumnerna summerar till kravet och poängen går att räkna efter.
 
 En skytt räknas som godkänd i sammanställningen om **något** av försöken var godkänt.
 

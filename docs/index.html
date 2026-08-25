@@ -281,6 +281,10 @@ label.falt input.saknas { border-color: var(--underkand); }
 }
 .zongrupp h3 .raknare { font-variant-numeric: tabular-nums; }
 .zongrupp h3 .raknare.klar { color: var(--godkand); }
+/* Överskottet: röda siffror inom parentes, för att skilja det inknappade
+   antalet från det som räknas. Röd som i underkänt — inte för att något är
+   fel, utan för att det är den färg som fångar ögat i den här appen. */
+.zongrupp h3 .raknare .over { color: var(--underkand); font-weight: 700; }
 .zoner { display: grid; grid-template-columns: repeat(auto-fit, minmax(4.6rem, 1fr)); gap: 0.5rem; }
 .zonknapp {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -488,7 +492,7 @@ Appen följer hur provet genomförs: alla tiderna först, poängen när gruppen 
 - **1. Lägg upp omgången.** *+ Ny omgång* — välj prov, datum, plats och instruktör, och bocka i deltagarna **i skjutordning**. Numret de får är skyttens tavelnummer på banan. *Starta omgången* går rakt in i den; *Spara utan att starta* lägger den åt sidan till senare.
 - **2. Ta tiderna.** *Registrera tid för första skytt* öppnar tavla 1. Knappa tiden rakt av som den står på timern — **555** blir 5,55 — och tryck *Spara & nästa skytt*. Under knappen står vem som står på tur.
 - **3. Gå fram till tavlorna.** När sista tiden är inne heter knappen *Spara & börja med poängen*, och appen står på tavla 1 i poängläget.
-- **4. För in träffarna.** En tryckning per träff på respektive zon — **bättringsskotten med**. Knappa av hålen som de sitter; appen väljer ut de bästa träffarna åt dig, och räknaren i målytans rubrik säger vad som gäller: *4 av 4 — klart*, eller *6 av 4 — de 4 bästa räknas*. Poängkvoten och utfallet — **Godkänd** eller **Underkänd** — räknas medan du knappar.
+- **4. För in träffarna.** En tryckning per träff på respektive zon — **bättringsskotten med**. Knappa av hålen som de sitter; appen väljer ut de bästa träffarna åt dig, och räknaren i målytans rubrik säger vad som gäller: *4 av 4 — klart*, eller *(6 av 4) — de 4 bästa räknas* med siffrorna i rött när du knappat in fler än som räknas. Poängkvoten och utfallet — **Godkänd** eller **Underkänd** — räknas medan du knappar.
 - **5. Registrera.** *Registrera & nästa skytt* låser försöket och går vidare. Efter sista skytten summeras omgången: *"Omgången klar — 2 av 3 godkända."*
 
 Växeln **TID | POÄNG** visar inom parentes hur många som väntar i respektive läge, och listan står alltid i det läge som har något kvar att göra. Du behöver alltså inte hålla reda på var i omgången ni är — och en avstickare till anvisningen eller delningen tappar inte bort dig.
@@ -512,7 +516,7 @@ Tryck *Dela resultat* i omgången och välj form:
 - **PDF** — protokoll att skriva ut eller bifoga.
 - **Excel** eller **CSV** — för vidare bearbetning.
 
-Telefonen öppnar sin vanliga delningsruta, så resultatet kan mejlas, skickas som meddelande eller sparas i Filer. Listan innehåller tavelnummer, Fmid/Anstnr, namn, förband, försök, tid, träffar per zon, poäng, poängkvot och utfall — plus en summering av hur många som blev godkända.
+Telefonen öppnar sin vanliga delningsruta, så resultatet kan mejlas, skickas som meddelande eller sparas i Filer. Listan innehåller tavelnummer, Fmid/Anstnr, namn, förband, försök, tid, träffar per zon, poäng, poängkvot och utfall — plus en summering av hur många som blev godkända. **Bättringsskotten följer inte med ut:** protokollet visar de träffar bedömningen vilar på, så zonkolumnerna summerar till kravet och poängen går att räkna efter.
 
 En skytt räknas som godkänd i sammanställningen om **något** av försöken var godkänt.
 
@@ -749,6 +753,42 @@ function tvaDecimaler(n) {
 }
 
 /**
+ * Träffarna som RÄKNAS i en målyta, som antal per zon.
+ *
+ * Bästa poäng först, och vid lika poäng — C och D är båda 3 p — i zonordning.
+ * Summan blir densamma hur man än väljer mellan två likvärdiga träffar, men
+ * urvalet ska vara förutsägbart: samma försök ska ge samma protokoll varje
+ * gång det exporteras.
+ */
+function raknadeIGrupp(grupp, traffar = {}) {
+  const ordning = grupp.zoner
+    .filter((z) => (traffar[z] || 0) > 0)
+    .sort((a, b) => ZONPOANG[b] - ZONPOANG[a]
+      || ZONORDNING.indexOf(a) - ZONORDNING.indexOf(b));
+  const raknade = {};
+  let kvar = grupp.antal;
+  for (const zon of ordning) {
+    if (kvar <= 0) break;
+    raknade[zon] = Math.min(traffar[zon], kvar);
+    kvar -= raknade[zon];
+  }
+  return raknade;
+}
+
+/**
+ * Hela försökets räknande träffar, per zon — målytorna var för sig och sedan
+ * hopslagna. Zonerna tillhör en enda målyta var, så de kan inte krocka.
+ *
+ * Det här är formen som går ut i protokollet: bättringsskotten knappas in i
+ * appen, men det som lämnar telefonen är de träffar bedömningen vilar på.
+ */
+function raknadeTraffar(provKod, traffar = {}) {
+  const ut = {};
+  for (const g of PROV[provKod].grupper) Object.assign(ut, raknadeIGrupp(g, traffar));
+  return ut;
+}
+
+/**
  * Bedömer ett försök.
  *
  * traffar: { A: 2, C: 4, ... } — antal träffar per zon, som de knappats in.
@@ -766,27 +806,24 @@ function bedom(provKod, traffar = {}, tid = null, vapenhanteringUnderkand = fals
   let poang = 0;
 
   const grupper = prov.grupper.map((g) => {
-    // Träffarna som en lista poängvärden, bästa först. Alla hål i tavlan
-    // knappas in, bättringsskotten med, och urvalet görs här: de N bästa i
-    // varje målyta räknas, resten faller bort.
-    const varden = [];
-    for (const zon of g.zoner) {
-      for (let i = 0; i < (traffar[zon] || 0); i++) varden.push(ZONPOANG[zon]);
-    }
-    varden.sort((a, b) => b - a);
-    const raknade = varden.slice(0, g.antal);
-    const summa = raknade.reduce((a, b) => a + b, 0);
+    // Alla hål i tavlan knappas in, bättringsskotten med. Urvalet görs av
+    // raknadeIGrupp() — samma funktion som exporten läser, så protokollet och
+    // poängen aldrig kan bygga på olika träffar.
+    const antal = g.zoner.reduce((n, z) => n + (traffar[z] || 0), 0);
+    const raknade = raknadeIGrupp(g, traffar);
+    const summa = Object.entries(raknade)
+      .reduce((s, [zon, n]) => s + ZONPOANG[zon] * n, 0);
     poang += summa;
-    if (varden.length < g.antal) {
+    if (antal < g.antal) {
       brister.push(
         prov.grupper.length > 1
-          ? `${g.namn}: ${varden.length} av ${g.antal} träff`
-          : `${varden.length} av ${g.antal} träff`,
+          ? `${g.namn}: ${antal} av ${g.antal} träff`
+          : `${antal} av ${g.antal} träff`,
       );
     }
     return {
-      id: g.id, namn: g.namn, antal: varden.length, kravAntal: g.antal,
-      poang: summa, over: Math.max(0, varden.length - g.antal),
+      id: g.id, namn: g.namn, antal, kravAntal: g.antal,
+      poang: summa, over: Math.max(0, antal - g.antal),
     };
   });
 
@@ -1240,11 +1277,16 @@ function underlag(omgang, personer, resultat) {
     }
     for (const r of forsok) {
       const b = bedom(omgang.gren, r.traffar, r.tid, r.vapenhanteringUnderkand);
+      // Protokollet visar de träffar bedömningen vilar på, inte varje hål i
+      // tavlan. Bättringsskotten hör hemma i appen, där instruktören knappar;
+      // det som lämnar telefonen ska gå att lägga bredvid poängen och summera
+      // utan att någon behöver veta vilka träffar som föll bort.
+      const traffar = raknadeTraffar(omgang.gren, r.traffar);
       rader.push({
-        person: p, nr, forsok: r, bedomning: b,
+        person: p, nr, forsok: r, bedomning: b, traffar,
         celler: [
           nr, p.fmid || '', p.namn, p.forband, r.forsok, r.tid === null ? '' : komma(r.tid),
-          ...zoner.map((z) => r.traffar[z] || 0),
+          ...zoner.map((z) => traffar[z] || 0),
           b.poang, b.pk === null ? '' : komma(b.pk),
           b.godkand ? 'Godkänd' : 'Underkänd',
           b.godkand ? '' : b.brister.join('; '),
@@ -1301,8 +1343,8 @@ function somText(u) {
       continue;
     }
     const b = rad.bedomning;
-    const traffar = ZONORDNING.filter((z) => rad.forsok.traffar[z])
-      .map((z) => `${z}${rad.forsok.traffar[z]}`).join(' ');
+    const traffar = ZONORDNING.filter((z) => rad.traffar[z])
+      .map((z) => `${z}${rad.traffar[z]}`).join(' ');
     rader.push(
       `   Försök ${rad.forsok.forsok}: ${komma(rad.forsok.tid)} s · ${traffar || 'inga träffar'}` +
       ` · ${b.poang} p · PK ${komma(b.pk)} · ${b.godkand ? 'GODKÄND' : 'UNDERKÄND'}` +
@@ -2276,9 +2318,17 @@ function uppdateraPoang() {
     const ruta = app.querySelector(`[data-grupp="${g.id}"]`);
     const klar = g.antal >= g.kravAntal;
     const del = ruta.querySelector('.raknare');
-    del.textContent = `${g.antal} av ${g.kravAntal}`
-      + (g.over > 0 ? ` — de ${g.kravAntal} bästa räknas` : klar ? ' — klart' : '');
-    del.classList.toggle('klar', klar);
+    if (g.over > 0) {
+      // Fler träffar inknappade än målytan räknar: siffrorna inom parentes och
+      // i rött. Parentesen säger att talet inte är det protokollet bygger på,
+      // och färgen fångar ögat utan att texten behöver läsas — texten bredvid
+      // säger sedan vad som gäller.
+      del.innerHTML = `<span class="over">(${g.antal} av ${g.kravAntal})</span>`
+        + ` — de ${g.kravAntal} bästa räknas`;
+    } else {
+      del.textContent = `${g.antal} av ${g.kravAntal}${klar ? ' — klart' : ''}`;
+    }
+    del.classList.toggle('klar', klar && g.over === 0);
     // Dubbla antalet räknande träffar är ingen regelgräns utan ett rimlighets-
     // mått: så många bättringsskott skjuter ingen, så då är det troligen ett
     // tryck för mycket. Appen spärrar inte — den påpekar.
