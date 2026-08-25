@@ -1217,6 +1217,111 @@ test('inställningarna länkar till koden på GitHub', () => {
   assert.ok(lank.classList.contains('knapp'), 'den ska se ut som knapparna den står bredvid');
 });
 
+test('beskedet om ny version ligger tyst tills det finns något att säga', () => {
+  const rad = doc.querySelector('#uppdatering');
+  assert.ok(rad, 'raden ska finnas i sidan från början — den ska inte behöva skapas');
+  assert.ok(rad.hidden, 'den ligger dold tills servicearbetaren hittat en ny version');
+  assert.equal(rad.tagName, 'BUTTON', 'den ska gå att trycka på, med tangentbord också');
+  assert.equal(rad.dataset.uppdatera, '1', 'klickdelegeringen letar efter data-uppdatera');
+  assert.match(rad.textContent.trim(), /^Ny version finns/);
+  assert.ok(!doc.querySelector('#bottenrad #uppdatering'),
+    'den måste ligga utanför bottenraden, som varje vy skriver om');
+});
+
+test('beskedet överlever en omritning', () => {
+  const rad = doc.querySelector('#uppdatering');
+  rad.hidden = false;                       // som när arbetaren sagt till
+  klicka('Appinställningar');
+  klicka('Om appen');
+  assert.equal(doc.querySelector('#uppdatering'), rad, 'samma element hela vägen');
+  assert.ok(!doc.querySelector('#uppdatering').hidden,
+    'ett vybyte får inte tysta ett besked som ännu inte tryckts bort');
+});
+
+/**
+ * Startar appen med en påhittad servicearbetare, eftersom jsdom inte har
+ * någon. Attrappen låter provet driva hela förloppet för hand: en ny version
+ * hittas, installeras och blir klar.
+ *
+ * `styrd` säger om sidan redan hade en arbetare när den laddades. Den allra
+ * första installationen ska INTE ge något besked — då är ingenting nytt.
+ */
+function startaMedArbetare(styrd) {
+  const lyssnare = {};
+  const statlyssnare = [];
+  const arbetare = { state: 'installing',
+    addEventListener: (namn, f) => { if (namn === 'statechange') statlyssnare.push(f); } };
+  const falsk = {
+    controller: styrd ? {} : null,
+    register: () => Promise.resolve({
+      waiting: null,
+      installing: arbetare,
+      addEventListener: (namn, f) => { lyssnare[namn] = f; },
+    }),
+  };
+  const d = new JSDOM(fs.readFileSync(FIL, 'utf8'), {
+    runScripts: 'dangerously', url: 'https://exempel.test/', pretendToBeVisual: true,
+    beforeParse(window) {
+      window.localStorage.setItem('fm-kompetensprov', JSON.stringify(
+        { version: 1, personer: [], omgangar: [], resultat: [] }));
+      Object.defineProperty(window.navigator, 'serviceWorker',
+        { value: falsk, configurable: true });
+    },
+  });
+  return {
+    dokument: d.window.document,
+    // Så här går det till i webbläsaren: en ny arbetare hittas, och när dess
+    // filer ligger i cachen byter den tillstånd till "installed".
+    nyVersionHittas: () => lyssnare.updatefound && lyssnare.updatefound(),
+    nyVersionKlar: () => { arbetare.state = 'installed'; statlyssnare.forEach((f) => f()); },
+  };
+}
+
+test('beskedet visas när en ny version ligger klar i cachen', async () => {
+  const app = startaMedArbetare(true);
+  await new Promise((r) => setTimeout(r, 0));      // registreringen är ett löfte
+  assert.ok(app.dokument.querySelector('#uppdatering').hidden,
+    'ingenting att säga förrän arbetaren hittat något');
+
+  app.nyVersionHittas();
+  assert.ok(app.dokument.querySelector('#uppdatering').hidden,
+    'en påbörjad hämtning räcker inte — filerna ska ligga i cachen först');
+
+  app.nyVersionKlar();
+  assert.ok(!app.dokument.querySelector('#uppdatering').hidden,
+    'nu finns det något att erbjuda');
+});
+
+test('den allra första installationen ger inget besked', async () => {
+  const app = startaMedArbetare(false);            // ingen arbetare styrde sidan
+  await new Promise((r) => setTimeout(r, 0));
+  app.nyVersionHittas();
+  app.nyVersionKlar();
+  assert.ok(app.dokument.querySelector('#uppdatering').hidden,
+    'appen installeras just nu — det är inte en uppdatering av något');
+});
+
+test('sidan lämnar plats för beskedet, och beskedet står på bottenraden', () => {
+  const css = fs.readFileSync(FIL, 'utf8');
+  const block = css.slice(css.indexOf('.uppdatering {'), css.indexOf('}', css.indexOf('.uppdatering {')));
+  assert.match(block, /bottom: var\(--bottenradhojd, 7\.5rem\)/,
+    'beskedet placeras mot bottenradens egen höjd — läste det totalen skulle det '
+    + 'sväva sin egen höjd för högt');
+  assert.match(css, /padding: 0\.9rem 0\.9rem calc\(var\(--bottenhojd, 7\.5rem\) \+ 1rem\)/,
+    'sidans marginal läser totalen, som rymmer både raden och beskedet');
+});
+
+test('servicearbetaren säger till om en ny version, utan att fråga extra', () => {
+  const kod = fs.readFileSync(FIL, 'utf8');
+  assert.match(kod, /navigator\.serviceWorker\.controller/,
+    'den allra första installationen är ingen uppdatering och ska inte ge besked');
+  assert.match(kod, /updatefound/);
+  assert.match(kod, /'installed'/, 'beskedet ges när de nya filerna ligger i cachen');
+  assert.ok(!/registration\.update\(\)|reg\.update\(\)/.test(kod),
+    'ingen egen uppdateringskoll: den hade kostat en utgående förbindelse per gång, '
+    + 'och det är just vad cachen-först är till för att slippa');
+});
+
 test('kroken som höjer versionen ligger i arkivet och är körbar', () => {
   const krok = path.join(import.meta.dirname, '..', '.githooks', 'pre-commit');
   const stat = fs.statSync(krok);

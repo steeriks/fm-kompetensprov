@@ -23,6 +23,7 @@ const bottenrad = document.getElementById('bottenrad');
 const rubrikText = document.getElementById('rubriktext');
 const underrubrik = document.getElementById('underrubrik');
 const hemKnapp = document.getElementById('hem');
+const uppdateringsrad = document.getElementById('uppdatering');
 document.getElementById('utgava').textContent = `v${UTGAVA}`;
 const stegaKnappar = [document.getElementById('stegabak'), document.getElementById('stegafram')];
 
@@ -1053,7 +1054,13 @@ function rita() {
  * — en fast marginal göms antingen bakom knapparna eller slösar skärm.
  */
 function mätBottenrad() {
-  const h = bottenrad.offsetHeight;
+  const rad = bottenrad.offsetHeight;
+  if (rad > 0) document.documentElement.style.setProperty('--bottenradhojd', `${rad}px`);
+  // Sidans marginal måste rymma bottenraden OCH beskedet om en ny version,
+  // annars göms sista raden innehåll bakom det. Beskedet placeras däremot
+  // mot bottenradens egen höjd — läste det totalen skulle det sväva sin egen
+  // höjd för högt.
+  const h = rad + (uppdateringsrad.hidden ? 0 : uppdateringsrad.offsetHeight);
   if (h > 0) document.documentElement.style.setProperty('--bottenhojd', `${h}px`);
 }
 window.addEventListener('resize', mätBottenrad);
@@ -1131,6 +1138,7 @@ document.addEventListener('click', async (ev) => {
     '[data-format], [data-historik], [data-nytt-forsok], [data-soptunna], [data-kopia], ' +
     '[data-radera-allt], [data-radera-alla-skyttar], [data-skriv-ut], [data-anvisning], ' +
     '[data-lagg-till], [data-lagg-in], [data-flyttlage], [data-dok], [data-import], ' +
+    '[data-uppdatera], ' +
     '.zonknapp');
   if (!t) return;
   const d = t.dataset;
@@ -1373,6 +1381,7 @@ document.addEventListener('click', async (ev) => {
     return;
   }
   if (d.skrivUt) return window.print();
+  if (d.uppdatera) return location.reload();
 
   // --- register och inställningar ---
   if (d.raderaAllaSkyttar) {
@@ -1670,8 +1679,39 @@ hemKnapp.addEventListener('click', () => {
 
 // Servicearbetaren finns bara i den installerade versionen; som lös fil
 // saknas den, och då ska appen starta ändå.
+//
+// Den nya versionen tar över direkt (skipWaiting), men SIDAN som redan är
+// laddad är den gamla appen — hela appen ligger i den ena filen. Utan
+// besked syntes en publicering därför först vid nästa start. Nu säger
+// arbetaren till, och raden i nederkant låter användaren välja ögonblicket.
+//
+// Ingen extra begäran görs för det här: webbläsaren letar efter en ny sw.js
+// när appen startar, och det som händer nedan är att appen lyssnar på svaret.
+// Att fråga oftare — vid varje start eller varje gång appen tas fram — hade
+// kostat en utgående förbindelse per gång, och det är precis vad servicearbetaren
+// är cache-först för att slippa.
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-  navigator.serviceWorker.register('sw.js').catch(() => {});
+  // Fanns det redan en arbetare när sidan laddades? Utan den frågan hade
+  // raden dykt upp vid den allra första installationen, då ingenting är nytt.
+  const styrdFranStart = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register('sw.js').then((reg) => {
+    if (reg.waiting) visaUppdatering();
+    reg.addEventListener('updatefound', () => {
+      const ny = reg.installing;
+      if (!ny) return;
+      // "installed" = de nya filerna ligger i cachen och är redo. Aktiveringen
+      // följer av sig själv, eftersom install-steget kallar skipWaiting().
+      ny.addEventListener('statechange', () => {
+        if (ny.state === 'installed') visaUppdatering();
+      });
+    });
+  }).catch(() => {});
+
+  function visaUppdatering() {
+    if (!styrdFranStart || !uppdateringsrad.hidden) return;
+    uppdateringsrad.hidden = false;
+    mätBottenrad();
+  }
 }
 
 history.replaceState(vy, '');

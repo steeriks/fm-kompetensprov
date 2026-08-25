@@ -248,6 +248,12 @@ likadan ut på varje skärm.
 sidans nedre marginal läser. Raden är olika hög i olika vyer, och en gissad marginal göms
 antingen bakom knapparna eller slösar skärm.
 
+`mätBottenrad()` skriver **två** mått. `--bottenradhojd` är bottenraden ensam, och beskedet
+om en ny version placeras mot den. `--bottenhojd` är raden plus beskedet, och sidans marginal
+läser den. Ett enda mått hade blivit cirkulärt: beskedet hade svävat sin egen höjd för högt.
+`#uppdatering` ligger av samma skäl **utanför** `#bottenrad` — som barn hade det raderats av
+nästa `bottenrad.innerHTML = …`, alltså vid första vybyte.
+
 ## Fällor som redan kostat tid
 
 - **Långtryck markerar text om man inte stoppar det.** Skytterader och zonknappar hålls in
@@ -320,7 +326,7 @@ inte i bygget — filerna ska gå att läsa som de är i `src/`. `src/hjalp.md` 
 
 ```bash
 python3 bygg.py     # måste köras först — proven kör mot docs/
-npm test            # 121 prov: regler, export, import, hela flödet, spärrarna mot utgående trafik
+npm test            # 128 prov: regler, export, import, hela flödet, spärrarna mot utgående trafik
 ```
 
 **Bygg före du provar.** Det här är den enklaste fällan i arkivet och den värsta, eftersom
@@ -403,7 +409,27 @@ följde med, men en utgående förbindelse per start avslöjar IP, tidpunkt och 
 för den som serverar filen — och det är inte gratis för en app som ska gå att använda utan
 att lämna spår. Uppdateringar tappas inte: webbläsaren jämför `sw.js` mot serverns kopia på
 egen hand, och eftersom cachenamnet bär appens fingeravtryck hämtar en ny version sina filer
-i `install`-steget. Priset är att en ny version kan dröja en start extra.
+i `install`-steget.
+
+**Beskedet om en ny version är vad som gör cachen-först gratis.** Den nya arbetaren tar över
+direkt (`skipWaiting`), men SIDAN som redan är laddad *är* den gamla appen — hela appen
+ligger i den ena filen. Utan besked syntes en publicering därför först vid nästa start.
+Registreringen i `app.js` lyssnar i stället på `updatefound` och visar `#uppdatering` när den
+nya arbetaren når `installed`; ett tryck laddar om. Ingen extra begäran görs för det —
+webbläsaren letar efter en ny `sw.js` när appen startar ändå, och appen lyssnar bara på
+svaret. Det finns **inget** `registration.update()` i appen, och ska inte finnas: en egen
+koll vid varje start eller varje gång appen tas fram hade kostat en utgående förbindelse per
+gång, alltså precis det cachen-först är till för att slippa. Ett prov vaktar att anropet inte
+smyger sig in.
+
+Beskedet laddar aldrig om av sig självt. Att rycka undan skärmen mitt i en registrering är
+fel i fält, även om allt inmatat ligger kvar i lagringen.
+
+**`cache: 'reload'` i `install`-steget.** Pages skickar `max-age=600` på allt. Webbläsaren
+hämtar visserligen själva `sw.js` förbi HTTP-cachen vid uppdateringskollen, men filerna i
+`FILER` gick annars den vanliga vägen — och då kunde den nya arbetaren cacha en upp till tio
+minuter gammal `index.html` under sitt nya cachenamn. Uppdateringen syntes då en start senare
+än den skulle, utan att något såg fel ut.
 
 Arbetaren släpper också bara igenom appens egen värd (`url.origin !== self.location.origin`
 → passera). En begäran till någon annan ska inte cachas som om den hörde hemma.

@@ -176,6 +176,11 @@ Samma text, och hur appen installeras på iOS och Android, finns i appen under
 den som undrar vad appen gör med uppgifterna ska kunna gå och läsa efter, från telefonen och
 utan att veta adressen i förväg.
 
+**Uppdateringar sköter sig själva.** Appen letar efter en ny version när den startas — och
+bara då; den hör inte av sig i bakgrunden. Har den hittat en dyker en rad upp i nederkant:
+*Ny version finns — tryck för att uppdatera*. Ett tryck laddar om. Appen laddar aldrig om av
+sig själv, så en pågående registrering avbryts inte. Versionen du kör står överst till höger.
+
 > Appen går även att skicka som **en enda HTML-fil** och öppna direkt ur mailet. Då saknar
 > den egen säker adress och lagringen är opålitlig — Android kan neka den helt. Den vägen
 > duger för att visa appen eller köra ett enstaka tillfälle. Ska resultaten sparas:
@@ -189,7 +194,7 @@ Inga beroenden i appen — ren HTML, CSS och JavaScript, ingen CDN, inget ramver
 npm install       # bara jsdom, och bara för testerna
 npm run serve     # http://localhost:8390 mot src/
 npm run bygg      # bakar ihop src/ till docs/index.html
-npm test          # 121 prov: regelmotor, export, import och hela flödet i jsdom
+npm test          # 128 prov: regelmotor, export, import och hela flödet i jsdom
 ```
 
 Testerna kör mot `docs/`, så **bygg innan du provar**.

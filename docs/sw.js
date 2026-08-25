@@ -5,11 +5,20 @@
 // vilket gör att en ny version verkligen slår igenom i stället för att den
 // gamla ligger kvar i cachen.
 
-const CACHE = 'fm-kompetensprov-d60d56f90982';   // byts av bygg.py till appens fingeravtryck
+const CACHE = 'fm-kompetensprov-c0cac6bac862';   // byts av bygg.py till appens fingeravtryck
 const FILER = ['./', './index.html', './manifest.webmanifest', './ikon-180.png', './ikon-512.png'];
 
+// cache: 'reload' förbi HTTP-cachen. GitHub Pages skickar max-age=600 på allt,
+// och webbläsaren hämtar visserligen SJÄLVA sw.js färskt vid uppdateringskollen
+// — men filerna nedan går annars via HTTP-cachen. Den nya arbetaren kunde
+// därmed cacha en upp till tio minuter gammal index.html under sitt nya
+// cachenamn, och uppdateringen syntes först en start senare än den skulle.
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILER)).then(() => self.skipWaiting()));
+  e.waitUntil(
+    caches.open(CACHE)
+      .then((c) => c.addAll(FILER.map((u) => new Request(u, { cache: 'reload' }))))
+      .then(() => self.skipWaiting()),
+  );
 });
 
 self.addEventListener('activate', (e) => {

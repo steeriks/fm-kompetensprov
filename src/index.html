@@ -75,6 +75,13 @@
      externa anrop. -->
 <script type="text/markdown" id="dok-anvandning" data-fil="anvandning.md"></script>
 <script type="text/markdown" id="dok-hjalp" data-fil="hjalp.md"></script>
+<!-- Visas när servicearbetaren hämtat hem en ny version. Ett TRYCK laddar om,
+     aldrig appen själv: att rycka undan skärmen mitt i en registrering är fel i
+     fält, även om allt inmatat ligger kvar i lagringen. Raden ligger utanför
+     #bottenrad, som skrivs om av varje vy. -->
+<button class="uppdatering" id="uppdatering" data-uppdatera="1" hidden>
+  Ny version finns — tryck för att uppdatera
+</button>
 <div class="bottenrad" id="bottenrad"></div>
 <script type="module" src="app.js"></script>
 </body>

@@ -65,6 +65,16 @@ test('lagringen ligger i telefonen och ingen annanstans', () => {
   assert.ok(/localStorage/.test(kod), 'localStorage är den lagring som ska användas');
 });
 
+test('den nya arbetaren hämtar sina filer förbi HTTP-cachen', () => {
+  // GitHub Pages skickar max-age=600 på allt. Utan cache: 'reload' kunde den
+  // nya arbetaren cacha en tio minuter gammal index.html under sitt nya
+  // cachenamn, och uppdateringen syntes en start senare än den skulle.
+  const install = sw.slice(sw.indexOf("addEventListener('install'"));
+  assert.match(install.slice(0, install.indexOf('});')), /cache: 'reload'/);
+  assert.match(install.slice(0, install.indexOf('});')), /skipWaiting\(\)/,
+    'den nya versionen ska ta över direkt, inte vänta ut den gamla');
+});
+
 test('servicearbetaren hämtar bara appens egna filer, cachen först', () => {
   assert.match(sw, /url\.origin !== self\.location\.origin/,
     'främmande värdar ska inte passera servicearbetaren');
