@@ -1,7 +1,7 @@
 # FM kompetensprov — Ak och Pistol
 
 **Ett stöd för instruktören** vid genomförandet av Försvarsmaktens kompetensprov för
-**pistol** (Delmoment 14, Kompetensprov BAS "PILEN") och **automatkarbin** (Delmoment 12,
+**pistol** (Delmoment 14, Kompetensprov BAS) och **automatkarbin** (Delmoment 12,
 Kompetensprov Bas, på 50 m eller — i undantagsfall — 30 m). En webbapp (PWA) som körs i telefonen, fungerar utan täckning och lagrar
 allt lokalt.
 
@@ -114,7 +114,7 @@ under *Lägg till & hantera skyttar*, där alla också går att ta bort på en g
 
 Målet är **Helfigur 2020**: A 5, B 4, C 3, D 3, X 2, H 1 poäng.
 
-| | Automatkarbin, Dm 12 Bas | Automatkarbin, Dm 12 Bas (30 m) | Pistol, Dm 14 BAS (PILEN) |
+| | Automatkarbin, Dm 12 Bas | Automatkarbin, Dm 12 Bas (30 m) | Pistol, Dm 14 BAS |
 |---|---|---|---|
 | Avstånd | 50 m | 30 m | 10 m |
 | Träffar som räknas | 9 | 9 | 4 i XBCD + 2 i AH |

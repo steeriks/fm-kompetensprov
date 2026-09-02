@@ -55,6 +55,11 @@ något innehåll; båda läser tabellen. Ett nytt delmoment läggs till genom at
 `PROV`, inte genom att skriva om vare sig räkningen eller vyn. Det som är gemensamt för
 delmomenten står i `BEDOMNING`.
 
+`anvisning.dokumentation` och `anvisning.tips` är **valfria** — bara pistolen har dem, för
+bara pistolens anvisning har de avsnitten. `avsnitt()` i `src/app.js` ritar rubriken
+först när det finns rader, så automatkarbinen får ingen tom rubrik. Får ett annat prov samma
+avsnitt räcker det att fylla på fälten; vyn behöver inte röras.
+
 Tabellen har tre prov, inte två: `ak` (automatkarbin, 50 m, PK 1,0), `ak30` (samma
 delmoment på 30 m — skjuts bara när ingen 50-metersbana finns att tillgå, och kravet är
 då PK 1,3) och `pist`. De två automatkarbinsproven är samma övning på olika avstånd, så
@@ -63,15 +68,25 @@ rubrik, ställning, mätregler och genomförande står som konstanter (`AK_RUBRI
 med flit: texterna är citat, och ett citat som skrivs av på två ställen hinner bli olika.
 
 **Anvisningstexterna är citat, inte appens egen prosa — rätta dem inte.** `anvisning` och
-`BEDOMNING` är återgivna ur handboken, vilket vyn också säger i klartext. Fyra ställen ser
-ut som språkfel och är kontrollerade mot handboken 2026-08-12; de står som de står:
+`BEDOMNING` är återgivna ur handboken, vilket vyn också säger i klartext. Sex ställen ser
+ut som språkfel och är kontrollerade mot källan — ak mot *Delmoment 12* 2026-08-12, pist mot
+*Delmoment 14 Kompetensprov (18 skott)* 2026-09-02; de står som de står:
 
 | var | ser ut som fel | men |
 |---|---|---|
 | `pist` genomförande | *"4 träff **mot** XBCD"* men *"2 träff **i** AH"* | olika preposition, så står det |
 | `ak` genomförande | *"skjut tre **skott**"* två gånger, sedan *"skjut tre **träff**"* | skott och träff är inte samma sak |
-| `pist` genomförande | *"Inledningsvis, på signal: genomför skytten…"* | kolon plus omvänd ordföljd |
+| `pist` genomförande | *"**Slutligen,** skjuter skytten 2 träff i AH"* | kommat står i källan |
+| `pist` genomförande | *"de 4 bästa … och **dom** 2 bästa"* | talspråkligt *dom* står i källan |
+| `pist` mätning | *"…väldigt fort **utan** bättringen ska komma…"* | *utan* utan komma, så står det |
 | `fakta` | ak har **Krav**, pist har **Träffkrav** | etiketterna följer respektive delmoment |
+
+**Mätreglerna säger samma sak på två olika sätt, med flit.** `AK_MATNING` och `pist.matning`
+handlar båda om skjuttimern, bättringen och att reglerna inte ska utnyttjas — men lydelsen
+skiljer sig (*"Det är inte meningen…"* mot *"Observera att det inte är meningen…"*, ord mot
+siffror i *två/2 skott*), för texterna är hämtade ur varsitt delmoment. Att slå ihop dem till
+en delad konstant, som `AK_MATNING` är för de två ak-proven, vore att välja åt handboken
+vilken formulering som gäller för bägge.
 
 En språkgenomgång som "jämnar ut" dem gör appen otrogen mot källan. Ska något ändras här
 är det handboken som avgör, inte språkkänslan — och då ska gällande utgåva kontrolleras

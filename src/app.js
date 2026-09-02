@@ -172,7 +172,7 @@ function ritaNy() {
   app.innerHTML = `
     <label class="falt">Prov
       <select id="gren">
-        <option value="pist">Pistol — Delmoment 14, BAS (PILEN)</option>
+        <option value="pist">Pistol — Delmoment 14, BAS</option>
         <option value="ak">Automatkarbin — Delmoment 12, Bas (50 m)</option>
         <!-- 30 m är undantaget: det skjuts när ingen 50-metersbana finns att
              tillgå, och kravet på poängkvot är då 1,3 i stället för 1,0. -->
@@ -624,6 +624,16 @@ function ritaLaggTill() {
 
 // ------------------------------------------------------------- anvisningar
 
+/**
+ * Ett avsnitt i anvisningen som bara vissa prov har — rubriken ritas inte alls
+ * när provet saknar texterna, i stället för att lämna en tom rubrik efter sig.
+ */
+function avsnitt(rubrik, rader) {
+  if (!rader || !rader.length) return '';
+  return `<h2>${esc(rubrik)}</h2>`
+    + rader.map((s) => `<p class="dampad liten">${esc(s)}</p>`).join('');
+}
+
 function ritaAnvisning() {
   const gren = vy.gren || 'pist';
   const prov = PROV[gren];
@@ -649,6 +659,9 @@ function ritaAnvisning() {
 
     <h2>Bedömningar och krav</h2>
     ${BEDOMNING.map((s) => `<p class="dampad liten">${esc(s)}</p>`).join('')}
+
+    ${avsnitt('Dokumentation', a.dokumentation)}
+    ${avsnitt('Tips', a.tips)}
 
     <div class="varningsruta">Återgivet ur handboken som stöd för genomförandet.
     Appen är inte utgiven av Försvarsmakten — kontrollera mot gällande utgåva.</div>

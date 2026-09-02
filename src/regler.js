@@ -97,7 +97,7 @@ export const PROV = {
   pist: {
     kod: 'pist',
     namn: 'Pistol',
-    delmoment: 'Delmoment 14 – Kompetensprov BAS (PILEN)',
+    delmoment: 'Delmoment 14 – Kompetensprov (18 skott)',
     avstand: '10 m',
     mal: '1/1-figur',
     pkKrav: 2.0,
@@ -109,32 +109,43 @@ export const PROV = {
       { id: 'ah', namn: 'AH', zoner: ['A', 'H'], antal: 2 },
     ],
     anvisning: {
-      rubrik: 'Kompetensprov BAS — PILEN (18 skott)',
+      rubrik: 'Kompetensprov BAS',
       fakta: [
         ['Avstånd', '10 m'],
         ['Mål', '1/1-figur'],
-        ['Ställning', 'Stående grundställning'],
+        ['Ställning', 'Stående – grundställning'],
         ['Antal', '6 träff'],
         ['Träffkrav', 'PK 2,0 (4 träff XBCD, 2 träff AH)'],
         ['Målyta', 'XBCD och AH'],
         ['Fokus', 'Vändning, drag och omladdning'],
       ],
+      // Pistolens egen lydelse ur delmoment 14. AK_MATNING säger nästan samma
+      // sak i lite annan ordalydelse — den kommer ur delmoment 12 och ska inte
+      // dras hit, hur lik den än ser ut.
       matning: [
         'Skjuttiden mäts med skjuttimer. Tiden mäts mellan startsignal och sista skott.',
-        'Skytten får bättra missar eller dåliga träffar genom att skjuta fler än två skott i '
-          + 'stående ställning efter att ha genomfört omladdning. De sex bästa träffarna räknas: '
-          + 'de fyra bästa mot XBCD och de två bästa mot AH.',
-        'Det är inte meningen att skyttarna ska utnyttja reglerna genom att skjuta orimligt '
-          + 'många skott väldigt fort — bättringen ska komma som en konsekvens av att skytten '
-          + 'tolkar siktbilden.',
+        'Skytten får bättra missar eller dåliga träffar genom att skjuta fler än 2 skott i '
+          + 'stående ställning efter att ha genomfört omladdning. De 6 bästa träffarna räknas.',
+        'Observera att det inte är meningen att skyttarna ska försöka utnyttja reglerna genom '
+          + 'att skjuta orimligt många skott väldigt fort utan bättringen ska komma som en '
+          + 'konsekvens av att skytten tolkar siktbilden.',
       ],
       genomforande: [
-        'Startposition: skytten är vänd med ryggen mot målet, pistolen hölstrad samt laddad. '
-          + 'Magasin om 3 patroner samt 1 i vapnet. Omladdningsmagasinet är fullt.',
-        'Inledningsvis, på signal: genomför skytten en vändning och skjuter 4 träff mot XBCD.',
+        'Startposition: skytten är vänd med ryggen mot målet, pistolen hölstrad samt laddad '
+          + '(patron i patronläget och tre patroner i magasinet). Omladdningsmagasinet är fullt.',
+        'Inledningsvis, på signal genomför skytten en vändning och skjuter 4 träff mot XBCD.',
         'Därefter genomför skytten omladdning.',
-        'Slutligen skjuter skytten 2 träff i AH. Bättringsskott får genomföras mot samtliga '
+        'Slutligen, skjuter skytten 2 träff i AH. Bättringsskott får genomföras mot samtliga '
           + 'träffzoner efter omladdning.',
+        'De 4 bästa träffarna mot XBCD och dom 2 bästa mot AH räknas in i poängkvoten.',
+      ],
+      // Två avsnitt som bara pistolens anvisning har. Vyn ritar dem bara när
+      // de finns, så automatkarbinen får inga tomma rubriker.
+      dokumentation: [
+        'Resultat dokumenteras i skyttens skjutbok och på plutonslista eller motsvarande.',
+      ],
+      tips: [
+        'Om skytten skjuter max poäng 26p (16p B+10p A) är godkänd tid 13 sekunder.',
       ],
     },
   },

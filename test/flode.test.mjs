@@ -886,8 +886,10 @@ test('anvisningen finns för båda proven, med avstånd och genomförande', () =
   const text = () => doc.querySelector('#app').textContent.replace(/\s+/g, ' ');
 
   // Pistol visas först
-  assert.match(doc.querySelector('#underrubrik').textContent, /Pistol · Delmoment 14/);
-  assert.match(text(), /PILEN/);
+  assert.match(doc.querySelector('#underrubrik').textContent,
+    /Pistol · Delmoment 14 – Kompetensprov \(18 skott\)/);
+  assert.match(text(), /Kompetensprov BAS/);
+  assert.doesNotMatch(text(), /PILEN/, 'provet heter inte PILEN i källan');
   assert.equal(fakta()['Avstånd'], '10 m');
   assert.equal(fakta()['Mål'], '1/1-figur');
   assert.equal(fakta()['Träffkrav'], 'PK 2,0 (4 träff XBCD, 2 träff AH)');
@@ -898,6 +900,14 @@ test('anvisningen finns för båda proven, med avstånd och genomförande', () =
   assert.match(text(), /genomför skytten omladdning/i);
   assert.match(text(), /Vid osäker eller felaktig vapenhantering/);
   assert.match(text(), /Övningen får skjutas tre gånger/);
+  assert.equal(fakta()['Ställning'], 'Stående – grundställning');
+  assert.match(text(), /patron i patronläget och tre patroner i magasinet/);
+  assert.match(text(), /dom 2 bästa mot AH räknas in i poängkvoten/);
+  assert.match(text(), /Dokumentation.*skyttens skjutbok och på plutonslista/);
+  assert.match(text(), /Tips.*godkänd tid 13 sekunder/);
+  assert.match(text(), /fler än 2 skott i stående ställning/);
+  assert.match(text(), /De 6 bästa träffarna räknas/);
+  assert.match(text(), /Observera att det inte är meningen/);
 
   klicka('AK 50 M');
   assert.match(doc.querySelector('#underrubrik').textContent, /Automatkarbin · Delmoment 12/);
@@ -907,6 +917,9 @@ test('anvisningen finns för båda proven, med avstånd och genomförande', () =
   assert.match(text(), /valfri knästående\/sittande ställning/);
   assert.match(text(), /Grundställning/);
   assert.match(text(), /Kravet är 1,00 för automatkarbin/);
+  assert.match(text(), /Det är inte meningen att skyttarna ska utnyttja reglerna/,
+    'ak har sin egen lydelse av mätreglerna, inte pistolens');
+  assert.match(text(), /fler än tre skott/, 'och skriver räkneorden med bokstäver');
   assert.equal(doc.querySelectorAll('.steg li').length, 6, 'sex punkter i genomförandet');
 
   // Undantaget: samma delmoment på 30 m, med högre krav på poängkvot.
@@ -916,6 +929,11 @@ test('anvisningen finns för båda proven, med avstånd och genomförande', () =
   assert.equal(fakta()['Krav'], '9 träff, poängkvot minst 1,3');
   assert.match(text(), /Kravet är 1,30 för automatkarbin 30 m/);
   assert.match(text(), /Vapnet laddat med sex patroner/, 'genomförandet är detsamma som på 50 m');
+
+  // Dokumentation och Tips finns bara i pistolens övningsförteckning. Rubriken
+  // ska då inte ritas alls — en tom rubrik ser ut som ett borttappat stycke.
+  assert.doesNotMatch(text(), /Dokumentation/, 'ingen tom rubrik för ak');
+  assert.doesNotMatch(text(), /Tips/, 'ingen tom rubrik för ak');
 });
 
 test('anvisningen nås mitt i en omgång och visar rätt prov', () => {
