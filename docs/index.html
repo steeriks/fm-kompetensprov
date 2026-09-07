@@ -24,7 +24,7 @@
 <!-- Versionen skrivs bara i package.json; bygg.py byter innehållet här mot
      numret därifrån, precis som cachenamnet i sw.js. Lämna "utveckling"
      stående i src/ — den som serverar src/ direkt kör inte en utgåva. -->
-<meta name="version" content="1.1.6">
+<meta name="version" content="1.2.0">
 <meta name="description" content="Instruktörsverktyg för Försvarsmaktens kompetensprov, pistol och automatkarbin.">
 <meta name="theme-color" content="#0b0d0c">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -539,7 +539,7 @@ Vid osäker eller felaktig vapenhantering: kryssa rutan på poängskärmen, så 
 - **Byta plats:** håll in en rad tills handtagen (**☰**) visas, dra skytten dit hen ska, och tryck *Klar med ordningen*. Numret följer tavlan, inte personen.
 - **Rätta en träff:** håll in zonknappen för att nolla den, och knappa in rätt. Har det blivit orimligt många träffar i en målyta säger appen till — den spärrar inget, men ett tryck för mycket ska upptäckas innan det följer med in i protokollet.
 - **Byta skytt i tidfönstret:** pilarna på var sida om namnet stegar en tavla fram eller tillbaka, om något gått snett på linjen. Den påbörjade tiden sparas på vägen, och pilen slocknar när linjen är slut åt det hållet.
-- **Nytt försök:** *+ Nytt försök* på skyttens rad. Provet får skjutas tre gånger; ett omtag startas alltid med flit.
+- **Nytt försök:** *+ Nytt försök* på skyttens rad. Appen sätter ingen gräns för antalet omtag; ett omtag startas alltid med flit.
 - **⌂** längst upp till vänster går alltid hem. En påbörjad tid sparas på vägen.
 - **Grön rad i nederkant?** Då väntar en ny version av appen. Den stör ingenting och kan stå kvar hela omgången ut — appen laddar aldrig om av sig själv. Trycker du på den laddas appen om: allt inknappat ligger kvar, men du landar på startsidan och får öppna omgången igen. Vänta hellre tills gruppen är klar.
 
@@ -552,6 +552,8 @@ Tryck *Dela resultat* i omgången och välj form:
 - **Excel** eller **CSV** — för vidare bearbetning.
 
 Telefonen öppnar sin vanliga delningsruta, så resultatet kan mejlas, skickas som meddelande eller sparas i Filer. Listan innehåller tavelnummer, Fmid/Anstnr, namn, förband, försök, tid, träffar per zon, poäng, poängkvot och utfall — plus en summering av hur många som blev godkända. **Bättringsskotten följer inte med ut:** protokollet visar de träffar bedömningen vilar på, så zonkolumnerna summerar till kravet och poängen går att räkna efter.
+
+**I PDF:en och Excel-filen är godkända försök grönmarkerade** — hela raden, så det syns vilket försök som höll utan att man behöver läsa sig fram till utfallskolumnen. Text- och CSV-formaten skriver ut *GODKÄND* respektive *Godkänd* i klartext i stället.
 
 En skytt räknas som godkänd i sammanställningen om **något** av försöken var godkänt.
 
@@ -686,7 +688,6 @@ const PROV = {
     avstand: '50 m',
     mal: '1/1-figur',
     pkKrav: 1.0,
-    maxForsok: 3,
     // De nio bästa träffarna räknas, oavsett var på figuren de sitter.
     grupper: [
       { id: 'alla', namn: 'Träffar', zoner: ['A', 'B', 'C', 'D', 'X', 'H'], antal: 9 },
@@ -713,7 +714,6 @@ const PROV = {
     // Kortare avstånd ger tätare träffbild, och kravet höjs därefter: samma
     // nio träffar ska sitta på kortare tid för att räcka till godkänt.
     pkKrav: 1.3,
-    maxForsok: 3,
     grupper: [
       { id: 'alla', namn: 'Träffar', zoner: ['A', 'B', 'C', 'D', 'X', 'H'], antal: 9 },
     ],
@@ -738,7 +738,6 @@ const PROV = {
     avstand: '10 m',
     mal: '1/1-figur',
     pkKrav: 2.0,
-    maxForsok: 3,
     // Fyra träff i kroppen och två i huvudet. Bättringsskott får gå mot
     // samtliga zoner, men bara de bästa i varje målyta räknas in i kvoten.
     grupper: [
@@ -1328,7 +1327,7 @@ function underlag(omgang, personer, resultat) {
       });
       continue;
     }
-    // Godkänd på något av försöken räcker — provet får skjutas tre gånger.
+    // Godkänd på något av försöken räcker, hur många omtag det än tog.
     if (forsok.some((r) => bedom(omgang.gren, r.traffar, r.tid, r.vapenhanteringUnderkand).godkand)) {
       godkanda++;
     }
@@ -1358,6 +1357,15 @@ function underlag(omgang, personer, resultat) {
     rubrik: `${prov.namn} — ${prov.delmoment}`,
     filnamn: `kompetensprov-${prov.kod}-${omgang.datum}`,
   };
+}
+
+/**
+ * Är raden ett godkänt försök? En och samma fråga för xlsx och pdf, så att
+ * de två inte kan råka gröna olika rader. Raden för den som inte skjutit har
+ * ingen bedömning alls och blir aldrig grön.
+ */
+function radGodkand(rad) {
+  return Boolean(rad.bedomning && rad.bedomning.godkand);
 }
 
 /**
@@ -1519,12 +1527,17 @@ function kolumnBokstav(i) {
   return s;
 }
 
+// Cellstilar i styles.xml nedan: index i <cellXfs>. Grönt är Excels egen
+// "Bra" — ljusgrön botten och mörkgrön text — så ett godkänt försök ser ut
+// som ett godkänt försök även för den som aldrig sett protokollet förr.
+const STIL = { normal: 0, fet: 1, gron: 2 };
+
 function somXlsx(u) {
   const arkRader = [];
-  const skrivRad = (radnr, celler, fet = false) => {
+  const skrivRad = (radnr, celler, stilnr = STIL.normal) => {
     const c = celler.map((v, i) => {
       const ref = kolumnBokstav(i) + radnr;
-      const stil = fet ? ' s="1"' : '';
+      const stil = stilnr ? ` s="${stilnr}"` : '';
       if (typeof v === 'number' && Number.isFinite(v)) {
         return `<c r="${ref}"${stil}><v>${v}</v></c>`;
       }
@@ -1535,19 +1548,22 @@ function somXlsx(u) {
   };
 
   let rad = 1;
-  for (const text of huvudrader(u)) skrivRad(rad++, [text], true);
+  for (const text of huvudrader(u)) skrivRad(rad++, [text], STIL.fet);
   rad++;
-  skrivRad(rad++, u.kolumner, true);
+  skrivRad(rad++, u.kolumner, STIL.fet);
   for (const r of u.rader) {
     // Tid och PK som text med komma vore obrukbart i kalkyl — skriv tal.
     const celler = r.celler.map((v) => {
       if (typeof v === 'string' && /^-?\d+,\d+$/.test(v)) return Number(v.replace(',', '.'));
       return v;
     });
-    skrivRad(rad++, celler);
+    // Hela raden grönas, inte bara utfallskolumnen: den som bläddrar i ett
+    // protokoll med tre försök per skytt ska se vilket som höll utan att
+    // läsa sig fram till kolumnen längst ut.
+    skrivRad(rad++, celler, radGodkand(r) ? STIL.gron : STIL.normal);
   }
   rad++;
-  skrivRad(rad++, [`${u.godkanda} av ${u.antalSkyttar} godkända`], true);
+  skrivRad(rad++, [`${u.godkanda} av ${u.antalSkyttar} godkända`], STIL.fet);
 
   const ns = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
   const filer = [
@@ -1587,11 +1603,11 @@ function somXlsx(u) {
       namn: 'xl/styles.xml',
       data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <styleSheet xmlns="${ns}">
-<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>
-<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>
+<fonts count="3"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font><font><color rgb="FF006100"/><sz val="11"/><name val="Calibri"/></font></fonts>
+<fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFC6EFCE"/><bgColor indexed="64"/></patternFill></fill></fills>
 <borders count="1"><border/></borders>
 <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
-<cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs>
+<cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="0" fontId="2" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/></cellXfs>
 <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
 </styleSheet>`,
     },
@@ -1612,6 +1628,10 @@ function somXlsx(u) {
 const SIDBREDD = 595;   // A4 i punkter
 const SIDHOJD = 842;
 const MARGINAL = 36;
+// Samma ljusgröna botten som xlsx (FFC6EFCE), i PDF:ens 0–1-skala. Ljus nog
+// att svart text står kvar läsbar ovanpå, och att en gråskaleutskrift blir
+// ett svagt raster i stället för ett svart fält.
+const GRON = [0.776, 0.937, 0.808];
 
 function winAnsi(text) {
   // WinAnsi ligger nära Latin-1 för det vi behöver. Tecken utanför byts mot
@@ -1696,7 +1716,15 @@ function somPdf(u) {
       String.fromCharCode(...pdfText(text)) + ') Tj ET',
     );
   };
-  const rad = (celler, storlek, fet) => {
+  // Grön botten bakom ett godkänt försök. Rektangeln ritas FÖRE texten —
+  // PDF målar i den ordning operatorerna står, och en ruta efteråt hade lagt
+  // sig över siffrorna. q/Q sparar och återställer grafiktillståndet, så
+  // fyllfärgen inte följer med in i nästa rad (Tj fyller med samma färg).
+  const band = (storlek) => {
+    strommar.push(`q ${GRON.join(' ')} rg ${MARGINAL} ${y - 3} ${summa} ${storlek + 4} re f Q`);
+  };
+  const rad = (celler, storlek, fet, gron = false) => {
+    if (gron) band(storlek);
     let x = MARGINAL;
     celler.forEach((v, i) => {
       skriv(kapa(v, storlek, kol[i].bredd - 3), x, storlek, fet);
@@ -1724,7 +1752,7 @@ function somPdf(u) {
     // att läsa än en gles. Sista kolumnen får den korta anmärkningen.
     const celler = r.celler.map((v) => (v === 0 ? '' : v));
     celler[celler.length - 1] = kortAnmarkning(r.bedomning);
-    rad(celler, 8, false);
+    rad(celler, 8, false, radGodkand(r));
   }
   y -= 8;
   if (y < MARGINAL) nySida();
@@ -2106,7 +2134,7 @@ function ritaOmgang() {
       </button>
       ${klara.length ? `<div class="knapprad" style="margin-top:-0.35rem">
          <button class="knapp liten" data-historik="${id}">${oppen ? 'Dölj' : 'Visa'} försök</button>
-         ${!pagar && klara.length < prov.maxForsok
+         ${!pagar
            ? `<button class="knapp liten" data-nytt-forsok="${id}">+ Nytt försök</button>` : ''}
        </div>` : ''}
       ${oppen ? ritaHistorik(o, klara) : ''}`;

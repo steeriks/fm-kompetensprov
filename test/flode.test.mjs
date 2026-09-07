@@ -570,6 +570,31 @@ test('andra försöket lägger sig bredvid det första, inte ovanpå', () => {
   assert.match(doc.querySelector('#app').textContent, /godkänd/i);
 });
 
+test('ett fjärde försök går att skjuta — appen spärrar inte antalet omtag', () => {
+  klicka('+ Ny omgång');
+  rader()[0].click();
+  klicka('Starta omgången');
+  nastaIListan();
+
+  // Fyra underkända försök i rad. Den gamla gränsen låg vid tre, och tog
+  // bort knappen efter det tredje — då gick det som faktiskt sköts inte
+  // längre att skriva in.
+  for (let i = 1; i <= 4; i++) {
+    if (i > 1) klicka('+ Nytt försök');
+    knappaTid('20,00');
+    klicka('Poäng för');
+    knappaZon('C', 4);
+    knappaZon('H', 2);          // 14 p / 20 s = 0,70 → underkänd
+    klicka('Registrera');
+    assert.equal(lagret().resultat.filter((r) => r.registrerad).length, i,
+      `försök ${i} ska ha registrerats`);
+    assert.ok(knapp('+ Nytt försök'), `knappen ska finnas kvar efter försök ${i}`);
+  }
+
+  assert.match(doc.querySelector('#app').textContent, /4 försök/,
+    'raden räknar alla fyra');
+});
+
 test('vapenhantering underkänner även en perfekt serie', () => {
   klicka('+ Ny omgång');
   rader()[0].click();

@@ -37,7 +37,7 @@ export function underlag(omgang, personer, resultat) {
       });
       continue;
     }
-    // Godkänd på något av försöken räcker — provet får skjutas tre gånger.
+    // Godkänd på något av försöken räcker, hur många omtag det än tog.
     if (forsok.some((r) => bedom(omgang.gren, r.traffar, r.tid, r.vapenhanteringUnderkand).godkand)) {
       godkanda++;
     }
@@ -67,6 +67,15 @@ export function underlag(omgang, personer, resultat) {
     rubrik: `${prov.namn} — ${prov.delmoment}`,
     filnamn: `kompetensprov-${prov.kod}-${omgang.datum}`,
   };
+}
+
+/**
+ * Är raden ett godkänt försök? En och samma fråga för xlsx och pdf, så att
+ * de två inte kan råka gröna olika rader. Raden för den som inte skjutit har
+ * ingen bedömning alls och blir aldrig grön.
+ */
+export function radGodkand(rad) {
+  return Boolean(rad.bedomning && rad.bedomning.godkand);
 }
 
 /**
@@ -228,12 +237,17 @@ function kolumnBokstav(i) {
   return s;
 }
 
+// Cellstilar i styles.xml nedan: index i <cellXfs>. Grönt är Excels egen
+// "Bra" — ljusgrön botten och mörkgrön text — så ett godkänt försök ser ut
+// som ett godkänt försök även för den som aldrig sett protokollet förr.
+const STIL = { normal: 0, fet: 1, gron: 2 };
+
 export function somXlsx(u) {
   const arkRader = [];
-  const skrivRad = (radnr, celler, fet = false) => {
+  const skrivRad = (radnr, celler, stilnr = STIL.normal) => {
     const c = celler.map((v, i) => {
       const ref = kolumnBokstav(i) + radnr;
-      const stil = fet ? ' s="1"' : '';
+      const stil = stilnr ? ` s="${stilnr}"` : '';
       if (typeof v === 'number' && Number.isFinite(v)) {
         return `<c r="${ref}"${stil}><v>${v}</v></c>`;
       }
@@ -244,19 +258,22 @@ export function somXlsx(u) {
   };
 
   let rad = 1;
-  for (const text of huvudrader(u)) skrivRad(rad++, [text], true);
+  for (const text of huvudrader(u)) skrivRad(rad++, [text], STIL.fet);
   rad++;
-  skrivRad(rad++, u.kolumner, true);
+  skrivRad(rad++, u.kolumner, STIL.fet);
   for (const r of u.rader) {
     // Tid och PK som text med komma vore obrukbart i kalkyl — skriv tal.
     const celler = r.celler.map((v) => {
       if (typeof v === 'string' && /^-?\d+,\d+$/.test(v)) return Number(v.replace(',', '.'));
       return v;
     });
-    skrivRad(rad++, celler);
+    // Hela raden grönas, inte bara utfallskolumnen: den som bläddrar i ett
+    // protokoll med tre försök per skytt ska se vilket som höll utan att
+    // läsa sig fram till kolumnen längst ut.
+    skrivRad(rad++, celler, radGodkand(r) ? STIL.gron : STIL.normal);
   }
   rad++;
-  skrivRad(rad++, [`${u.godkanda} av ${u.antalSkyttar} godkända`], true);
+  skrivRad(rad++, [`${u.godkanda} av ${u.antalSkyttar} godkända`], STIL.fet);
 
   const ns = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
   const filer = [
@@ -296,11 +313,11 @@ export function somXlsx(u) {
       namn: 'xl/styles.xml',
       data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <styleSheet xmlns="${ns}">
-<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>
-<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>
+<fonts count="3"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font><font><color rgb="FF006100"/><sz val="11"/><name val="Calibri"/></font></fonts>
+<fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFC6EFCE"/><bgColor indexed="64"/></patternFill></fill></fills>
 <borders count="1"><border/></borders>
 <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
-<cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs>
+<cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="0" fontId="2" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/></cellXfs>
 <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
 </styleSheet>`,
     },
@@ -321,6 +338,10 @@ export function somXlsx(u) {
 const SIDBREDD = 595;   // A4 i punkter
 const SIDHOJD = 842;
 const MARGINAL = 36;
+// Samma ljusgröna botten som xlsx (FFC6EFCE), i PDF:ens 0–1-skala. Ljus nog
+// att svart text står kvar läsbar ovanpå, och att en gråskaleutskrift blir
+// ett svagt raster i stället för ett svart fält.
+const GRON = [0.776, 0.937, 0.808];
 
 function winAnsi(text) {
   // WinAnsi ligger nära Latin-1 för det vi behöver. Tecken utanför byts mot
@@ -405,7 +426,15 @@ export function somPdf(u) {
       String.fromCharCode(...pdfText(text)) + ') Tj ET',
     );
   };
-  const rad = (celler, storlek, fet) => {
+  // Grön botten bakom ett godkänt försök. Rektangeln ritas FÖRE texten —
+  // PDF målar i den ordning operatorerna står, och en ruta efteråt hade lagt
+  // sig över siffrorna. q/Q sparar och återställer grafiktillståndet, så
+  // fyllfärgen inte följer med in i nästa rad (Tj fyller med samma färg).
+  const band = (storlek) => {
+    strommar.push(`q ${GRON.join(' ')} rg ${MARGINAL} ${y - 3} ${summa} ${storlek + 4} re f Q`);
+  };
+  const rad = (celler, storlek, fet, gron = false) => {
+    if (gron) band(storlek);
     let x = MARGINAL;
     celler.forEach((v, i) => {
       skriv(kapa(v, storlek, kol[i].bredd - 3), x, storlek, fet);
@@ -433,7 +462,7 @@ export function somPdf(u) {
     // att läsa än en gles. Sista kolumnen får den korta anmärkningen.
     const celler = r.celler.map((v) => (v === 0 ? '' : v));
     celler[celler.length - 1] = kortAnmarkning(r.bedomning);
-    rad(celler, 8, false);
+    rad(celler, 8, false, radGodkand(r));
   }
   y -= 8;
   if (y < MARGINAL) nySida();

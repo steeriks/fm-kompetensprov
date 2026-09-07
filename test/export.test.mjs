@@ -107,6 +107,48 @@ test('pdf har rubrik, xref och slutmarkör', () => {
   fs.writeFileSync(path.join(UT, 'prov.pdf'), bytes);
 });
 
+// --- grön markering vid godkänt ---------------------------------------
+
+test('godkända rader gröns i xlsx, underkända och ej skjutna inte', () => {
+  const bytes = somXlsx(u);
+  const text = Buffer.from(bytes).toString('latin1');
+  // Stilen måste finnas i styles.xml, annars vägrar Excel öppna filen.
+  assert.match(text, /<fgColor rgb="FFC6EFCE"\/>/, 'ljusgrön fyllning saknas');
+  assert.match(text, /<color rgb="FF006100"\/>/, 'mörkgrön text saknas');
+  assert.match(text, /<fills count="3">/);
+  assert.match(text, /<cellXfs count="3">/);
+
+  // Tre huvudrader, en tom, kolumnrubrikerna på rad 5 — sedan de fyra
+  // dataraderna: p1 (godkänd), p2 försök 1 (underkänd), p2 försök 2
+  // (godkänd) och p3 (ej skjuten).
+  const stilar = [6, 7, 8, 9].map((radnr) => {
+    const rad = text.match(new RegExp(`<row r="${radnr}">.*?</row>`))[0];
+    return /s="2"/.test(rad);
+  });
+  assert.deepEqual(stilar, [true, false, true, false],
+    'bara de godkända försöken ska vara gröna');
+});
+
+test('godkända rader får ett grönt band i pdf:en', () => {
+  const bytes = somPdf(u);
+  const text = Buffer.from(bytes).toString('latin1');
+  const band = text.match(/0\.776 0\.937 0\.808 rg [\d.]+ [\d.-]+ [\d.]+ [\d.]+ re f/g) || [];
+  assert.equal(band.length, 2, 'två godkända försök, alltså två band');
+  // Bandet ska ligga före radens text i strömmen, annars målas siffrorna över.
+  assert.ok(text.indexOf('0.776 0.937 0.808 rg') < text.indexOf('Godk\xe4nd'),
+    'bandet ritas före texten');
+  // Grafiktillståndet ska återställas, annars blir all text därefter grön.
+  assert.ok(text.includes('re f Q'), 'q/Q ska rama in fyllningen');
+});
+
+test('ett protokoll utan godkända försök får inga band alls', () => {
+  const bara = underlag({ ...omgang, deltagare: ['p2'] }, personer,
+    [resultat[1]]);                       // p2:s underkända första försök
+  const text = Buffer.from(somPdf(bara)).toString('latin1');
+  assert.ok(!text.includes('0.776 0.937 0.808 rg'), 'inget att grönmarkera');
+  assert.ok(!Buffer.from(somXlsx(bara)).toString('latin1').includes('s="2"'));
+});
+
 test('automatkarbin ger nio zonkolumner och rätt krav i huvudet', () => {
   const akOmgang = { ...omgang, gren: 'ak', id: 'o2' };
   const akResultat = [{

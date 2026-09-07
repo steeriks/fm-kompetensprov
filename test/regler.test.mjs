@@ -149,17 +149,19 @@ test('komma skriver svenskt decimaltecken', () => {
 });
 
 test('provtabellen har kraven ur reglerna', () => {
+  // Antalet försök är inget krav i reglerna och står därför inte i tabellen:
+  // instruktören avgör hur många omtag som ryms.
+  for (const prov of Object.values(PROV)) {
+    assert.equal(prov.maxForsok, undefined, `${prov.kod} ska inte spärra antalet försök`);
+  }
   assert.equal(PROV.ak.pkKrav, 1.0);
   assert.equal(PROV.pist.pkKrav, 2.0);
-  assert.equal(PROV.ak.maxForsok, 3);
-  assert.equal(PROV.pist.maxForsok, 3);
   assert.equal(PROV.ak.grupper[0].antal, 9);
   assert.deepEqual(PROV.pist.grupper.map((g) => g.antal), [4, 2]);
   // 30-metersvarianten är samma delmoment: samma målyta och samma antal
   // träffar, men kortare avstånd och därför högre krav på poängkvot.
   assert.equal(PROV.ak30.pkKrav, 1.3);
   assert.equal(PROV.ak30.avstand, '30 m');
-  assert.equal(PROV.ak30.maxForsok, 3);
   assert.deepEqual(PROV.ak30.grupper, PROV.ak.grupper);
   assert.deepEqual(PROV.ak30.anvisning.genomforande, PROV.ak.anvisning.genomforande,
     'genomförandet skiljer sig inte åt mellan avstånden');

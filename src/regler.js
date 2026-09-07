@@ -49,7 +49,6 @@ export const PROV = {
     avstand: '50 m',
     mal: '1/1-figur',
     pkKrav: 1.0,
-    maxForsok: 3,
     // De nio bästa träffarna räknas, oavsett var på figuren de sitter.
     grupper: [
       { id: 'alla', namn: 'Träffar', zoner: ['A', 'B', 'C', 'D', 'X', 'H'], antal: 9 },
@@ -76,7 +75,6 @@ export const PROV = {
     // Kortare avstånd ger tätare träffbild, och kravet höjs därefter: samma
     // nio träffar ska sitta på kortare tid för att räcka till godkänt.
     pkKrav: 1.3,
-    maxForsok: 3,
     grupper: [
       { id: 'alla', namn: 'Träffar', zoner: ['A', 'B', 'C', 'D', 'X', 'H'], antal: 9 },
     ],
@@ -101,7 +99,6 @@ export const PROV = {
     avstand: '10 m',
     mal: '1/1-figur',
     pkKrav: 2.0,
-    maxForsok: 3,
     // Fyra träff i kroppen och två i huvudet. Bättringsskott får gå mot
     // samtliga zoner, men bara de bästa i varje målyta räknas in i kvoten.
     grupper: [

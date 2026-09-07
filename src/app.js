@@ -276,7 +276,7 @@ function ritaOmgang() {
       </button>
       ${klara.length ? `<div class="knapprad" style="margin-top:-0.35rem">
          <button class="knapp liten" data-historik="${id}">${oppen ? 'Dölj' : 'Visa'} försök</button>
-         ${!pagar && klara.length < prov.maxForsok
+         ${!pagar
            ? `<button class="knapp liten" data-nytt-forsok="${id}">+ Nytt försök</button>` : ''}
        </div>` : ''}
       ${oppen ? ritaHistorik(o, klara) : ''}`;

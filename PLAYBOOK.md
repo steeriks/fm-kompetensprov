@@ -48,11 +48,11 @@ utslag:
   förklaringen måste få nämna `fetch` och `sendBeacon` utan att fälla sitt eget bygge.
 
 **Reglerna är data, inte kod.** `PROV` i `src/regler.js` beskriver varje delmoment:
-målytor, hur många träffar som räknas i varje målyta, kravet på poängkvot, hur många försök
-som är tillåtna — och `anvisning` med avstånd, ställning, genomförande och mätregler i
-klartext. `bedom()` känner inte till något prov, och `ritaAnvisning()` känner inte till
-något innehåll; båda läser tabellen. Ett nytt delmoment läggs till genom att fylla på
-`PROV`, inte genom att skriva om vare sig räkningen eller vyn. Det som är gemensamt för
+målytor, hur många träffar som räknas i varje målyta, kravet på poängkvot — och
+`anvisning` med avstånd, ställning, genomförande och mätregler i klartext. `bedom()`
+känner inte till något prov, och `ritaAnvisning()` känner inte till något innehåll; båda
+läser tabellen. Ett nytt delmoment läggs till genom att fylla på `PROV`, inte genom att
+skriva om vare sig räkningen eller vyn. Det som är gemensamt för
 delmomenten står i `BEDOMNING`.
 
 `anvisning.dokumentation` och `anvisning.tips` är **valfria** — bara pistolen har dem, för
@@ -161,6 +161,12 @@ skjutit, men aldrig ett omtag: är skytten färdig säger appen ifrån. Vem som 
 avgörs på ETT ställe, `behoverLage()`, som både lägesväljarens räknare och `nastaSkytt()`
 läser — annars börjar de två påstå olika saker, och svepet drar in färdiga skyttar och
 hittar på försök åt dem.
+
+**Antalet omtag är inte spärrat.** Appen hade en gräns på tre försök per omgång; den är
+borta. Regeln om hur många gånger provet får skjutas är instruktörens att hålla, inte
+appens, och en spärr som slår till mitt i en omgång hjälper ingen på banan — den gör bara
+att det som faktiskt sköts inte går att skriva in. `+ Nytt försök` visas därför så länge
+skytten inte har ett öppet försök. Kom inte tillbaka med ett `maxForsok` i `PROV`.
 
 `lagring.pagaende()` är gångjärnet: den ger skyttens *öppna* försök, det som ännu inte
 registrerats. Tidssvepet skapar det, poängsvepet hittar tillbaka till samma post timmar
@@ -314,6 +320,23 @@ Fyra format ur samma underlag (`underlag()` i `src/export.js`), inga bibliotek:
   de frågetecken. Kolumnbredderna kontrolleras mot sidbredden; summerar de för högt kastar
   `somPdf()` hellre än att skriva utanför pappret.
 
+**Grönmarkeringen av godkända försök sitter i två format och avgörs på ett ställe.**
+`radGodkand()` svarar på frågan, och både `somXlsx()` och `somPdf()` frågar den — två egna
+uttryck hade förr eller senare gjort olika rader gröna i de två filerna. Färgen är Excels
+egen "Bra": botten `FFC6EFCE`, text `FF006100`, och samma nyans i PDF:en som `GRON`
+(0–1-skalan). Text- och CSV-formaten står utanför: där finns ordet *GODKÄND* utskrivet, och
+en färg går ändå inte att bära i en textfil.
+
+Två saker som är lätta att göra fel:
+
+- I xlsx räknar `styles.xml` sina egna listor. Läggs en font eller fyllning till måste
+  `count` på `<fonts>`, `<fills>` och `<cellXfs>` räknas upp i takt, annars vägrar Excel
+  öppna filen. `STIL` överst i filen ger indexen namn, så en stil inte pekas ut med en
+  lös siffra.
+- I PDF:en målas i den ordning operatorerna står i strömmen. Bandet ritas därför **före**
+  radens text — annars lägger det sig över siffrorna. `q … Q` ramar in fyllfärgen, för
+  `rg` gäller även `Tj`, och utan återställning blir all text efter bandet grön.
+
 Utskriftsstilmallen i `style.css` är kvar med flit: `window.print()` ger "Spara som PDF" på
 iOS och papper på banan, och är reserven om den handskrivna PDF:en någon gång skulle visa
 sig spröd. Knappen finns på exportskärmen — inte under inställningar, där det inte finns
@@ -341,7 +364,7 @@ inte i bygget — filerna ska gå att läsa som de är i `src/`. `src/hjalp.md` 
 
 ```bash
 python3 bygg.py     # måste köras först — proven kör mot docs/
-npm test            # 128 prov: regler, export, import, hela flödet, spärrarna mot utgående trafik
+npm test            # 132 prov: regler, export, import, hela flödet, spärrarna mot utgående trafik
 ```
 
 **Bygg före du provar.** Det här är den enklaste fällan i arkivet och den värsta, eftersom

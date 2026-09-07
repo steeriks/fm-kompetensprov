@@ -43,6 +43,7 @@ alla skjutit går omgången fram och poängen registreras in. Två svep genom sa
    *Registrera sista resultatet*, och då summeras omgången: *"Omgången klar — 2 av 3
    godkända."*
 6. **Dela resultat** ger hela omgången som text, PDF, Excel eller CSV, redo att mejla.
+   Godkända försök ligger grönmarkerade i PDF:en och Excel-filen.
 
 **Så använder du appen** på startsidan är en kortfattad användarinstruktion: arbetsgången,
 ändringar under omgången, delning och säkerhetskopior.
@@ -59,7 +60,7 @@ och zontabellen.
 - **Byta ordning:** håll in en rad, så får varje skytt ett handtag (**☰**). Dra i handtaget
   och tryck *Klar med ordningen*. Numret sitter på **tavlan**, inte på personen — den som
   hamnar på tredje raden får nummer 3.
-- **Omtag:** provet får skjutas tre gånger. Ett nytt försök startas alltid med flit, med
+- **Omtag:** appen sätter ingen gräns för antalet försök. Ett nytt försök startas alltid med flit, med
   *+ Nytt försök* på raden; ett tryck på en färdig skytt gör ingenting.
 - **Stega mellan skyttarna:** i TID-läget står en pil på var sida om namnet. De går en
   tavla fram eller tillbaka i skjutordningen — vägen tillbaka när fel skytt öppnats eller
@@ -195,7 +196,7 @@ Inga beroenden i appen — ren HTML, CSS och JavaScript, ingen CDN, inget ramver
 npm install       # bara jsdom, och bara för testerna
 npm run serve     # http://localhost:8390 mot src/
 npm run bygg      # bakar ihop src/ till docs/index.html
-npm test          # 128 prov: regelmotor, export, import och hela flödet i jsdom
+npm test          # 132 prov: regelmotor, export, import och hela flödet i jsdom
 ```
 
 Testerna kör mot `docs/`, så **bygg innan du provar**.

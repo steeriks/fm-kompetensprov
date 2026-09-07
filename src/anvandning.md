@@ -40,7 +40,7 @@ Vid osäker eller felaktig vapenhantering: kryssa rutan på poängskärmen, så 
 - **Byta plats:** håll in en rad tills handtagen (**☰**) visas, dra skytten dit hen ska, och tryck *Klar med ordningen*. Numret följer tavlan, inte personen.
 - **Rätta en träff:** håll in zonknappen för att nolla den, och knappa in rätt. Har det blivit orimligt många träffar i en målyta säger appen till — den spärrar inget, men ett tryck för mycket ska upptäckas innan det följer med in i protokollet.
 - **Byta skytt i tidfönstret:** pilarna på var sida om namnet stegar en tavla fram eller tillbaka, om något gått snett på linjen. Den påbörjade tiden sparas på vägen, och pilen slocknar när linjen är slut åt det hållet.
-- **Nytt försök:** *+ Nytt försök* på skyttens rad. Provet får skjutas tre gånger; ett omtag startas alltid med flit.
+- **Nytt försök:** *+ Nytt försök* på skyttens rad. Appen sätter ingen gräns för antalet omtag; ett omtag startas alltid med flit.
 - **⌂** längst upp till vänster går alltid hem. En påbörjad tid sparas på vägen.
 - **Grön rad i nederkant?** Då väntar en ny version av appen. Den stör ingenting och kan stå kvar hela omgången ut — appen laddar aldrig om av sig själv. Trycker du på den laddas appen om: allt inknappat ligger kvar, men du landar på startsidan och får öppna omgången igen. Vänta hellre tills gruppen är klar.
 
@@ -53,6 +53,8 @@ Tryck *Dela resultat* i omgången och välj form:
 - **Excel** eller **CSV** — för vidare bearbetning.
 
 Telefonen öppnar sin vanliga delningsruta, så resultatet kan mejlas, skickas som meddelande eller sparas i Filer. Listan innehåller tavelnummer, Fmid/Anstnr, namn, förband, försök, tid, träffar per zon, poäng, poängkvot och utfall — plus en summering av hur många som blev godkända. **Bättringsskotten följer inte med ut:** protokollet visar de träffar bedömningen vilar på, så zonkolumnerna summerar till kravet och poängen går att räkna efter.
+
+**I PDF:en och Excel-filen är godkända försök grönmarkerade** — hela raden, så det syns vilket försök som höll utan att man behöver läsa sig fram till utfallskolumnen. Text- och CSV-formaten skriver ut *GODKÄND* respektive *Godkänd* i klartext i stället.
 
 En skytt räknas som godkänd i sammanställningen om **något** av försöken var godkänt.
 
