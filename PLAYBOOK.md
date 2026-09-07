@@ -426,8 +426,30 @@ git config core.hooksPath .githooks
 
 Kroken avstår när en sammanslagning, ombasering, cherry-pick eller revert pågår — de skriver
 om commits som redan har sitt nummer — och när ingenting är iscensatt, så en tom commit inte
-blir en utgåvehöjning utan innehåll. `git commit --no-verify` hoppar över den helt. Större
-steg än en rättningssiffra sätts för hand i `package.json`; kroken räknar vidare därifrån.
+blir en utgåvehöjning utan innehåll. `git commit --no-verify` hoppar över den helt.
+
+**En minorhöjning görs för hand, för kroken kan inte göra den.** Kroken höjer *bara*
+rättningssiffran. Sätter du 1.2.0 i `package.json` och committar som vanligt räknar den
+vidare till 1.2.1, och 1.2.0 blir aldrig en utgåva någon ser. Vägen till en `x.y.0` går
+därför förbi kroken, och då måste du göra dess jobb själv — annars publiceras en `docs/`
+som ligger efter `src/`, vilket är precis den fälla kroken finns för att stänga:
+
+```bash
+# 1. sätt numret för hand i package.json — "version": "1.2.0"
+python3 bygg.py     # 2. bygg om, så docs/ bär det nya numret
+npm test            # 3. provet jämför taggen i bygget mot package.json
+git add -A          # 4. package.json OCH docs/index.html + docs/sw.js måste med
+git commit --no-verify
+```
+
+Skriv i commitmeddelandet att numret är satt för hand och varför kroken hoppades över —
+annars ser en `--no-verify` i loggen ut som slarv. Nästa commit efter den tar vid som
+vanligt: kroken räknar 1.2.0 → 1.2.1.
+
+Vad som förtjänar en minorhöjning är en bedömning, inte en regel, men riktmärket är vad
+instruktören märker: en ny funktion eller ett ändrat beteende i fält är en minor, en
+rättning eller en textändring är en rättningssiffra. Utgåva 1.2.0 — spärren på antalet
+försök borttagen och grönmarkering i exporten — är exemplet att gå efter.
 
 `bygg.py` bakar in numret i `<meta name="version">`, `app.js` läser taggen som `UTGAVA` och
 visar den på tre ställen: `#utgava` i huvudets högerkant, `{{utgava}}` i `src/hjalp.md` (byts

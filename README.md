@@ -226,9 +226,12 @@ git config core.hooksPath .githooks
 
 Numret bakas in i den byggda filen och visas på tre ställen i appen: längst upp till höger i
 varje vy, i *Om appen* och under *Appinställningar* — så den som anmäler ett fel kan säga
-vilken utgåva det gäller, och svaret pekar på en bestämd commit. Större steg än en
-rättningssiffra sätts för hand i `package.json`; kroken räknar vidare därifrån.
-`git commit --no-verify` hoppar över den.
+vilken utgåva det gäller, och svaret pekar på en bestämd commit. `git commit --no-verify`
+hoppar över kroken.
+
+Kroken höjer bara rättningssiffran. En minorhöjning — en ny funktion, ett ändrat beteende i
+fält — sätts för hand i `package.json` och committas förbi kroken, och då måste `docs/`
+byggas om för hand i samma commit. Arbetsgången står i PLAYBOOK under *Publicering*.
 
 Se **[PLAYBOOK.md](PLAYBOOK.md)** för hur delarna hänger ihop, vilka fällor som redan
 kostat tid, och vad som gäller vid publicering.
