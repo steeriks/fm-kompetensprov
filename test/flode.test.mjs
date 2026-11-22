@@ -1993,7 +1993,7 @@ test('verktygen ligger överst i vallistan, före skyttarna', () => {
   assert.equal(doc.querySelector('#app').firstElementChild, verktyg);
   for (const text of ['+ Lägg till skytt', 'Ändra ordning']) assert.ok(knapp(text, verktyg), text);
   const val = doc.querySelector('#app .regval');
-  assert.match(val.textContent, /Registrera:/);
+  assert.match(val.textContent, /Registrera tid & Poäng/);
   assert.equal(knapp('I två steg', val).getAttribute('aria-pressed'), 'true');
   assert.equal(knapp('I ett steg', val).getAttribute('aria-pressed'), 'false');
   klicka('Ändra ordning');

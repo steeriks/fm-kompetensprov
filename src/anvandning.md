@@ -22,7 +22,7 @@ Behöver något bort — en skytt ur registret eller en hel omgång från starts
 
 ## Välj hur du registrerar
 
-Överst i omgångens lista står **Registrera: I två steg | I ett steg**. Det gröna valet är det som gäller. Tryck på det andra för att byta. Samma val finns under **Appinställningar**.
+Överst i omgångens lista står **Registrera tid & Poäng** med valen **I två steg** och **I ett steg**. Det gröna valet är det som gäller. Tryck på det andra för att byta. Samma val finns under **Appinställningar**.
 
 - **I två steg** (standard): ta **alla tider** vid linjen, gå fram till tavlorna och för sedan in **alla poäng**. Passar när hela gruppen skjuter innan någon går fram.
 - **I ett steg:** gör **en skytt i taget klar** på samma skärm, med tid och träffar tillsammans. Passar när du går fram till tavlan efter varje skytt.

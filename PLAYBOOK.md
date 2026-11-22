@@ -184,7 +184,7 @@ inne. Under den står vem som står på tur, och när linjen är klar lämnar kn
 poängsteget av sig själv.
 
 **Det samlade arbetssättet är ett val, inte en ersättning.** Under Appinställningar, eller
-med valet *Registrera:* överst i vallistan, kan telefonen ställas på *I ett steg* i stället
+med valet *Registrera tid & Poäng* överst i vallistan, kan telefonen ställas på *I ett steg* i stället
 för *I två steg*. Inställningen ligger under en egen nyckel,
 `fm-kompetensprov-arbetssatt`, så den följer inte med i säkerhetskopian. Båda sätten använder
 samma öppna försök, och därför går det att byta mitt i en omgång. I det samlade läget är

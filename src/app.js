@@ -335,7 +335,7 @@ function ritaOmgang() {
         ? '<button class="knapp liten" data-flyttlage="pa">Ändra ordning</button>' : ''}
     </div>
     <div class="regval" role="group" aria-labelledby="regvalrubrik">
-      <span class="rubrik" id="regvalrubrik">Registrera:</span>
+      <span class="rubrik" id="regvalrubrik">Registrera tid &amp; Poäng</span>
       <div class="val">
         <button data-arbetssatt="svep" aria-pressed="${!samlat}">I två steg</button>
         <button data-arbetssatt="samlat" aria-pressed="${samlat}">I ett steg</button>

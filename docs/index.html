@@ -24,7 +24,7 @@
 <!-- Versionen skrivs bara i package.json; bygg.py byter innehållet här mot
      numret därifrån, precis som cachenamnet i sw.js. Lämna "utveckling"
      stående i src/ — den som serverar src/ direkt kör inte en utgåva. -->
-<meta name="version" content="1.3.2">
+<meta name="version" content="1.3.3">
 <meta name="description" content="Instruktörsverktyg för Försvarsmaktens kompetensprov, pistol och automatkarbin.">
 <meta name="theme-color" content="#0b0d0c">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -293,7 +293,7 @@ label.falt input.saknas { border-color: var(--underkand); }
 /* Registreringssättet i vallistan: en låg rad, det aktiva valet ifyllt. Knappen
    ritas 38 px hög, men ramen runt den gör raden till en träffyta på 44 px. */
 .regval { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.6rem; }
-.regval .rubrik { flex: 0 0 auto; font-size: 0.8rem; color: var(--dampad); }
+.regval .rubrik { flex: 0 0 5rem; font-size: 0.8rem; line-height: 1.15; color: var(--dampad); }
 .regval .val {
   flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 0.2rem; padding: 2px;
   background: var(--kort); border: 1px solid var(--linje); border-radius: var(--radie);
@@ -573,7 +573,7 @@ Behöver något bort — en skytt ur registret eller en hel omgång från starts
 
 ## Välj hur du registrerar
 
-Överst i omgångens lista står **Registrera: I två steg | I ett steg**. Det gröna valet är det som gäller. Tryck på det andra för att byta. Samma val finns under **Appinställningar**.
+Överst i omgångens lista står **Registrera tid & Poäng** med valen **I två steg** och **I ett steg**. Det gröna valet är det som gäller. Tryck på det andra för att byta. Samma val finns under **Appinställningar**.
 
 - **I två steg** (standard): ta **alla tider** vid linjen, gå fram till tavlorna och för sedan in **alla poäng**. Passar när hela gruppen skjuter innan någon går fram.
 - **I ett steg:** gör **en skytt i taget klar** på samma skärm, med tid och träffar tillsammans. Passar när du går fram till tavlan efter varje skytt.
@@ -2290,7 +2290,7 @@ function ritaOmgang() {
         ? '<button class="knapp liten" data-flyttlage="pa">Ändra ordning</button>' : ''}
     </div>
     <div class="regval" role="group" aria-labelledby="regvalrubrik">
-      <span class="rubrik" id="regvalrubrik">Registrera:</span>
+      <span class="rubrik" id="regvalrubrik">Registrera tid &amp; Poäng</span>
       <div class="val">
         <button data-arbetssatt="svep" aria-pressed="${!samlat}">I två steg</button>
         <button data-arbetssatt="samlat" aria-pressed="${samlat}">I ett steg</button>
