@@ -1082,7 +1082,7 @@ test('skyttar går att lägga till i en pågående omgång', () => {
   assert.equal(lagret().omgangar[0].deltagare.length, 2);
 });
 
-test('långt tryck slår på flyttläget, sedan dras det i handtaget', async () => {
+test('Ändra ordning slår på flyttläget, sedan dras det i handtaget', async () => {
   klicka('+ Ny omgång');
   bockaIAlla();
   klicka('Starta omgången');
@@ -1101,10 +1101,8 @@ test('långt tryck slår på flyttläget, sedan dras det i handtaget', async () 
   const peka = (el, typ, y) => el.dispatchEvent(
     new win.MouseEvent(typ, { bubbles: true, cancelable: true, clientX: 50, clientY: y }));
 
-  // Håll in en rad: läget slås på, men ingenting flyttas av själva trycket
-  peka(rader()[2], 'pointerdown', 3 * höjd + 10);
-  await new Promise((r) => setTimeout(r, 600));
-  peka(rader()[2], 'pointerup', 3 * höjd + 10);
+  // Knappen slår på läget, men ingenting flyttas av själva trycket
+  klicka('Ändra ordning');
   assert.equal(rader().length, 3);
   assert.equal(doc.querySelectorAll('[data-dra]').length, 3, 'alla rader får handtag');
   assert.match(doc.body.textContent, /Dra i ☰/);
@@ -1133,7 +1131,7 @@ test('långt tryck slår på flyttläget, sedan dras det i handtaget', async () 
     'och raderna går att öppna som vanligt');
 });
 
-test('ett kort tryck öppnar skytten, det långa flyttar', async () => {
+test('ett kort tryck öppnar skytten', async () => {
   klicka('+ Ny omgång');
   bockaIAlla();
   klicka('Starta omgången');
@@ -1512,11 +1510,11 @@ test('ett långt tryck markerar inte texten', async () => {
   // Och bältet: en markering som ändå hunnit uppstå släpps när draget börjar
   let slapptes = false;
   win.getSelection = () => ({ removeAllRanges: () => { slapptes = true; } });
-  const rad = rader()[0];
-  rad.dispatchEvent(new win.MouseEvent('pointerdown', { bubbles: true, clientX: 50, clientY: 10 }));
-  await new Promise((r) => setTimeout(r, 600));
-  assert.ok(slapptes, 'markeringen ska släppas när långtrycket slår till');
-  rad.dispatchEvent(new win.MouseEvent('pointerup', { bubbles: true, clientX: 50, clientY: 10 }));
+  klicka('Ändra ordning');
+  const handtag = rader()[0].querySelector('[data-dra]');
+  handtag.dispatchEvent(new win.MouseEvent('pointerdown', { bubbles: true, clientX: 50, clientY: 10 }));
+  assert.ok(slapptes, 'markeringen ska släppas när draget börjar');
+  handtag.dispatchEvent(new win.MouseEvent('pointerup', { bubbles: true, clientX: 50, clientY: 10 }));
 });
 
 test('en färdig skytt får inget nytt försök av ett tryck på raden', () => {
@@ -1801,4 +1799,187 @@ test('anvisningen mitt i en omgång erbjuder båda vägarna ut', () => {
   const knappar = [...doc.querySelectorAll('#bottenrad button')].map((b) => b.textContent.trim());
   assert.ok(knappar.includes('Tillbaka till listan'), knappar.join(', '));
   assert.ok(knappar.includes('Tillbaka till startsidan'), knappar.join(', '));
+});
+
+// ------------------------------------------------- fältfeedback, utgåva 1.3
+
+/** Lägger upp en omgång med alla tre och står kvar i vallistan. */
+function omgangMedAlla() {
+  klicka('+ Ny omgång');
+  bockaIAlla();
+  klicka('Starta omgången');
+}
+
+/** Pistolresultat på öppen poängskärm: godkänt med 26 p, underkänt utan träffar. */
+function registreraPistol(godkand) {
+  if (godkand) { knappaZon('B', 4); knappaZon('A', 2); }
+  klicka('Registrera');
+}
+
+/** Tider och poäng för hela linjen: Ek godkänd, Berg underkänd, Craf utan resultat. */
+function blandadOmgang() {
+  omgangMedAlla();
+  for (const tid of ['500', '500']) { nastaIListan(); knappaTid(tid); klicka('Spara & tillbaka'); }
+  klicka('POÄNG');
+  nastaIListan();
+  registreraPistol(true);
+  registreraPistol(false);
+  hem();
+  doc.querySelector('[data-oppna]').click();
+}
+
+const filtertext = () => [...doc.querySelectorAll('[data-filter]')]
+  .map((b) => b.textContent.replace(/\s+/g, ' ').trim());
+const synligaNamn = () => rader().map((r) => r.querySelector('.namn').textContent.replace(/\s+/g, ' ').trim());
+
+test('långt tryck på en rad slår inte på flyttläget', async () => {
+  omgangMedAlla();
+  const rad = rader()[0];
+  rad.dispatchEvent(new win.MouseEvent('pointerdown', { bubbles: true, clientX: 50, clientY: 10 }));
+  await new Promise((r) => setTimeout(r, 600));
+  rad.dispatchEvent(new win.MouseEvent('pointercancel', { bubbles: true, clientX: 50, clientY: 10 }));
+  assert.equal(doc.querySelector('[data-dra]'), null, 'blött eller avbrutet tryck ger inget handtag');
+  rader()[0].click();
+  assert.match(doc.querySelector('#underrubrik').textContent, /Tid · försök 1/);
+});
+
+test('ett avbrutet drag sparar ingen ny ordning', () => {
+  omgangMedAlla();
+  const fore = [...lagret().omgangar[0].deltagare];
+  klicka('Ändra ordning');
+  const handtag = rader()[2].querySelector('[data-dra]');
+  handtag.dispatchEvent(new win.MouseEvent('pointerdown', { bubbles: true, clientX: 50, clientY: 200 }));
+  handtag.dispatchEvent(new win.MouseEvent('pointercancel', { bubbles: true, clientX: 50, clientY: 200 }));
+  assert.deepEqual(lagret().omgangar[0].deltagare, fore);
+  assert.equal(doc.querySelector('.lyft'), null, 'raden ska inte bli hängande i luften');
+});
+
+test('listan står kvar där man är när en skytt bockas i', () => {
+  klicka('+ Ny omgång');
+  let y = 640;
+  const anrop = [];
+  Object.defineProperty(win, 'scrollY', { configurable: true, get: () => y });
+  win.scrollTo = (_x, ny) => { anrop.push(ny); y = ny; };
+  rader()[2].click();
+  assert.equal(y, 640, 'ibockningen ska inte flytta skärmen');
+  assert.ok(rader()[2].className.includes('klar'));
+  klicka('Starta omgången');
+  assert.equal(y, 0, 'en ny vy börjar överst');
+});
+
+test('filtret visar godkända, underkända och ej klara med rätt tavelnummer', () => {
+  omgangMedAlla();
+  assert.equal(doc.querySelector('[data-filter]'), null, 'inget filter innan något är registrerat');
+  const namn = synligaNamn();
+  hem();
+  doc.querySelector('[data-oppna]').click();
+  for (const tid of ['500', '500']) { nastaIListan(); knappaTid(tid); klicka('Spara & tillbaka'); }
+  klicka('POÄNG');
+  nastaIListan();
+  registreraPistol(true);
+  registreraPistol(false);
+  hem();
+  doc.querySelector('[data-oppna]').click();
+
+  assert.deepEqual(filtertext(), ['Alla', 'Godkända (1)', 'Underkända (1)', 'Ej klara (1)']);
+  klicka('Godkända');
+  assert.deepEqual(synligaNamn(), [namn[0]]);
+  klicka('Underkända');
+  assert.deepEqual(synligaNamn(), [namn[1]], 'tavelnumret följer med in i urvalet');
+  klicka('Ej klara');
+  assert.deepEqual(synligaNamn(), [namn[2]]);
+  klicka('Alla');
+  assert.equal(rader().length, 3);
+});
+
+test('den som klarat ett försök förblir godkänd efter ett sämre omtag', () => {
+  blandadOmgang();
+  klicka('+ Nytt försök');
+  knappaTid('900');
+  klicka('Poäng för');
+  klicka('Registrera');
+  hem();
+  doc.querySelector('[data-oppna]').click();
+  klicka('Godkända');
+  assert.equal(rader().length, 1);
+  assert.equal(rader()[0].querySelector('.chip').textContent, 'godkänd');
+  assert.match(rader()[0].querySelector('.varden').textContent, /5,00 s/, 'raden visar det godkända försöket');
+});
+
+test('flyttläget efter ett filter behåller hela linjen', () => {
+  blandadOmgang();
+  const fore = [...lagret().omgangar[0].deltagare];
+  klicka('Godkända');
+  klicka('Ändra ordning');
+  assert.equal(rader().length, 3, 'flyttläget visar alla');
+  const handtag = rader()[0].querySelector('[data-dra]');
+  handtag.dispatchEvent(new win.MouseEvent('pointerdown', { bubbles: true, clientX: 50, clientY: 1 }));
+  handtag.dispatchEvent(new win.MouseEvent('pointerup', { bubbles: true, clientX: 50, clientY: 1 }));
+  assert.deepEqual([...lagret().omgangar[0].deltagare].sort(), [...fore].sort());
+});
+
+test('standardläget är tider först', () => {
+  omgangMedAlla();
+  assert.ok(doc.querySelector('.lagesvaljare [data-lage="tid"]'));
+  nastaIListan();
+  assert.match(doc.querySelector('#underrubrik').textContent, /^Tid · försök 1/);
+});
+
+test('samlat arbetssätt: tid och poäng på samma skärm, hela linjen', () => {
+  klicka('Appinställningar');
+  klicka('Tid och poäng samtidigt');
+  assert.equal(win.localStorage.getItem('fm-kompetensprov-arbetssatt'), 'samlat');
+  hem();
+  omgangMedAlla();
+  assert.equal(doc.querySelector('.lagesvaljare'), null, 'ingen TID/POÄNG-växel');
+  nastaIListan();
+  for (let i = 0; i < 3; i++) {
+    assert.match(doc.querySelector('#underrubrik').textContent, /^Tid och poäng · försök 1/);
+    assert.ok(doc.querySelector('.zonknapp') && doc.querySelector('.knappsats'), 'båda på skärmen');
+    const zon = doc.querySelector('.zonknapp');
+    knappaTid('1000');
+    assert.equal(doc.querySelector('.zonknapp'), zon, 'zonerna ritas inte om per siffra');
+    assert.equal(doc.querySelector('#summatid').textContent, '10,00 s');
+    knappaZon('B', 4);
+    knappaZon('A', 2);
+    assert.equal(doc.querySelector('#pkvarde').textContent, '2,60');
+    klicka('Registrera');
+  }
+  assert.equal(lagret().resultat.filter((r) => r.registrerad && r.tid === 10).length, 3);
+  assert.match(doc.body.textContent, /3 av 3 godkända/);
+});
+
+test('samlat arbetssätt: en ogiltig tid går inte att registrera', () => {
+  klicka('Appinställningar');
+  klicka('Tid och poäng samtidigt');
+  hem();
+  omgangMedAlla();
+  nastaIListan();
+  knappaTid('500');
+  klicka('⌫', doc.querySelector('.knappsats'));
+  klicka('⌫', doc.querySelector('.knappsats'));
+  klicka('⌫', doc.querySelector('.knappsats'));
+  knappaTid('0');
+  assert.equal(doc.querySelector('#summatid').textContent, '–', 'gammal tid ska inte leva kvar');
+  doc.querySelector('#vapen').click();
+  klicka('Registrera');
+  assert.equal(lagret().resultat.filter((r) => r.registrerad).length, 0);
+  assert.match(doc.body.textContent, /större än noll/);
+});
+
+test('arbetssättet går att byta mitt i en omgång utan att tappa försöket', () => {
+  omgangMedAlla();
+  nastaIListan();
+  knappaTid('800');
+  klicka('Spara & tillbaka');
+  const antal = lagret().resultat.length;
+  hem();
+  klicka('Appinställningar');
+  klicka('Tid och poäng samtidigt');
+  hem();
+  doc.querySelector('[data-oppna]').click();
+  rader()[0].click();
+  assert.equal(doc.querySelector('.tidvisning').firstChild.textContent, '8,00');
+  assert.ok(doc.querySelector('.tidpanel').hidden, 'tid finns, så zonerna ligger överst');
+  assert.equal(lagret().resultat.length, antal, 'inget nytt försök skapas');
 });

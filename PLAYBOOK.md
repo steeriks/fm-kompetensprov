@@ -183,6 +183,18 @@ nästa steg, utan att man behöver peta på växeln själv.
 inne. Under den står vem som står på tur, och när linjen är klar lämnar knappen över till
 poängsteget av sig själv.
 
+**Det samlade arbetssättet är ett val, inte en ersättning.** Under Appinställningar kan
+telefonen ställas på *Tid och poäng samtidigt*. Inställningen ligger under en egen nyckel,
+`fm-kompetensprov-arbetssatt`, så den följer inte med i säkerhetskopian. Båda sätten använder
+samma öppna försök, och därför går det att byta mitt i en omgång. I det samlade läget är
+`behoverLage(…, 'samlat')` sant för den som har ett öppet försök eller aldrig skjutit, och
+poängskärmen bär tidsfältet. Tiden sparas medan den knappas, och ett oanvändbart värde lagras
+som saknad tid så att ingen gammal tid lever kvar under en tom visning.
+
+**Filtret i vallistan läser `skyttStatus()`,** liksom räknarna och radens märke. Godkänd på
+något försök räcker, samma regel som exporten. Filtret stängs av i flyttläget: draget sparar
+ordningen ur raderna på skärmen, så en filtrerad lista hade skrivit bort de dolda skyttarna.
+
 ## Tiden knappas rakt av
 
 `tolkadTid()` läser knappsatsens buffert. Utan komma är de två sista siffrorna hundradelar
@@ -205,9 +217,9 @@ skjutlaget.
 |---|---|---|
 | `start` | `ritaStart` | Omgångarna. Långt tryck lägger fram soptunnan som raderar; raden säger med `data-hall-radera="typ:id"` vad den är. |
 | `ny` | `ritaNy` | Prov, datum, plats, ibockning i skjutordning. Två utgångar: *Starta omgången* och *Spara utan att starta*. |
-| `omgang` | `ritaOmgang` | Vallistan med lägesväljare — arbetsvyn. |
+| `omgang` | `ritaOmgang` | Vallistan med lägesväljare och filter — arbetsvyn. |
 | `tid` | `ritaTid` | Sifferknappsats. Pilarna i rubriken stegar en tavla åt vardera hållet. |
-| `poang` | `ritaPoang` | Zonknappar, summering, utfall. |
+| `poang` | `ritaPoang` | Zonknappar, summering, utfall. I samlat arbetssätt även tiden. |
 | `lagg-till` | `ritaLaggTill` | Fyller på en pågående omgång. |
 | `anvisning` | `ritaAnvisning` | Regelverkets anvisning per prov. |
 | `export` | `ritaExportval` | Fyra format plus förhandsgranskning. |
@@ -251,10 +263,14 @@ måste kunna granskas: den stryker rubrikrader, numrering och BOM, och det är r
 så länge användaren ser resultatet innan det skrivs. `granskaSkyttelista` rör därför inte
 lagret, och `importeraSkyttar` är den enda som skriver.
 
-**Flyttläge** är ett tillstånd på vallistan (`vy.flyttlage`), inte en egen vy: ett långt
-tryck slår på det, varje rad får ett handtag (☰) och draget börjar när man tar i handtaget.
-Att hålla in och dra i samma rörelse var för hal gest i fält — det var första försöket, och
-det fick bytas ut.
+**Flyttläge** är ett tillstånd på vallistan (`vy.flyttlage`), inte en egen vy: knappen
+*Ändra ordning* slår på det, varje rad får ett handtag (☰) och draget börjar när man tar i
+handtaget. Läget startades först med ett långt tryck på raden. Den timern rensades inte vid
+`pointercancel`, och på en blöt skärm hamnade instruktören i flyttläget när skytten skulle
+väljas. Kom inte tillbaka med ett långtryck på vallistans rader.
+
+**`rita()` börjar överst, `ritaPaPlats()` står kvar.** Använd den senare för ändringar inom
+samma vy, som ibockning, filter och *Visa försök*.
 
 **Hemknappen** går alltid till startsidan och sparar en påbörjad tid på vägen. Vägen
 tillbaka till vallistan finns som egen knapp i nederkant på de vyer som ligger inuti en
@@ -277,7 +293,7 @@ nästa `bottenrad.innerHTML = …`, alltså vid första vybyte.
 
 ## Fällor som redan kostat tid
 
-- **Långtryck markerar text om man inte stoppar det.** Skytterader och zonknappar hålls in
+- **Långtryck markerar text om man inte stoppar det.** Rader som raderas och zonknappar hålls in
   med flit, och iOS svarar med markering och kopieringsmeny mitt i draget. Både
   `user-select: none` och `-webkit-touch-callout: none` behövs; dragets start släpper
   dessutom en markering som redan hunnit uppstå.
@@ -364,7 +380,7 @@ inte i bygget — filerna ska gå att läsa som de är i `src/`. `src/hjalp.md` 
 
 ```bash
 python3 bygg.py     # måste köras först — proven kör mot docs/
-npm test            # 132 prov: regler, export, import, hela flödet, spärrarna mot utgående trafik
+npm test            # 142 prov: regler, export, import, hela flödet, spärrarna mot utgående trafik
 ```
 
 **Bygg före du provar.** Det här är den enklaste fällan i arkivet och den värsta, eftersom

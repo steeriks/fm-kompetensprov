@@ -357,10 +357,38 @@ export function lasInSakerhetskopia(text) {
   return rakning;
 }
 
+// Arbetssättet är en inställning för den här telefonen, inte en del av det
+// som skjutits. Därför egen nyckel: det följer inte med i säkerhetskopian och
+// kräver ingen ny lagringsversion. Går lagringen inte att skriva gäller värdet
+// i minnet så länge sidan är öppen.
+const NYCKEL_ARBETSSATT = NYCKEL + '-arbetssatt';
+let arbetssattIMinnet = null;
+
+/** 'svep' = tider först, sedan poäng. 'samlat' = båda på poängskärmen. */
+export function arbetssatt() {
+  if (arbetssattIMinnet) return arbetssattIMinnet;
+  try {
+    return localStorage.getItem(NYCKEL_ARBETSSATT) === 'samlat' ? 'samlat' : 'svep';
+  } catch {
+    return 'svep';
+  }
+}
+
+export function sattArbetssatt(varde) {
+  arbetssattIMinnet = varde === 'samlat' ? 'samlat' : 'svep';
+  try {
+    localStorage.setItem(NYCKEL_ARBETSSATT, arbetssattIMinnet);
+  } catch {
+    /* värdet ligger kvar i minnet */
+  }
+}
+
 export function raderaAllt() {
   data = tomtLager();
+  arbetssattIMinnet = null;
   try {
     localStorage.removeItem(NYCKEL);
+    localStorage.removeItem(NYCKEL_ARBETSSATT);
   } catch {
     /* redan borta */
   }

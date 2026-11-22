@@ -57,9 +57,13 @@ och zontabellen.
 
 - **Fylla på:** *+ Lägg till skytt* under listan tar in någon ur registret eller
   registrerar en ny på plats, utan att du lämnar omgången. Hen hamnar på nästa lediga tavla.
-- **Byta ordning:** håll in en rad, så får varje skytt ett handtag (**☰**). Dra i handtaget
+- **Byta ordning:** tryck *Ändra ordning*, så får varje skytt ett handtag (**☰**). Dra i handtaget
   och tryck *Klar med ordningen*. Numret sitter på **tavlan**, inte på personen — den som
   hamnar på tredje raden får nummer 3.
+- **Filtrera:** när första resultatet är inne visas *Alla · Godkända · Underkända · Ej klara*
+  över listan. Godkänd på något försök räcker, och tavelnumren ändras inte.
+- **Tid och poäng på samma skärm:** välj *Tid och poäng samtidigt* under Appinställningar.
+  Valet gäller telefonen och går att ändra mitt i en omgång.
 - **Omtag:** appen sätter ingen gräns för antalet försök. Ett nytt försök startas alltid med flit, med
   *+ Nytt försök* på raden; ett tryck på en färdig skytt gör ingenting.
 - **Stega mellan skyttarna:** i TID-läget står en pil på var sida om namnet. De går en

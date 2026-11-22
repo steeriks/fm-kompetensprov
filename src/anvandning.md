@@ -37,9 +37,11 @@ Vid osäker eller felaktig vapenhantering: kryssa rutan på poängskärmen, så 
 ## Ändra under pågående omgång
 
 - **Fylla på:** *+ Lägg till skytt* under listan — ur registret eller en helt ny. Hen hamnar på nästa lediga tavla.
-- **Byta plats:** håll in en rad tills handtagen (**☰**) visas, dra skytten dit hen ska, och tryck *Klar med ordningen*. Numret följer tavlan, inte personen.
+- **Byta plats:** tryck *Ändra ordning* under listan, dra skytten i handtaget (**☰**) dit hen ska, och tryck *Klar med ordningen*. Numret följer tavlan, inte personen.
 - **Rätta en träff:** håll in zonknappen för att nolla den, och knappa in rätt. Har det blivit orimligt många träffar i en målyta säger appen till — den spärrar inget, men ett tryck för mycket ska upptäckas innan det följer med in i protokollet.
 - **Byta skytt i tidfönstret:** pilarna på var sida om namnet stegar en tavla fram eller tillbaka, om något gått snett på linjen. Den påbörjade tiden sparas på vägen, och pilen slocknar när linjen är slut åt det hållet.
+- **Se vilka som klarat provet:** när första resultatet är inne visas filtret *Alla · Godkända · Underkända · Ej klara* över listan. Godkänd på något försök räcker. Tavelnumren ändras inte.
+- **Tid och poäng på samma skärm:** välj *Tid och poäng samtidigt* under **Appinställningar**. Varje skytt görs då klar på en skärm, och valet går att ändra mitt i en omgång.
 - **Nytt försök:** *+ Nytt försök* på skyttens rad. Appen sätter ingen gräns för antalet omtag; ett omtag startas alltid med flit.
 - **⌂** längst upp till vänster går alltid hem. En påbörjad tid sparas på vägen.
 - **Grön rad i nederkant?** Då väntar en ny version av appen. Den stör ingenting och kan stå kvar hela omgången ut — appen laddar aldrig om av sig själv. Trycker du på den laddas appen om: allt inknappat ligger kvar, men du landar på startsidan och får öppna omgången igen. Vänta hellre tills gruppen är klar.

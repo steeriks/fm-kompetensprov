@@ -176,8 +176,8 @@ label.falt input.saknas { border-color: var(--underkand); }
   border-radius: var(--radie); margin-bottom: 0.5rem;
   padding: 0.6rem 0.7rem; min-height: 64px; width: 100%;
   color: inherit; text-align: left; cursor: pointer;
-  /* Ett långt tryck ska lyfta raden för att flytta skytten — inte markera
-     namnet och visa iOS kopieringsmeny mitt i draget. */
+  /* Raderna dras i flyttläget och hålls in för att raderas. Det ska inte
+     markera namnet och visa iOS kopieringsmeny mitt i gesten. */
   user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
 }
 .skyttrad.klar { border-color: #2f4a2c; }
@@ -231,6 +231,24 @@ label.falt input.saknas { border-color: var(--underkand); }
 .lagesvaljare.tre { grid-template-columns: repeat(3, 1fr); }
 .lagesvaljare.tre button { font-size: 0.95rem; }
 
+/* Valet av arbetssätt har hela meningar på knapparna, inte versala lägesord. */
+.lagesvaljare.textval button { font-size: 0.85rem; letter-spacing: 0; line-height: 1.2; padding: 0.3rem; }
+
+/* Filtret ovanför vallistan. Fyra knappar på en telefonbredd: antalet får
+   brytas under ordet hellre än att knapparna blir för smala att träffa. */
+.filterrad {
+  display: grid; grid-template-columns: auto 1fr 1.15fr 1fr; gap: 0.25rem;
+  margin-bottom: 0.6rem; padding: 0.2rem;
+  background: var(--kort); border: 1px solid var(--linje); border-radius: var(--radie);
+}
+.filterrad button {
+  min-width: 44px; min-height: 48px; padding: 0.2rem 0.35rem; border: 0; border-radius: 9px;
+  background: none; color: var(--dampad); font-size: 0.78rem; font-weight: 700;
+  line-height: 1.15; cursor: pointer; touch-action: manipulation;
+}
+.filterrad .antal { display: block; font-variant-numeric: tabular-nums; }
+.filterrad button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+
 /* -------------------------------------------------------- sifferknappsats */
 
 .tidvisning {
@@ -249,6 +267,21 @@ label.falt input.saknas { border-color: var(--underkand); }
   user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
 }
 .knappsats button:active { background: var(--accent); color: var(--accent-ink); }
+
+/* Tiden på den samlade poängskärmen: ett fält som fäller ut knappsatsen. */
+.tidfalt {
+  display: flex; align-items: center; gap: 0.7rem; width: 100%; min-height: 56px;
+  margin-bottom: 0.6rem; padding: 0.3rem 0.8rem; color: var(--ink);
+  background: var(--kort); border: 1px solid var(--linje); border-radius: var(--radie);
+  cursor: pointer; touch-action: manipulation;
+}
+.tidfalt .etikett { color: var(--dampad); font-size: 0.9rem; }
+.tidfalt .tidvisning { flex: 1; min-height: 0; padding: 0; font-size: 1.8rem; text-align: right; }
+.tidfalt .tidvisning .enhet { font-size: 0.95rem; }
+.tidfalt .pil { color: var(--accent); font-size: 1.2rem; }
+.tidpanel { margin-bottom: 0.9rem; }
+.tidpanel .knappsats button { min-height: 54px; }
+.tidpanel > .knapp { width: 100%; margin-top: 0.5rem; }
 
 /* ------------------------------------------------------------ zonknappar */
 
@@ -392,9 +425,8 @@ label.falt input.saknas { border-color: var(--underkand); }
 }
 .nastaskytt b { color: var(--ink); }
 
-/* Flyttläge: raden får ett handtag att dra i. Att hålla in OCH dra i samma
-   rörelse visade sig för hal gest i fält — långtrycket slår i stället på
-   läget, och sedan drar man i ☰ med lugn hand. */
+/* Flyttläge: *Ändra ordning* ger raden ett handtag att dra i. Långtryck på
+   raden är borta, eftersom en blöt skärm utlöste det av misstag. */
 .skyttrad.flyttbar { grid-template-columns: auto 1fr auto auto; }
 .skyttrad .dra {
   grid-row: 1 / span 2; align-self: center;
