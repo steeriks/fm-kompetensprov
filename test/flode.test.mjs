@@ -2014,3 +2014,109 @@ test('registreringssättet byts direkt från vallistan och tillbaka', () => {
   assert.equal(win.localStorage.getItem('fm-kompetensprov-arbetssatt'), 'svep');
   assert.ok(doc.querySelector('.lagesvaljare [data-lage="tid"][aria-pressed="true"]'));
 });
+
+// ------------------------------------------------ rätta ett registrerat försök
+
+function oppnaAndring(godkann = true) {
+  win.confirm = () => godkann;
+  klicka('Visa försök');
+  doc.querySelector('[data-andra-forsok]').click();
+}
+
+test('ett registrerat försök kan rättas och behåller sitt nummer', () => {
+  blandadOmgang();
+  const fore = lagret().resultat.find((r) => r.personId === lagret().omgangar[0].deltagare[0]);
+  oppnaAndring();
+  assert.match(doc.body.textContent, /Du ändrar försök 1/);
+  assert.equal(doc.querySelector('.zonknapp[data-zon="B"]').classList.contains('har'), true);
+  knappaZon('C', 1);
+  klicka('Spara ändringen');
+  const efter = lagret().resultat.find((r) => r.id === fore.id);
+  assert.equal(efter.forsok, 1);
+  assert.equal(efter.traffar.C, 1);
+  assert.equal(efter.registrerad, fore.registrerad);
+  assert.equal(efter.fore, undefined);
+  assert.equal(lagret().resultat.filter((r) => r.personId === fore.personId).length, 1);
+  assert.match(doc.body.textContent, /försök 1 ändrat/);
+});
+
+test('en rättning kan ändra utfallet', () => {
+  blandadOmgang();
+  oppnaAndring();
+  doc.querySelector('#vapen').click();
+  klicka('Spara ändringen');
+  assert.equal(rader()[0].querySelector('.chip').textContent, 'underkänd');
+});
+
+test('Ångra ändringen lämnar försöket orört', () => {
+  blandadOmgang();
+  const fore = lagret().resultat[0];
+  oppnaAndring();
+  knappaZon('H', 3);
+  klicka('Ångra ändringen');
+  const efter = lagret().resultat.find((r) => r.id === fore.id);
+  assert.deepEqual(efter.traffar, fore.traffar);
+  assert.equal(efter.registrerad, fore.registrerad);
+  assert.equal(efter.fore, undefined);
+});
+
+test('hemknappen avbryter en rättning utan att resultatet försvinner', () => {
+  blandadOmgang();
+  const fore = lagret().resultat[0];
+  oppnaAndring();
+  knappaZon('H', 3);
+  hem();
+  const efter = lagret().resultat.find((r) => r.id === fore.id);
+  assert.deepEqual(efter.traffar, fore.traffar);
+  assert.ok(efter.registrerad);
+  assert.match(doc.body.textContent, /Ändringen sparades inte/);
+});
+
+test('tiden kan rättas utan att stega vidare till någon annan', () => {
+  blandadOmgang();
+  const id = lagret().resultat[0].id;
+  oppnaAndring();
+  klicka('Ändra tiden');
+  assert.ok(doc.querySelector('#stegafram').hidden, 'inga pilar under en rättning');
+  klicka('⌫', doc.querySelector('.knappsats'));
+  klicka('⌫', doc.querySelector('.knappsats'));
+  klicka('⌫', doc.querySelector('.knappsats'));
+  klicka('⌫', doc.querySelector('.knappsats'));
+  knappaTid('800');
+  klicka('Spara tiden');
+  klicka('Spara ändringen');
+  assert.equal(lagret().resultat.find((r) => r.id === id).tid, 8);
+});
+
+test('nej i frågan ändrar ingenting', () => {
+  blandadOmgang();
+  const fore = JSON.stringify(lagret().resultat);
+  oppnaAndring(false);
+  assert.equal(JSON.stringify(lagret().resultat), fore);
+  assert.equal(doc.querySelector('.varningsruta'), null);
+});
+
+test('ett försök går inte att ändra medan skytten har ett öppet omtag', () => {
+  blandadOmgang();
+  klicka('+ Nytt försök');
+  hem();
+  doc.querySelector('[data-oppna]').click();
+  klicka('Visa försök');
+  assert.equal(doc.querySelector('[data-andra-forsok]'), null);
+});
+
+test('en avbruten rättning återställs när appen startas om', () => {
+  blandadOmgang();
+  const fore = lagret().resultat[0];
+  oppnaAndring();
+  knappaZon('H', 3);
+  const sparat = win.localStorage.getItem('fm-kompetensprov');
+  dom = new JSDOM(fs.readFileSync(FIL, 'utf8'), {
+    runScripts: 'dangerously', url: 'https://exempel.test/', pretendToBeVisual: true,
+    beforeParse(window) { window.localStorage.setItem('fm-kompetensprov', sparat); },
+  });
+  win = dom.window; doc = win.document;
+  const efter = lagret().resultat.find((r) => r.id === fore.id);
+  assert.deepEqual(efter.traffar, fore.traffar);
+  assert.ok(efter.registrerad, 'försöket ska vara registrerat igen');
+});

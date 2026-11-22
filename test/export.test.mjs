@@ -62,7 +62,7 @@ test('texten innehåller rubrik, försök och summering', () => {
   assert.match(t, /2\. Öberg, Björn \(1\. plut\)/, 'utan fmid står namnet direkt');
   // Träffarna skrivs alltid i zonordning A B C D X H, inte i den ordning de
   // knappades in — protokollet ska se likadant ut varje gång.
-  assert.match(t, /Försök 1: 11,20 s · A2 B4 · 26 p · PK 2,32 · GODKÄND/);
+  assert.match(t, /Försök 1: A2 B4 · 26 p · 11,20 s · PK 2,32 · GODKÄND/);
   // 4 × C (3 p) + 2 × H (1 p) = 14 p på 15,0 s → 0,93
   assert.match(t, /UNDERKÄND \(Poängkvot 0,93 — kravet är 2,00\)/);
   assert.match(t, /Ej skjuten/, 'samma versal som i tabellformaten');
@@ -72,9 +72,9 @@ test('texten innehåller rubrik, försök och summering', () => {
 test('csv:n har BOM, semikolon och tal med komma', () => {
   const c = somCsv(u);
   assert.ok(c.startsWith('﻿'), 'BOM krävs för att Excel ska läsa å ä ö');
-  assert.match(c, /Nr;Fmid\/Anstnr;Namn;Förband;Försök;Tid \(s\)/);
-  assert.match(c, /1;AsaAnd07;Andersson, Åsa;1\. plut;1;11,20/);
-  assert.match(c, /2;;Öberg, Björn;1\. plut;1;15,00/, 'tomt fmid lämnar cellen tom');
+  assert.match(c, /Nr;Fmid\/Anstnr;Namn;Förband;Försök;A \(5p\);B \(4p\);C \(3p\);D \(3p\);X \(2p\);H \(1p\);Poäng;Tid \(s\);PK;Utfall/);
+  assert.match(c, /1;AsaAnd07;Andersson, Åsa;1\. plut;1;2;4;0;0;0;0;26;11,20;2,32/);
+  assert.match(c, /2;;Öberg, Björn;1\. plut;1;0;0;4;0;0;2;14;15,00/, 'tomt fmid lämnar cellen tom');
   assert.ok(c.includes('\r\n'), 'radbrytning enligt csv-konvention');
 });
 
@@ -161,7 +161,7 @@ test('automatkarbin ger nio zonkolumner och rätt krav i huvudet', () => {
   assert.match(t, /Automatkarbin — Delmoment 12/);
   assert.match(t, /Krav: poängkvot 1,00/);
   // 5×B(4) + 4×C(3) = 32, de nio bästa; D:na faller bort
-  assert.match(t, /32 p · PK 1,31 · GODKÄND/);
+  assert.match(t, /32 p · \S+ s · PK 1,31 · GODKÄND/);
   fs.writeFileSync(path.join(UT, 'prov-ak.pdf'), somPdf(au));
   fs.writeFileSync(path.join(UT, 'prov-ak.xlsx'), somXlsx(au));
 });

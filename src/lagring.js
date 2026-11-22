@@ -321,6 +321,46 @@ export function registrera(id) {
   return andraResultat(id, { registrerad: new Date().toISOString() });
 }
 
+/**
+ * Öppnar ett registrerat försök för rättning. Originalet läggs i `fore`, för
+ * ett öppet försök följer inte med i exporten: utan en väg tillbaka hade ett
+ * avbrutet ändringsförsök tagit bort resultatet ur protokollet.
+ */
+export function oppnaForAndring(id) {
+  const r = las().resultat.find((x) => x.id === id);
+  if (!r || !r.registrerad) return null;
+  r.fore = {
+    tid: r.tid, traffar: { ...r.traffar },
+    vapenhanteringUnderkand: r.vapenhanteringUnderkand, registrerad: r.registrerad,
+  };
+  r.registrerad = null;
+  spara();
+  return r;
+}
+
+/** Bekräftar rättningen. Försöket behåller nummer och registreringstid. */
+export function sparaAndring(id) {
+  const r = las().resultat.find((x) => x.id === id);
+  if (!r || !r.fore) return null;
+  r.registrerad = r.fore.registrerad;
+  delete r.fore;
+  spara();
+  return r;
+}
+
+/** Lägger tillbaka originalet för varje rättning som inte bekräftats. */
+export function aterstallAndringar(undantagId = null) {
+  let antal = 0;
+  for (const r of las().resultat) {
+    if (!r.fore || r.id === undantagId) continue;
+    Object.assign(r, r.fore);
+    delete r.fore;
+    antal++;
+  }
+  if (antal) spara();
+  return antal;
+}
+
 export function raderaResultat(id) {
   const d = las();
   d.resultat = d.resultat.filter((r) => r.id !== id);

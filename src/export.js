@@ -18,9 +18,11 @@ export function underlag(omgang, personer, resultat) {
     // banan. Det är det man matchar mot när protokollet läses efteråt.
     // Fmid/Anstnr står före namnet: det är den identitet ett förband matchar
     // protokollet mot, och den är tom för den som inte fyllt i något.
-    'Nr', 'Fmid/Anstnr', 'Namn', 'Förband', 'Försök', 'Tid (s)',
+    // Från försöket och framåt följer kolumnerna skjutboken, så att resultatet
+    // kan föras över rakt av: träffresultat, poäng, tid och kvot.
+    'Nr', 'Fmid/Anstnr', 'Namn', 'Förband', 'Försök',
     ...zoner.map((z) => `${z} (${{ A: 5, B: 4, C: 3, D: 3, X: 2, H: 1 }[z]}p)`),
-    'Poäng', 'PK', 'Utfall', 'Anmärkning',
+    'Poäng', 'Tid (s)', 'PK', 'Utfall', 'Anmärkning',
   ];
   const rader = [];
   let godkanda = 0;
@@ -32,8 +34,8 @@ export function underlag(omgang, personer, resultat) {
     if (!forsok.length) {
       rader.push({
         person: p, nr, forsok: null,
-        celler: [nr, p.fmid || '', p.namn, p.forband, '', '',
-          ...zoner.map(() => ''), '', '', 'Ej skjuten', ''],
+        celler: [nr, p.fmid || '', p.namn, p.forband, '',
+          ...zoner.map(() => ''), '', '', '', 'Ej skjuten', ''],
       });
       continue;
     }
@@ -51,9 +53,9 @@ export function underlag(omgang, personer, resultat) {
       rader.push({
         person: p, nr, forsok: r, bedomning: b, traffar,
         celler: [
-          nr, p.fmid || '', p.namn, p.forband, r.forsok, r.tid === null ? '' : komma(r.tid),
+          nr, p.fmid || '', p.namn, p.forband, r.forsok,
           ...zoner.map((z) => traffar[z] || 0),
-          b.poang, b.pk === null ? '' : komma(b.pk),
+          b.poang, r.tid === null ? '' : komma(r.tid), b.pk === null ? '' : komma(b.pk),
           b.godkand ? 'Godkänd' : 'Underkänd',
           b.godkand ? '' : b.brister.join('; '),
         ],
@@ -121,8 +123,8 @@ export function somText(u) {
     const traffar = ZONORDNING.filter((z) => rad.traffar[z])
       .map((z) => `${z}${rad.traffar[z]}`).join(' ');
     rader.push(
-      `   Försök ${rad.forsok.forsok}: ${komma(rad.forsok.tid)} s · ${traffar || 'inga träffar'}` +
-      ` · ${b.poang} p · PK ${komma(b.pk)} · ${b.godkand ? 'GODKÄND' : 'UNDERKÄND'}` +
+      `   Försök ${rad.forsok.forsok}: ${traffar || 'inga träffar'} · ${b.poang} p` +
+      ` · ${komma(rad.forsok.tid)} s · PK ${komma(b.pk)} · ${b.godkand ? 'GODKÄND' : 'UNDERKÄND'}` +
       (b.godkand ? '' : ` (${b.brister.join('; ')})`),
     );
   }
@@ -399,9 +401,9 @@ export function somPdf(u) {
     { rubrik: 'Namn', bredd: 84 },
     { rubrik: 'Förband', bredd: 46 },
     { rubrik: 'F', bredd: 12 },
-    { rubrik: 'Tid', bredd: 30 },
     ...ZONORDNING.map((z) => ({ rubrik: z, bredd: 16 })),
     { rubrik: 'Poäng', bredd: 30 },
+    { rubrik: 'Tid', bredd: 30 },
     { rubrik: 'PK', bredd: 28 },
     { rubrik: 'Utfall', bredd: 46 },
     { rubrik: 'Anmärkning', bredd: 71 },

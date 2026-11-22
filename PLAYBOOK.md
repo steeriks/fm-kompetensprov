@@ -137,7 +137,9 @@ Lagringsversionen bumpades inte: ett fält som får vara tomt behöver ingen mig
 Lagringsversionen är `VERSION` i `src/lagring.js` och har **inget** med appens utgåva att
 göra. Den ena beskriver formen på det som ligger i telefonen, den andra vilken kod som
 kör; de höjs av olika skäl och vid olika tillfällen.
-I exporten står kolumnen `Fmid/Anstnr` **före** namnet, i alla fyra formaten.
+I exporten står kolumnen `Fmid/Anstnr` **före** namnet, i alla fyra formaten. Efter försöket
+följer kolumnerna skjutbokens *Kompetensprov Bas*: träffar, poäng, tid och kvot. Tiden står
+alltså efter poängen med flit, så att skjutledaren kan föra över raden utan att hoppa.
 
 **Exempelvärdena är formade `TreTre` plus löpnummer** — tre bokstäver ur förnamnet, tre ur
 efternamnet och ett tvåsiffrigt löpnummer, `Cia Craf` → `CiaCra05`. Det gäller överallt där
@@ -195,6 +197,13 @@ som saknad tid så att ingen gammal tid lever kvar under en tom visning.
 **Filtret i vallistan läser `skyttStatus()`,** liksom räknarna och radens märke. Godkänd på
 något försök räcker, samma regel som exporten. Filtret stängs av i flyttläget: draget sparar
 ordningen ur raderna på skärmen, så en filtrerad lista hade skrivit bort de dolda skyttarna.
+
+**Ett registrerat försök rättas med `fore`.** *Ändra försök* under *Visa försök* lägger
+originalet i `resultat.fore` och öppnar posten. Ett öppet försök följer inte med i exporten,
+så `rita()` lägger tillbaka originalet så fort man lämnar rättningen, även efter en omstart.
+Först *Spara ändringen* tar bort `fore`. Försöket behåller nummer och registreringstid, och
+protokollet visar med flit ingen markering. Ändra-knappen saknas medan skytten har ett annat
+öppet försök, eftersom `pagaende()` bara kan peka ut ett.
 
 ## Tiden knappas rakt av
 
@@ -381,7 +390,7 @@ inte i bygget — filerna ska gå att läsa som de är i `src/`. `src/hjalp.md` 
 
 ```bash
 python3 bygg.py     # måste köras först — proven kör mot docs/
-npm test            # 144 prov: regler, export, import, hela flödet, spärrarna mot utgående trafik
+npm test            # 152 prov: regler, export, import, hela flödet, spärrarna mot utgående trafik
 ```
 
 **Bygg före du provar.** Det här är den enklaste fällan i arkivet och den värsta, eftersom

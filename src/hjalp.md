@@ -1,20 +1,22 @@
 ## Vad appen är
 
-Ett **stöd för instruktören** vid genomförandet av kompetensproven: den håller ordning på skjutordningen, räknar poängkvoten och samlar resultaten i en lista som går att dela.
+Ett **stöd för instruktören** vid genomförandet av kompetensproven. Appen håller ordning på skjutordningen, räknar poängkvoten och samlar resultaten i en lista som går att dela.
 
-Du kör **version {{utgava}}**. Numret står också längst upp till höger i appen och under Appinställningar — ha det till hands om du anmäler ett fel.
+**Appen är inte utgiven av Försvarsmakten** och är inget officiellt system. Den är privat gjord, och kraven är hämtade ur handböckerna för respektive delmoment. Kontrollera alltid mot gällande utgåva. Det är instruktören som bedömer, inte appen.
 
-**Appen är inte utgiven av Försvarsmakten** och är inget officiellt system. Den är privat gjord, och kraven den räknar med är hämtade ur handböckerna för respektive delmoment. Kontrollera alltid mot gällande utgåva — det är instruktören som bedömer, inte appen.
+Du kör **version {{utgava}}**. Numret står också längst upp till höger i appen.
+
+Hur appen används steg för steg står under **Så använder du appen** på startsidan.
 
 ## Installera på hemskärmen
 
-Installerad startar appen som vilken app som helst och **fungerar utan täckning** — vilket är hela poängen på en skjutbana. Resultaten ligger kvar mellan gångerna.
+Installerad startar appen som vilken app som helst och **fungerar utan täckning** på skjutbanan. Resultaten ligger kvar mellan gångerna.
 
 **iPhone och iPad**
 
 - Öppna appen i **Safari**. Andra webbläsare kan inte lägga till appen på hemskärmen i iOS.
 - Tryck på delningsknappen i nederkant.
-- Välj **Lägg till på hemskärmen**, och sedan **Lägg till**.
+- Välj **Lägg till på hemskärmen** och sedan **Lägg till**.
 
 **Android**
 
@@ -22,26 +24,26 @@ Installerad startar appen som vilken app som helst och **fungerar utan täckning
 - Tryck på menyn med de tre prickarna.
 - Välj **Installera app** eller **Lägg till på startskärmen**.
 
-Öppnar du i stället appen som en fristående HTML-fil ur ett mail fungerar den för ett enstaka tillfälle, men lagringen är opålitlig — Android kan neka den helt. Ska resultaten sparas: installera från länken.
+**Fick du appen som fil i ett mail?** Den fungerar för ett enstaka tillfälle, men lagringen är opålitlig och Android kan neka den helt. Installera från länken om resultaten ska sparas.
 
-**Uppdateringar sköter sig själva.** Appen letar efter en ny version när du startar den, och hittar den en dyker en rad upp i nederkant: *Ny version finns — tryck för att uppdatera*. Appen laddar aldrig om av sig själv — en pågående registrering avbryts alltså inte, och du väljer själv när det passar. Trycket laddar om appen: allt du knappat in ligger kvar, men du landar på startsidan.
+## Uppdateringar
 
-Hur appen används steg för steg står under **Så använder du appen** på startsidan.
+Appen letar efter en ny version när du startar den. Finns en ny visas raden *Ny version finns — tryck för att uppdatera* i nederkant. Appen laddar aldrig om av sig själv, så du väljer när det passar. Allt du knappat in ligger kvar, men du hamnar på startsidan.
 
 ## Var dina uppgifter finns
 
-Allt du knappar in — namn, förband, Fmid/Anstnr, tider och resultat — sparas **bara i den här telefonen**, i webbläsarens lagring. Ingenting skickas någonstans. Det finns ingen server, inget konto och ingen som kan se dina listor.
+Allt du knappar in, det vill säga namn, förband, Fmid/Anstnr, tider och resultat, sparas **bara i den här telefonen**. Ingenting skickas någonstans. Det finns ingen server, inget konto och ingen annan som kan se dina listor.
 
-Följden är att **du själv ansvarar för uppgifterna**:
+Det betyder att **du själv ansvarar för uppgifterna**:
 
 - Skyttarnas namn ligger kvar i telefonen tills du raderar dem.
-- Lånar du ut eller lämnar ifrån dig telefonen: radera först.
-- Under Appinställningar finns **Radera allt innehåll**, och enskilda skyttar och omgångar raderas var för sig.
-- Avinstallerar du appen försvinner allt — ta en säkerhetskopia först om du vill spara.
+- Radera innan du lånar ut eller lämnar ifrån dig telefonen.
+- **Radera allt innehåll** finns under Appinställningar. Enskilda skyttar och omgångar raderas genom att hålla in raden.
+- Avinstallerar du appen försvinner allt. Ta en säkerhetskopia först om du vill spara.
 
-Delar du ett resultat via mail eller fil lämnar uppgifterna telefonen i det ögonblicket, och då gäller vanliga regler för hur en sådan lista får hanteras.
+**När du delar ett resultat** lämnar uppgifterna telefonen, och då gäller vanliga regler för hur en sådan lista får hanteras.
 
-Det gäller åt ena hållet. Åt andra hållet: läser du in en deltagarlista eller en säkerhetskopia öppnas filen **i telefonen** och laddas inte upp någonstans. Men uppgifterna finns då i appen, och omfattas därifrån av samma ansvar som allt annat du knappat in.
+**När du läser in en lista eller säkerhetskopia** öppnas filen i telefonen och laddas inte upp någonstans. Uppgifterna omfattas sedan av samma ansvar som allt annat i appen.
 
 ## Buggar och önskemål
 
@@ -49,10 +51,10 @@ Fungerar något inte, eller saknas något? Skriv ett ärende:
 
 [github.com/steeriks/fm-kompetensprov/issues](https://github.com/steeriks/fm-kompetensprov/issues)
 
-Skriv gärna vilken **version** det gäller — den står överst till höger i appen — vilken telefon och webbläsare du har, vad du gjorde, och vad som hände i stället för det du väntade dig.
+Skriv gärna vilken **version** och telefon du har, vad du gjorde och vad som hände i stället för det du väntade dig.
 
 ## Licens och ansvar
 
-Appen är **fri att använda**, kopiera och ändra under MIT-licens. Koden ligger öppen — knappen *Koden på GitHub* står bredvid den här texten under Appinställningar, för den som vill läsa efter vad appen gör med uppgifterna.
+Appen är **fri att använda**, kopiera och ändra under MIT-licens. Koden är öppen, och knappen *Koden på GitHub* finns under Appinställningar.
 
-Den lämnas som den är, utan garantier. Ansvaret för bedömningen, för att kraven stämmer med gällande utgåva och för hur uppgifterna hanteras ligger hos den som använder appen.
+Appen lämnas som den är, utan garantier. Ansvaret för bedömningen, för att kraven stämmer med gällande utgåva och för hur uppgifterna hanteras ligger hos den som använder appen.

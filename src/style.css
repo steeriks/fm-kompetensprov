@@ -205,6 +205,8 @@ label.falt input.saknas { border-color: var(--underkand); }
   font-size: 0.88rem; color: var(--dampad); font-variant-numeric: tabular-nums;
 }
 .historik .forsokrad:last-child { border-bottom: 0; }
+.historik .forsokrad { flex-wrap: wrap; }
+.historik .andraforsok { flex: 1 0 100%; }
 
 /* --------------------------------------------------------- lägesväljare */
 

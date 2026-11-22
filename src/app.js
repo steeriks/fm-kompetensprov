@@ -306,7 +306,7 @@ function ritaOmgang() {
          ${!pagar
            ? `<button class="knapp liten" data-nytt-forsok="${id}">+ Nytt försök</button>` : ''}
        </div>` : ''}
-      ${oppen ? ritaHistorik(o, klara) : ''}`;
+      ${oppen ? ritaHistorik(o, klara, !pagar) : ''}`;
   }).join('');
 
   const utanTid = o.deltagare.filter((id) => behoverLage(o, id, 'tid')).length;
@@ -392,7 +392,7 @@ function skyttStatus(o, personId) {
   return !klara.length || alla.some((r) => !r.registrerad) ? 'ejklar' : 'underkand';
 }
 
-function ritaHistorik(o, forsok) {
+function ritaHistorik(o, forsok, kanAndras) {
   return `<div class="historik">${forsok.map((r) => {
     const b = bedom(o.gren, r.traffar, r.tid, r.vapenhanteringUnderkand);
     const traffar = Object.entries(r.traffar).filter(([, n]) => n)
@@ -401,6 +401,8 @@ function ritaHistorik(o, forsok) {
       <span>Försök ${r.forsok} · ${komma(r.tid)} s · ${esc(traffar || 'inga träffar')}</span>
       <span>${b.poang} p · <b>${komma(b.pk)}</b> ·
         <span class="${b.godkand ? 'chip g' : 'chip u'}">${b.godkand ? 'G' : 'U'}</span></span>
+      ${kanAndras ? `<button class="knapp liten andraforsok" data-andra-forsok="${r.id}"
+        >Ändra försök ${r.forsok}</button>` : ''}
     </div>`;
   }).join('')}</div>`;
 }
@@ -505,7 +507,7 @@ function ritaTid() {
   // Pilarna står bara här, och den som pekar ut i tomma intet slocknar i
   // stället för att svara med ett meddelande man ändå inte läser i mörker.
   for (const knapp of stegaKnappar) {
-    knapp.hidden = false;
+    knapp.hidden = !!r.fore;         // en rättning ska inte kunna stegas ifrån
     knapp.disabled = !stegadSkytt(o, p.id, Number(knapp.dataset.stega));
   }
 
@@ -522,6 +524,14 @@ function ritaTid() {
     </div>`;
   // Vad knappen leder till ska stå på den, och VEM den leder till under den.
   // I mörker vill man inte gissa om nästa tryck ger nästa skytt eller poängen.
+  if (r.fore) {
+    bottenrad.innerHTML = `
+      <button class="knapp primar" data-till-poang="1">Spara tiden &amp; fortsätt</button>
+      <div class="knapprad">
+        <button class="knapp liten" data-vy="omgang-ater">Ångra ändringen</button>
+      </div>`;
+    return;
+  }
   const nasta = nastaEfterTid(o, p.id);
   const text = !nasta ? 'Spara &amp; tillbaka'
     : nasta.typ === 'tid' ? 'Spara &amp; nästa skytt' : 'Spara &amp; börja med poängen';
@@ -586,7 +596,7 @@ function ritaPoang() {
       <p class="gruppvarning" hidden></p>
       <div class="zoner">
         ${g.zoner.map((z) => `
-          <button class="zonknapp" data-zon="${z}" data-poang="${ZONPOANG[z]}">
+          <button class="zonknapp${r.traffar[z] ? ' har' : ''}" data-zon="${z}" data-poang="${ZONPOANG[z]}">
             <span class="bokstav">${z}</span>
             <span class="antal">${r.traffar[z] || 0}</span>
             <span class="poang">${(r.traffar[z] || 0) * ZONPOANG[z]} p</span>
@@ -595,6 +605,8 @@ function ritaPoang() {
     </div>`).join('');
 
   app.innerHTML = `
+    ${r.fore ? `<div class="varningsruta"><b>Du ändrar försök ${r.forsok}.</b>
+      Inget ändras förrän du trycker Spara ändringen.</div>` : ''}
     ${tidfalt}
     ${r.tid === null && !samlat ? '<div class="varningsruta">Ingen tid inlagd ännu — utan tid går ingen poängkvot att räkna.</div>' : ''}
     <p class="dampad liten">Tryck en gång per träff — bättringsskotten med.
@@ -622,6 +634,14 @@ function ritaPoang() {
       ${samlat ? '' : '<button class="knapp liten" data-till-tid="1">Ändra tiden</button>'}
       <button class="knapp liten" data-vy="omgang-ater">Tillbaka till listan</button>
     </div>`;
+  if (r.fore) {
+    bottenrad.innerHTML = `
+      <button class="knapp primar" data-registrera="1">Spara ändringen</button>
+      <div class="knapprad">
+        ${samlat ? '' : '<button class="knapp liten" data-till-tid="1">Ändra tiden</button>'}
+        <button class="knapp liten" data-vy="omgang-ater">Ångra ändringen</button>
+      </div>`;
+  }
   uppdateraPoang();
 }
 
@@ -1147,6 +1167,13 @@ function rita() {
   // Pilarna hör till tidfönstret; varje annan vy ska slippa dem utan att
   // behöva veta om att de finns.
   for (const knapp of stegaKnappar) knapp.hidden = true;
+  // En rättning lever bara så länge man står kvar i den. Lämnas den på något
+  // sätt, även genom att appen stängs, gäller det ursprungliga försöket.
+  const iArbete = vy.namn === 'tid' || vy.namn === 'poang'
+    ? lager.pagaende(vy.omgangId, vy.personId, false) : null;
+  if (lager.aterstallAndringar(iArbete ? iArbete.id : null)) {
+    flash('Ändringen sparades inte. Försöket är oförändrat.', 4);
+  }
   if (vy.namn === 'start') ritaStart();
   else if (vy.namn === 'ny') ritaNy();
   else if (vy.namn === 'omgang') ritaOmgang();
@@ -1263,7 +1290,7 @@ document.addEventListener('click', async (ev) => {
     '[data-format], [data-historik], [data-nytt-forsok], [data-soptunna], [data-kopia], ' +
     '[data-radera-allt], [data-radera-alla-skyttar], [data-skriv-ut], [data-anvisning], ' +
     '[data-lagg-till], [data-lagg-in], [data-flyttlage], [data-dok], [data-import], ' +
-    '[data-uppdatera], [data-filter], [data-arbetssatt], [data-tidfalt], ' +
+    '[data-uppdatera], [data-andra-forsok], [data-filter], [data-arbetssatt], [data-tidfalt], ' +
     '.zonknapp');
   if (!t) return;
   const d = t.dataset;
@@ -1384,6 +1411,14 @@ document.addEventListener('click', async (ev) => {
     vy.oppen = vy.oppen === d.historik ? null : d.historik;
     return ritaPaPlats();
   }
+  if (d.andraForsok) {
+    const r = lager.resultat(vy.omgangId).find((x) => x.id === d.andraForsok);
+    const p = r && lager.person(r.personId);
+    if (!p || !confirm(`Ändra försök ${r.forsok} för ${p.namn}?\n\n`
+      + 'Det gamla resultatet ersätts när du trycker Spara ändringen.')) return;
+    lager.oppnaForAndring(r.id);
+    return gaTill('poang', { omgangId: vy.omgangId, personId: r.personId, lage: 'poang' });
+  }
   if (d.laggTill) return gaTill('lagg-till', { omgangId: vy.omgangId, lage: vy.lage });
   if (d.laggIn) {
     const o = lager.omgang(vy.omgangId);
@@ -1495,6 +1530,15 @@ document.addEventListener('click', async (ev) => {
     const r = lager.pagaende(o.id, vy.personId);
     if (r.tid === null && !r.vapenhanteringUnderkand) {
       return flash('Lägg in tiden först — utan den finns ingen poängkvot.');
+    }
+    if (r.fore) {
+      lager.sparaAndring(r.id);
+      vibrera(30);
+      const ny = bedom(o.gren, r.traffar, r.tid, r.vapenhanteringUnderkand);
+      flash(`${lager.person(vy.personId).namn}: försök ${r.forsok} ändrat · `
+        + `${ny.godkand ? 'GODKÄND' : 'UNDERKÄND'}`, 4);
+      return gaTill('omgang',
+        { omgangId: o.id, lage: lampligtLage(o, vy.lage), oppen: vy.personId }, true);
     }
     lager.registrera(r.id);
     vibrera(30);
