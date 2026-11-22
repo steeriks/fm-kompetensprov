@@ -24,7 +24,7 @@
 <!-- Versionen skrivs bara i package.json; bygg.py byter innehållet här mot
      numret därifrån, precis som cachenamnet i sw.js. Lämna "utveckling"
      stående i src/ — den som serverar src/ direkt kör inte en utgåva. -->
-<meta name="version" content="1.3.1">
+<meta name="version" content="1.3.2">
 <meta name="description" content="Instruktörsverktyg för Försvarsmaktens kompetensprov, pistol och automatkarbin.">
 <meta name="theme-color" content="#0b0d0c">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -289,6 +289,21 @@ label.falt input.saknas { border-color: var(--underkand); }
    får brytas på två rader i stället för att kapas. */
 .knapprad.verktyg { margin: 0 0 0.6rem; }
 .knapprad.verktyg .knapp { flex: 1 1 0; min-width: 0; }
+
+/* Registreringssättet i vallistan: en låg rad, det aktiva valet ifyllt. Knappen
+   ritas 38 px hög, men ramen runt den gör raden till en träffyta på 44 px. */
+.regval { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.6rem; }
+.regval .rubrik { flex: 0 0 auto; font-size: 0.8rem; color: var(--dampad); }
+.regval .val {
+  flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 0.2rem; padding: 2px;
+  background: var(--kort); border: 1px solid var(--linje); border-radius: var(--radie);
+}
+.regval button {
+  min-height: 38px; padding: 0.1rem 0.3rem; border: 0; border-radius: 9px;
+  background: none; color: var(--dampad); font-size: 0.8rem; font-weight: 700;
+  line-height: 1.1; cursor: pointer; touch-action: manipulation;
+}
+.regval button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
 
 /* -------------------------------------------------------- sifferknappsats */
 
@@ -556,7 +571,23 @@ Knappen finns på två ställen och gör olika saker: under **Lägg till & hante
 
 Behöver något bort — en skytt ur registret eller en hel omgång från startsidan — **håll in raden** tills en soptunna läggs fram i den, och tryck på soptunnan. Appen frågar först, och en raderad skytt tar sina resultat med sig.
 
-## Så går en omgång till
+## Välj hur du registrerar
+
+Överst i omgångens lista står **Registrera: I två steg | I ett steg**. Det gröna valet är det som gäller. Tryck på det andra för att byta. Samma val finns under **Appinställningar**.
+
+- **I två steg** (standard): ta **alla tider** vid linjen, gå fram till tavlorna och för sedan in **alla poäng**. Passar när hela gruppen skjuter innan någon går fram.
+- **I ett steg:** gör **en skytt i taget klar** på samma skärm, med tid och träffar tillsammans. Passar när du går fram till tavlan efter varje skytt.
+
+Valet gäller den här telefonen. Du kan byta mitt i en omgång, och inget som redan är inknappat försvinner.
+
+**Så gör du i ett steg:**
+
+- **1.** Tryck *Registrera första skytt*, eller på en skytt i listan.
+- **2.** Knappa tiden och tryck *Klar — till träffarna*. Tryck på tidsfältet om du behöver ändra den.
+- **3.** Tryck en gång per träff på zonerna. Poängkvoten och utfallet räknas medan du knappar.
+- **4.** Tryck *Registrera & nästa skytt*.
+
+## Så går en omgång till i två steg
 
 Appen följer hur provet genomförs: alla tiderna först, poängen när gruppen gått fram.
 
@@ -577,7 +608,6 @@ Vid osäker eller felaktig vapenhantering: kryssa rutan på poängskärmen, så 
 - **Rätta en träff:** håll in zonknappen för att nolla den, och knappa in rätt. Har det blivit orimligt många träffar i en målyta säger appen till — den spärrar inget, men ett tryck för mycket ska upptäckas innan det följer med in i protokollet.
 - **Byta skytt i tidfönstret:** pilarna på var sida om namnet stegar en tavla fram eller tillbaka, om något gått snett på linjen. Den påbörjade tiden sparas på vägen, och pilen slocknar när linjen är slut åt det hållet.
 - **Se vilka som klarat provet:** när första resultatet är inne visas filtret *Alla · Godkända · Underkända · Ej klara* över listan. Godkänd på något försök räcker. Tavelnumren ändras inte.
-- **Tid och poäng på samma skärm:** tryck *Registrering* överst i listan, eller välj *Tid och poäng samtidigt* under **Appinställningar**. Varje skytt görs då klar på en skärm, och valet går att ändra mitt i en omgång.
 - **Nytt försök:** *+ Nytt försök* på skyttens rad. Appen sätter ingen gräns för antalet omtag; ett omtag startas alltid med flit.
 - **⌂** längst upp till vänster går alltid hem. En påbörjad tid sparas på vägen.
 - **Grön rad i nederkant?** Då väntar en ny version av appen. Den stör ingenting och kan stå kvar hela omgången ut — appen laddar aldrig om av sig själv. Trycker du på den laddas appen om: allt inknappat ligger kvar, men du landar på startsidan och får öppna omgången igen. Vänta hellre tills gruppen är klar.
@@ -2252,14 +2282,19 @@ function ritaOmgang() {
   const tomText = filter ? 'Ingen skytt i det här urvalet.' : 'Inga deltagare i omgången.';
 
   // Verktygen ligger överst: i en lång lista ska de nås utan att skrolla förbi
-  // hela linjen. Knappen för registreringen visar vad som gäller nu, och ett
-  // tryck byter — samma val som under Appinställningar.
+  // hela linjen. Registreringen visar båda sätten med det aktiva markerat: en
+  // enda växlingsknapp gick inte att läsa som vare sig läge eller handling.
   const verktyg = vy.flyttlage ? '' : `<div class="knapprad verktyg">
-      <button class="knapp liten smal" data-lagg-till="1">+ Lägg till skytt</button>
+      <button class="knapp liten" data-lagg-till="1">+ Lägg till skytt</button>
       ${o.deltagare.length > 1
-        ? '<button class="knapp liten smal" data-flyttlage="pa">Ändra ordning</button>' : ''}
-      <button class="knapp liten smal" data-arbetssatt="${samlat ? 'svep' : 'samlat'}"
-        >Registrering: ${samlat ? 'samtidigt' : 'tider först'}</button>
+        ? '<button class="knapp liten" data-flyttlage="pa">Ändra ordning</button>' : ''}
+    </div>
+    <div class="regval" role="group" aria-labelledby="regvalrubrik">
+      <span class="rubrik" id="regvalrubrik">Registrera:</span>
+      <div class="val">
+        <button data-arbetssatt="svep" aria-pressed="${!samlat}">I två steg</button>
+        <button data-arbetssatt="samlat" aria-pressed="${samlat}">I ett steg</button>
+      </div>
     </div>`;
 
   app.innerHTML = verktyg + filterrad + (rader || `<p class="tom">${tomText}</p>`)
@@ -2986,12 +3021,12 @@ function ritaInstallningar() {
          </div>`}
     <h2>Arbetssätt</h2>
     <div class="lagesvaljare textval">
-      <button data-arbetssatt="svep" aria-pressed="${!arSamlat()}">Tider först, sedan poäng</button>
-      <button data-arbetssatt="samlat" aria-pressed="${arSamlat()}">Tid och poäng samtidigt</button>
+      <button data-arbetssatt="svep" aria-pressed="${!arSamlat()}">I två steg</button>
+      <button data-arbetssatt="samlat" aria-pressed="${arSamlat()}">I ett steg</button>
     </div>
     <p class="dampad liten">${arSamlat()
-      ? 'Varje skytt görs klar på en skärm, med tiden överst och träffarna under.'
-      : 'Alla tider tas vid linjen, och poängen när gruppen gått fram till tavlorna.'}
+      ? '<b>I ett steg:</b> tid och poäng för en skytt i taget, på samma skärm.'
+      : '<b>I två steg:</b> alla tider först, sedan alla poäng vid tavlorna.'}
     Gäller den här telefonen och går att byta mitt i en omgång.</p>
     <h2>Säkerhetskopia</h2>
     <p class="dampad liten">En fil med allt. Läs in den på en annan telefon, eller
@@ -3449,12 +3484,13 @@ document.addEventListener('click', async (ev) => {
 
   // --- register och inställningar ---
   if (d.arbetssatt) {
+    if (d.arbetssatt === lager.arbetssatt()) return;     // redan valt
     lager.sattArbetssatt(d.arbetssatt);
     if (vy.namn === 'omgang') {
       // Tillbaka till svepen ska landa i det läge som har något kvar att göra.
       vy.lage = lampligtLage(lager.omgang(vy.omgangId), vy.lage);
       flash(d.arbetssatt === 'samlat'
-        ? 'Tid och poäng registreras samtidigt.' : 'Tiderna först, sedan poängen.');
+        ? 'I ett steg: tid och poäng på samma skärm.' : 'I två steg: alla tider, sedan poängen.');
     }
     return ritaPaPlats();
   }

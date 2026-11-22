@@ -20,7 +20,23 @@ Knappen finns på två ställen och gör olika saker: under **Lägg till & hante
 
 Behöver något bort — en skytt ur registret eller en hel omgång från startsidan — **håll in raden** tills en soptunna läggs fram i den, och tryck på soptunnan. Appen frågar först, och en raderad skytt tar sina resultat med sig.
 
-## Så går en omgång till
+## Välj hur du registrerar
+
+Överst i omgångens lista står **Registrera: I två steg | I ett steg**. Det gröna valet är det som gäller. Tryck på det andra för att byta. Samma val finns under **Appinställningar**.
+
+- **I två steg** (standard): ta **alla tider** vid linjen, gå fram till tavlorna och för sedan in **alla poäng**. Passar när hela gruppen skjuter innan någon går fram.
+- **I ett steg:** gör **en skytt i taget klar** på samma skärm, med tid och träffar tillsammans. Passar när du går fram till tavlan efter varje skytt.
+
+Valet gäller den här telefonen. Du kan byta mitt i en omgång, och inget som redan är inknappat försvinner.
+
+**Så gör du i ett steg:**
+
+- **1.** Tryck *Registrera första skytt*, eller på en skytt i listan.
+- **2.** Knappa tiden och tryck *Klar — till träffarna*. Tryck på tidsfältet om du behöver ändra den.
+- **3.** Tryck en gång per träff på zonerna. Poängkvoten och utfallet räknas medan du knappar.
+- **4.** Tryck *Registrera & nästa skytt*.
+
+## Så går en omgång till i två steg
 
 Appen följer hur provet genomförs: alla tiderna först, poängen när gruppen gått fram.
 
@@ -41,7 +57,6 @@ Vid osäker eller felaktig vapenhantering: kryssa rutan på poängskärmen, så 
 - **Rätta en träff:** håll in zonknappen för att nolla den, och knappa in rätt. Har det blivit orimligt många träffar i en målyta säger appen till — den spärrar inget, men ett tryck för mycket ska upptäckas innan det följer med in i protokollet.
 - **Byta skytt i tidfönstret:** pilarna på var sida om namnet stegar en tavla fram eller tillbaka, om något gått snett på linjen. Den påbörjade tiden sparas på vägen, och pilen slocknar när linjen är slut åt det hållet.
 - **Se vilka som klarat provet:** när första resultatet är inne visas filtret *Alla · Godkända · Underkända · Ej klara* över listan. Godkänd på något försök räcker. Tavelnumren ändras inte.
-- **Tid och poäng på samma skärm:** tryck *Registrering* överst i listan, eller välj *Tid och poäng samtidigt* under **Appinställningar**. Varje skytt görs då klar på en skärm, och valet går att ändra mitt i en omgång.
 - **Nytt försök:** *+ Nytt försök* på skyttens rad. Appen sätter ingen gräns för antalet omtag; ett omtag startas alltid med flit.
 - **⌂** längst upp till vänster går alltid hem. En påbörjad tid sparas på vägen.
 - **Grön rad i nederkant?** Då väntar en ny version av appen. Den stör ingenting och kan stå kvar hela omgången ut — appen laddar aldrig om av sig själv. Trycker du på den laddas appen om: allt inknappat ligger kvar, men du landar på startsidan och får öppna omgången igen. Vänta hellre tills gruppen är klar.

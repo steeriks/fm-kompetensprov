@@ -254,6 +254,21 @@ label.falt input.saknas { border-color: var(--underkand); }
 .knapprad.verktyg { margin: 0 0 0.6rem; }
 .knapprad.verktyg .knapp { flex: 1 1 0; min-width: 0; }
 
+/* Registreringssättet i vallistan: en låg rad, det aktiva valet ifyllt. Knappen
+   ritas 38 px hög, men ramen runt den gör raden till en träffyta på 44 px. */
+.regval { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.6rem; }
+.regval .rubrik { flex: 0 0 auto; font-size: 0.8rem; color: var(--dampad); }
+.regval .val {
+  flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 0.2rem; padding: 2px;
+  background: var(--kort); border: 1px solid var(--linje); border-radius: var(--radie);
+}
+.regval button {
+  min-height: 38px; padding: 0.1rem 0.3rem; border: 0; border-radius: 9px;
+  background: none; color: var(--dampad); font-size: 0.8rem; font-weight: 700;
+  line-height: 1.1; cursor: pointer; touch-action: manipulation;
+}
+.regval button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+
 /* -------------------------------------------------------- sifferknappsats */
 
 .tidvisning {

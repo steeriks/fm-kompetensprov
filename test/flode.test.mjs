@@ -1708,6 +1708,9 @@ test('användarinstruktionen nås från startsidan och beskriver arbetsgången',
   assert.match(text, /Dela resultat/, 'delningen');
   assert.match(text, /PDF/);
   assert.match(text, /Spara kopia/, 'säkerhetskopian');
+  assert.match(text, /I två steg.*alla tider/, 'hjälpen förklarar två steg');
+  assert.match(text, /I ett steg.*en skytt i taget klar/, 'hjälpen förklarar ett steg');
+  assert.match(text, /Klar — till träffarna/, 'och hur det görs');
   assert.ok(doc.querySelectorAll('#app .dokument h2').length >= 5, 'flera avsnitt');
   assert.ok(!text.includes('*'), 'ingen markdown ska läcka ut som asterisker');
   assert.ok(doc.querySelector('#app .dokument i'), 'kursiv stil ska renderas');
@@ -1927,7 +1930,7 @@ test('standardläget är tider först', () => {
 
 test('samlat arbetssätt: tid och poäng på samma skärm, hela linjen', () => {
   klicka('Appinställningar');
-  klicka('Tid och poäng samtidigt');
+  klicka('I ett steg');
   assert.equal(win.localStorage.getItem('fm-kompetensprov-arbetssatt'), 'samlat');
   hem();
   omgangMedAlla();
@@ -1951,7 +1954,7 @@ test('samlat arbetssätt: tid och poäng på samma skärm, hela linjen', () => {
 
 test('samlat arbetssätt: en ogiltig tid går inte att registrera', () => {
   klicka('Appinställningar');
-  klicka('Tid och poäng samtidigt');
+  klicka('I ett steg');
   hem();
   omgangMedAlla();
   nastaIListan();
@@ -1975,7 +1978,7 @@ test('arbetssättet går att byta mitt i en omgång utan att tappa försöket', 
   const antal = lagret().resultat.length;
   hem();
   klicka('Appinställningar');
-  klicka('Tid och poäng samtidigt');
+  klicka('I ett steg');
   hem();
   doc.querySelector('[data-oppna]').click();
   rader()[0].click();
@@ -1988,23 +1991,26 @@ test('verktygen ligger överst i vallistan, före skyttarna', () => {
   omgangMedAlla();
   const verktyg = doc.querySelector('#app .verktyg');
   assert.equal(doc.querySelector('#app').firstElementChild, verktyg);
-  for (const text of ['+ Lägg till skytt', 'Ändra ordning', 'Registrering: tider först']) {
-    assert.ok(knapp(text, verktyg), text);
-  }
+  for (const text of ['+ Lägg till skytt', 'Ändra ordning']) assert.ok(knapp(text, verktyg), text);
+  const val = doc.querySelector('#app .regval');
+  assert.match(val.textContent, /Registrera:/);
+  assert.equal(knapp('I två steg', val).getAttribute('aria-pressed'), 'true');
+  assert.equal(knapp('I ett steg', val).getAttribute('aria-pressed'), 'false');
   klicka('Ändra ordning');
   assert.equal(doc.querySelector('.verktyg'), null, 'flyttläget har bara handtagen');
+  assert.equal(doc.querySelector('.regval'), null);
 });
 
 test('registreringssättet byts direkt från vallistan och tillbaka', () => {
   omgangMedAlla();
-  klicka('Registrering: tider först');
+  klicka('I ett steg');
   assert.equal(win.localStorage.getItem('fm-kompetensprov-arbetssatt'), 'samlat');
   assert.equal(doc.querySelector('.lagesvaljare'), null);
-  assert.ok(knapp('Registrering: samtidigt'));
+  assert.equal(knapp('I ett steg').getAttribute('aria-pressed'), 'true');
   rader()[0].click();
   assert.match(doc.querySelector('#underrubrik').textContent, /^Tid och poäng/);
   klicka('Tillbaka till listan');
-  klicka('Registrering: samtidigt');
+  klicka('I två steg');
   assert.equal(win.localStorage.getItem('fm-kompetensprov-arbetssatt'), 'svep');
   assert.ok(doc.querySelector('.lagesvaljare [data-lage="tid"][aria-pressed="true"]'));
 });

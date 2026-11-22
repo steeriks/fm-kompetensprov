@@ -327,14 +327,19 @@ function ritaOmgang() {
   const tomText = filter ? 'Ingen skytt i det här urvalet.' : 'Inga deltagare i omgången.';
 
   // Verktygen ligger överst: i en lång lista ska de nås utan att skrolla förbi
-  // hela linjen. Knappen för registreringen visar vad som gäller nu, och ett
-  // tryck byter — samma val som under Appinställningar.
+  // hela linjen. Registreringen visar båda sätten med det aktiva markerat: en
+  // enda växlingsknapp gick inte att läsa som vare sig läge eller handling.
   const verktyg = vy.flyttlage ? '' : `<div class="knapprad verktyg">
-      <button class="knapp liten smal" data-lagg-till="1">+ Lägg till skytt</button>
+      <button class="knapp liten" data-lagg-till="1">+ Lägg till skytt</button>
       ${o.deltagare.length > 1
-        ? '<button class="knapp liten smal" data-flyttlage="pa">Ändra ordning</button>' : ''}
-      <button class="knapp liten smal" data-arbetssatt="${samlat ? 'svep' : 'samlat'}"
-        >Registrering: ${samlat ? 'samtidigt' : 'tider först'}</button>
+        ? '<button class="knapp liten" data-flyttlage="pa">Ändra ordning</button>' : ''}
+    </div>
+    <div class="regval" role="group" aria-labelledby="regvalrubrik">
+      <span class="rubrik" id="regvalrubrik">Registrera:</span>
+      <div class="val">
+        <button data-arbetssatt="svep" aria-pressed="${!samlat}">I två steg</button>
+        <button data-arbetssatt="samlat" aria-pressed="${samlat}">I ett steg</button>
+      </div>
     </div>`;
 
   app.innerHTML = verktyg + filterrad + (rader || `<p class="tom">${tomText}</p>`)
@@ -1061,12 +1066,12 @@ function ritaInstallningar() {
          </div>`}
     <h2>Arbetssätt</h2>
     <div class="lagesvaljare textval">
-      <button data-arbetssatt="svep" aria-pressed="${!arSamlat()}">Tider först, sedan poäng</button>
-      <button data-arbetssatt="samlat" aria-pressed="${arSamlat()}">Tid och poäng samtidigt</button>
+      <button data-arbetssatt="svep" aria-pressed="${!arSamlat()}">I två steg</button>
+      <button data-arbetssatt="samlat" aria-pressed="${arSamlat()}">I ett steg</button>
     </div>
     <p class="dampad liten">${arSamlat()
-      ? 'Varje skytt görs klar på en skärm, med tiden överst och träffarna under.'
-      : 'Alla tider tas vid linjen, och poängen när gruppen gått fram till tavlorna.'}
+      ? '<b>I ett steg:</b> tid och poäng för en skytt i taget, på samma skärm.'
+      : '<b>I två steg:</b> alla tider först, sedan alla poäng vid tavlorna.'}
     Gäller den här telefonen och går att byta mitt i en omgång.</p>
     <h2>Säkerhetskopia</h2>
     <p class="dampad liten">En fil med allt. Läs in den på en annan telefon, eller
@@ -1524,12 +1529,13 @@ document.addEventListener('click', async (ev) => {
 
   // --- register och inställningar ---
   if (d.arbetssatt) {
+    if (d.arbetssatt === lager.arbetssatt()) return;     // redan valt
     lager.sattArbetssatt(d.arbetssatt);
     if (vy.namn === 'omgang') {
       // Tillbaka till svepen ska landa i det läge som har något kvar att göra.
       vy.lage = lampligtLage(lager.omgang(vy.omgangId), vy.lage);
       flash(d.arbetssatt === 'samlat'
-        ? 'Tid och poäng registreras samtidigt.' : 'Tiderna först, sedan poängen.');
+        ? 'I ett steg: tid och poäng på samma skärm.' : 'I två steg: alla tider, sedan poängen.');
     }
     return ritaPaPlats();
   }

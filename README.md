@@ -62,8 +62,9 @@ och zontabellen.
   hamnar på tredje raden får nummer 3.
 - **Filtrera:** när första resultatet är inne visas *Alla · Godkända · Underkända · Ej klara*
   över listan. Godkänd på något försök räcker, och tavelnumren ändras inte.
-- **Tid och poäng på samma skärm:** tryck *Registrering* överst i listan, eller välj
-  *Tid och poäng samtidigt* under Appinställningar.
+- **Registrera i två steg eller ett:** välj överst i listan eller under Appinställningar.
+  *I två steg* tar alla tider först och alla poäng sedan. *I ett steg* gör en skytt i taget
+  klar, med tid och poäng på samma skärm.
   Valet gäller telefonen och går att ändra mitt i en omgång.
 - **Omtag:** appen sätter ingen gräns för antalet försök. Ett nytt försök startas alltid med flit, med
   *+ Nytt försök* på raden; ett tryck på en färdig skytt gör ingenting.
