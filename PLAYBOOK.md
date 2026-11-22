@@ -183,8 +183,9 @@ nästa steg, utan att man behöver peta på växeln själv.
 inne. Under den står vem som står på tur, och när linjen är klar lämnar knappen över till
 poängsteget av sig själv.
 
-**Det samlade arbetssättet är ett val, inte en ersättning.** Under Appinställningar kan
-telefonen ställas på *Tid och poäng samtidigt*. Inställningen ligger under en egen nyckel,
+**Det samlade arbetssättet är ett val, inte en ersättning.** Under Appinställningar, eller
+med knappen *Registrering* i vallistans verktygsrad, kan telefonen ställas på *Tid och poäng
+samtidigt*. Inställningen ligger under en egen nyckel,
 `fm-kompetensprov-arbetssatt`, så den följer inte med i säkerhetskopian. Båda sätten använder
 samma öppna försök, och därför går det att byta mitt i en omgång. I det samlade läget är
 `behoverLage(…, 'samlat')` sant för den som har ett öppet försök eller aldrig skjutit, och
@@ -380,7 +381,7 @@ inte i bygget — filerna ska gå att läsa som de är i `src/`. `src/hjalp.md` 
 
 ```bash
 python3 bygg.py     # måste köras först — proven kör mot docs/
-npm test            # 142 prov: regler, export, import, hela flödet, spärrarna mot utgående trafik
+npm test            # 144 prov: regler, export, import, hela flödet, spärrarna mot utgående trafik
 ```
 
 **Bygg före du provar.** Det här är den enklaste fällan i arkivet och den värsta, eftersom

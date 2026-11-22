@@ -249,6 +249,11 @@ label.falt input.saknas { border-color: var(--underkand); }
 .filterrad .antal { display: block; font-variant-numeric: tabular-nums; }
 .filterrad button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
 
+/* Verktygsraden överst i vallistan. Tre knappar på en telefonbredd, så texten
+   får brytas på två rader i stället för att kapas. */
+.knapprad.verktyg { margin: 0 0 0.6rem; }
+.knapprad.verktyg .knapp { flex: 1 1 0; min-width: 0; }
+
 /* -------------------------------------------------------- sifferknappsats */
 
 .tidvisning {

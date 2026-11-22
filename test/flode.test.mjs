@@ -1983,3 +1983,28 @@ test('arbetssättet går att byta mitt i en omgång utan att tappa försöket', 
   assert.ok(doc.querySelector('.tidpanel').hidden, 'tid finns, så zonerna ligger överst');
   assert.equal(lagret().resultat.length, antal, 'inget nytt försök skapas');
 });
+
+test('verktygen ligger överst i vallistan, före skyttarna', () => {
+  omgangMedAlla();
+  const verktyg = doc.querySelector('#app .verktyg');
+  assert.equal(doc.querySelector('#app').firstElementChild, verktyg);
+  for (const text of ['+ Lägg till skytt', 'Ändra ordning', 'Registrering: tider först']) {
+    assert.ok(knapp(text, verktyg), text);
+  }
+  klicka('Ändra ordning');
+  assert.equal(doc.querySelector('.verktyg'), null, 'flyttläget har bara handtagen');
+});
+
+test('registreringssättet byts direkt från vallistan och tillbaka', () => {
+  omgangMedAlla();
+  klicka('Registrering: tider först');
+  assert.equal(win.localStorage.getItem('fm-kompetensprov-arbetssatt'), 'samlat');
+  assert.equal(doc.querySelector('.lagesvaljare'), null);
+  assert.ok(knapp('Registrering: samtidigt'));
+  rader()[0].click();
+  assert.match(doc.querySelector('#underrubrik').textContent, /^Tid och poäng/);
+  klicka('Tillbaka till listan');
+  klicka('Registrering: samtidigt');
+  assert.equal(win.localStorage.getItem('fm-kompetensprov-arbetssatt'), 'svep');
+  assert.ok(doc.querySelector('.lagesvaljare [data-lage="tid"][aria-pressed="true"]'));
+});

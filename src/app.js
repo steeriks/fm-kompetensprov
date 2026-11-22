@@ -326,16 +326,22 @@ function ritaOmgang() {
       </div>` : '';
   const tomText = filter ? 'Ingen skytt i det här urvalet.' : 'Inga deltagare i omgången.';
 
-  app.innerHTML = filterrad + (rader || `<p class="tom">${tomText}</p>`)
+  // Verktygen ligger överst: i en lång lista ska de nås utan att skrolla förbi
+  // hela linjen. Knappen för registreringen visar vad som gäller nu, och ett
+  // tryck byter — samma val som under Appinställningar.
+  const verktyg = vy.flyttlage ? '' : `<div class="knapprad verktyg">
+      <button class="knapp liten smal" data-lagg-till="1">+ Lägg till skytt</button>
+      ${o.deltagare.length > 1
+        ? '<button class="knapp liten smal" data-flyttlage="pa">Ändra ordning</button>' : ''}
+      <button class="knapp liten smal" data-arbetssatt="${samlat ? 'svep' : 'samlat'}"
+        >Registrering: ${samlat ? 'samtidigt' : 'tider först'}</button>
+    </div>`;
+
+  app.innerHTML = verktyg + filterrad + (rader || `<p class="tom">${tomText}</p>`)
     + (vy.flyttlage
       ? '<p class="dampad liten">Dra i ☰ för att flytta en skytt till en annan tavla.</p>'
       : '<p class="dampad liten">Siffran före skyttens namn motsvarar skyttens '
-        + 'tavelnummer.</p>'
-        + '<div class="knapprad"><button class="knapp liten" data-lagg-till="1">'
-        + '+ Lägg till skytt</button>'
-        + (o.deltagare.length > 1
-          ? '<button class="knapp liten" data-flyttlage="pa">Ändra ordning</button>' : '')
-        + '</div>');
+        + 'tavelnummer.</p>');
   if (vy.flyttlage) {
     bottenrad.innerHTML =
       '<button class="knapp primar" data-flyttlage="av">Klar med ordningen</button>';
@@ -1519,6 +1525,12 @@ document.addEventListener('click', async (ev) => {
   // --- register och inställningar ---
   if (d.arbetssatt) {
     lager.sattArbetssatt(d.arbetssatt);
+    if (vy.namn === 'omgang') {
+      // Tillbaka till svepen ska landa i det läge som har något kvar att göra.
+      vy.lage = lampligtLage(lager.omgang(vy.omgangId), vy.lage);
+      flash(d.arbetssatt === 'samlat'
+        ? 'Tid och poäng registreras samtidigt.' : 'Tiderna först, sedan poängen.');
+    }
     return ritaPaPlats();
   }
   if (d.raderaAllaSkyttar) {
