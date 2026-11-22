@@ -28,7 +28,7 @@ Installerad startar appen som vilken app som helst och **fungerar utan täckning
 
 ## Uppdateringar
 
-Appen letar efter en ny version när du startar den. Finns en ny visas raden *Ny version finns — tryck för att uppdatera* i nederkant. Appen laddar aldrig om av sig själv, så du väljer när det passar. Allt du knappat in ligger kvar, men du hamnar på startsidan.
+Appen letar efter en ny version när du startar den. Finns en ny visas raden *Ny version finns — tryck för att uppdatera* i nederkant. Appen laddar aldrig om av sig själv, så du väljer när det passar. Allt du knappat in ligger kvar, utom en rättning som inte sparats, och du hamnar på startsidan.
 
 ## Var dina uppgifter finns
 

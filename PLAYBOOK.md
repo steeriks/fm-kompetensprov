@@ -205,6 +205,16 @@ Först *Spara ändringen* tar bort `fore`. Försöket behåller nummer och regis
 protokollet visar med flit ingen markering. Ändra-knappen saknas medan skytten har ett annat
 öppet försök, eftersom `pagaende()` bara kan peka ut ett.
 
+**Kvoten jämförs exakt, visas avrundad.** `poangkvot()` räknar i hundradels sekunder och
+heltal. Kravet är ett minimum, så 0,9951 är inte 1,00 (beslut av Stefan 2026-11-22). Visningen
+är vanlig avrundning för att stämma med miniräknaren och skjutboken, utom precis under kravet,
+där den stannar en hundradel under. Bedömningen görs vid varje visning, så äldre försök på
+gränsen kan ändra utfall. Pistolen räknar 4 + 2, inte de sex bästa totalt.
+
+**Korta tider och tomma försök kräver bekräftelse.** Under `KORT_TID` (4 s) frågar appen om
+tiden stämmer, eftersom 30 utan komma betyder 0,30 s. Det är en fråga och ingen regel, och
+svaret minns per värde i `kortTidOk`. Registrering med noll träffar frågar också.
+
 ## Tiden knappas rakt av
 
 `tolkadTid()` läser knappsatsens buffert. Utan komma är de två sista siffrorna hundradelar
@@ -301,6 +311,18 @@ läser den. Ett enda mått hade blivit cirkulärt: beskedet hade svävat sin ege
 `#uppdatering` ligger av samma skäl **utanför** `#bottenrad` — som barn hade det raderats av
 nästa `bottenrad.innerHTML = …`, alltså vid första vybyte.
 
+## Säkerhetskopian är inte betrodd data
+
+`lasInSakerhetskopia()` granskar hela filen i `granskadKopia()` före första skrivningen och
+bygger nya poster av kända fält. Id:n måste matcha `GILTIGT_ID`, proven måste finnas och tider
+och träffar ha rätt typ. Ett fel avvisar hela filen. Finns omgången redan läggs nya deltagare
+sist, annars faller deras resultat ur protokollet.
+
+Tre lager till bakom granskningen: alla id:n går genom `esc()` i markup, CSP:n har
+`default-src 'none'` och en `script-src`-hash som `bygg.py` räknar ut, och `rita()` har en
+felgräns (`ritaFel`) så att skadade uppgifter inte ger en tom skärm utan väg till kopian.
+Hashen tillåter bara det inbakade skriptet och stoppar `onerror` och andra inline-händelser.
+
 ## Fällor som redan kostat tid
 
 - **Långtryck markerar text om man inte stoppar det.** Rader som raderas och zonknappar hålls in
@@ -313,6 +335,11 @@ nästa `bottenrad.innerHTML = …`, alltså vid första vybyte.
   och göms med `hidden` — därför finns `[hidden] { display: none !important }` överst i
   `style.css`. Utan den står de kvar synliga i varje vy som gömt dem — vilket hemknappen
   gjorde på startsidan ända tills pilarna kom och tvingade fram rättningen.
+- **Ett skrivfel i lagringen är tyst om ingen lyssnar.** `spara()` meddelar `narSparat`, och
+  appen visar `#lagringsfel` tills en sparning lyckats. Två flikar hålls i takt med
+  `storage`-händelsen och `lasOm()`, annars skriver den ena över den andras registreringar.
+- **En tidsbuffert utan komma är hundradelar.** Backsteg över kommat tar därför bort siffran
+  före och behåller kommat, så att `30,` blir `3,` och inte `30`, som vore 0,30 s.
 - **`rita()` fick inte städa bort flash-meddelanden.** Nästan varje bekräftelse följs av en
   omritning, så meddelandet rensades av just den omritning det skulle överleva och syntes
   aldrig. Flashen tar bort sig själv efter sina sekunder i stället.
@@ -390,7 +417,7 @@ inte i bygget — filerna ska gå att läsa som de är i `src/`. `src/hjalp.md` 
 
 ```bash
 python3 bygg.py     # måste köras först — proven kör mot docs/
-npm test            # 152 prov: regler, export, import, hela flödet, spärrarna mot utgående trafik
+npm test            # 184 prov: regler, export, import, hela flödet, spärrarna mot utgående trafik
 ```
 
 **Bygg före du provar.** Det här är den enklaste fällan i arkivet och den värsta, eftersom

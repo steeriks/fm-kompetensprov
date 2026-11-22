@@ -153,8 +153,9 @@ går att räkna efter för hand.
 
 Osäker eller felaktig vapenhantering underkänner provet — kryssrutan finns på poängskärmen.
 
-**Kvoten avrundas till två decimaler innan den jämförs med kravet.** Det som visas är det
-som bedöms; en app som visar 1,00 och säger underkänt vore obegriplig i fält.
+**Kvoten jämförs exakt med kravet.** 26 poäng på pistol kräver alltså högst 13,00 s, och
+13,01 s är underkänt. Kvoten visas avrundad till två decimaler, så att den stämmer med
+miniräknaren, men aldrig så att den ser ut att nå ett krav som inte är nått.
 
 ## Var uppgifterna finns
 

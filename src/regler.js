@@ -164,9 +164,30 @@ export function zonerFor(provKod) {
   return ZONORDNING.filter((z) => grupper.some((g) => g.zoner.includes(z)));
 }
 
-/** Avrundning till två decimaler — samma tal som visas är det som bedöms. */
-export function tvaDecimaler(n) {
-  return Math.round(n * 100) / 100;
+/**
+ * Poängkvoten och om den når kravet. Räknas i heltal (hundradels sekunder), så
+ * att inget flyttalsfel kan flytta en skytt över gränsen.
+ *
+ * Kravet är ett minimum och jämförs mot den EXAKTA kvoten: 0,9951 är inte 1,00.
+ * Visningen avrundas som vanligt till två decimaler, så att talet stämmer med
+ * miniräknaren när det förs in i skjutboken. Enda undantaget är precis under
+ * kravet, där kvoten visas en hundradel under det: skärmen får aldrig säga
+ * 1,00 om en skytt som är underkänd för att kvoten inte räckte.
+ */
+export function poangkvot(poang, tid, krav) {
+  const hundradelar = Math.round(tid * 100);
+  if (!(hundradelar > 0)) return { pk: null, nar: false };
+  const kravH = Math.round(krav * 100);
+  const nar = poang * 10000 >= kravH * hundradelar;
+  const avrundad = Math.floor((2 * poang * 10000 + hundradelar) / (2 * hundradelar));
+  return { pk: (nar ? avrundad : Math.min(avrundad, kravH - 1)) / 100, nar };
+}
+
+/** Dagens datum i telefonens egen tidszon, som ÅÅÅÅ-MM-DD. toISOString() ger
+ *  UTC och hade blivit gårdagens datum mellan midnatt och 02:00 svensk tid. */
+export function lokaltDatum(d = new Date()) {
+  const tva = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${tva(d.getMonth() + 1)}-${tva(d.getDate())}`;
 }
 
 /**
@@ -213,9 +234,8 @@ export function raknadeTraffar(provKod, traffar = {}) {
  *      förts in ännu.
  *
  * Returnerar poäng, poängkvot, godkänt och en lista brister i klartext. Kvoten
- * jämförs mot kravet EFTER avrundning till två decimaler: det är talet som står
- * på skärmen och i protokollet, och en app som visar 1,00 och säger underkänt
- * vore obegriplig i fält.
+ * jämförs exakt mot kravet (se poangkvot), och talet på skärmen och i
+ * protokollet visar aldrig att kravet är nått när det inte är det.
  */
 export function bedom(provKod, traffar = {}, tid = null, vapenhanteringUnderkand = false) {
   const prov = PROV[provKod];
@@ -244,10 +264,10 @@ export function bedom(provKod, traffar = {}, tid = null, vapenhanteringUnderkand
     };
   });
 
-  const pk = tid > 0 ? tvaDecimaler(poang / tid) : null;
+  const { pk, nar } = tid > 0 ? poangkvot(poang, tid, prov.pkKrav) : { pk: null, nar: false };
   if (tid === null || tid === undefined || tid === '') brister.push('Tid saknas');
-  else if (!(tid > 0)) brister.push('Ogiltig tid');
-  else if (pk < prov.pkKrav) brister.push(`Poängkvot ${komma(pk)} — kravet är ${komma(prov.pkKrav)}`);
+  else if (!(tid > 0) || pk === null) brister.push('Ogiltig tid');
+  else if (!nar) brister.push(`Poängkvot ${komma(pk)} — kravet är ${komma(prov.pkKrav)}`);
   if (vapenhanteringUnderkand) brister.push('Underkänd vapenhantering');
 
   return {

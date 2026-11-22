@@ -14,11 +14,12 @@
      någon gång slutar göra det ska webbläsaren stoppa POST:en i stället för
      att skicka namn och Fmid till en okänd adress.
 
-     Medvetet INTE default-src 'none': appen ska också fungera öppnad som lös
-     fil (file://), där 'self' inte matchar likadant, och en för snäv policy
-     hade tagit ikonen och manifestet med sig. Direktiven här är valda för att
-     enbart stänga vägar ut. -->
-<meta http-equiv="Content-Security-Policy" content="connect-src 'none'; form-action 'none'; object-src 'none'; base-uri 'none'; frame-src 'none'">
+     default-src 'none' stänger allt som inte räknas upp, även bilder, skript
+     och stilmallar från andra värdar, som annars bär data ut i en adress.
+     bygg.py byter skriptkällan mot en hash av det inbakade skriptet. Därmed
+     körs bara appens egen kod, och aldrig ett onerror-attribut i inläst data.
+     Öppnad som lös fil gäller hashen och data:-ikonen på samma sätt. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; manifest-src 'self'; worker-src 'self'; connect-src 'none'; form-action 'none'; object-src 'none'; base-uri 'none'; frame-src 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>FM kompetensprov</title>
 <!-- Versionen skrivs bara i package.json; bygg.py byter innehållet här mot
@@ -69,6 +70,7 @@
        "vilken version kör du?" ställs oftast när något redan krånglar. -->
   <span class="utgava" id="utgava"></span>
 </header>
+<div class="lagringsfel" id="lagringsfel" role="alert" hidden></div>
 <main id="app"></main>
 <!-- Texterna bor som .md-filer i src/ och bakas in hit av bygg.py, som läser
      data-fil. Att hämta dem vid körning hade brutit löftet om en app utan

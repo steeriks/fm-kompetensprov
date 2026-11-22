@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { bedom, zonerFor, taltolk, komma, PROV } from '../src/regler.js';
+import { bedom, zonerFor, taltolk, komma, PROV, poangkvot, lokaltDatum } from '../src/regler.js';
 
 // --- Automatkarbin: nio bästa träffarna av alla ---------------------------
 
@@ -202,4 +202,33 @@ test('pistolens målytor räknar sina bättringsskott var för sig', () => {
   assert.equal(ah.poang, 10);
   assert.equal(ah.over, 1);
   assert.deepEqual(b.brister, []);
+});
+
+test('kvoten jämförs exakt mot kravet och visas aldrig som uppnådd när den inte är det', () => {
+  const pa = bedom('pist', { B: 4, A: 2 }, 13);
+  assert.equal(pa.pk, 2);
+  assert.equal(pa.godkand, true);
+  const under = bedom('pist', { B: 4, A: 2 }, 13.01);
+  assert.equal(under.godkand, false, '13,01 s räcker inte för 26 p');
+  assert.equal(under.pk, 1.99, 'visningen får inte säga 2,00');
+  assert.match(under.brister.join(), /1,99/);
+  assert.equal(bedom('pist', { B: 4, A: 2 }, 13.03).godkand, false);
+  assert.equal(bedom('ak', { A: 9 }, 45).godkand, true);
+  assert.equal(bedom('ak', { A: 9 }, 45.01).godkand, false);
+  assert.equal(bedom('ak', { C: 9 }, 27.13).pk, 0.99);
+  assert.equal(bedom('ak30', { A: 9 }, 34.61).godkand, true);
+  assert.equal(bedom('ak30', { A: 9 }, 34.62).godkand, false);
+});
+
+test('kvoten avrundas som på en miniräknare, utan flyttalsfel', () => {
+  assert.equal(bedom('pist', { B: 4, A: 2 }, 12).pk, 2.17);
+  assert.equal(bedom('ak', { B: 5, C: 3, H: 1 }, 40).pk, 0.75);
+  // Exakt 0,575 och 3,125 ska avrundas uppåt trots att de saknar exakt binär form.
+  assert.equal(poangkvot(23, 40, 0.01).pk, 0.58);
+  assert.equal(poangkvot(7, 2.24, 1).pk, 3.13);
+});
+
+test('dagens datum följer telefonens tidszon', () => {
+  assert.equal(lokaltDatum(new Date(2026, 7, 12, 0, 30)), '2026-08-12');
+  assert.equal(lokaltDatum(new Date(2026, 0, 3, 23, 59)), '2026-01-03');
 });

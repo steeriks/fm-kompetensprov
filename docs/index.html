@@ -14,17 +14,18 @@
      någon gång slutar göra det ska webbläsaren stoppa POST:en i stället för
      att skicka namn och Fmid till en okänd adress.
 
-     Medvetet INTE default-src 'none': appen ska också fungera öppnad som lös
-     fil (file://), där 'self' inte matchar likadant, och en för snäv policy
-     hade tagit ikonen och manifestet med sig. Direktiven här är valda för att
-     enbart stänga vägar ut. -->
-<meta http-equiv="Content-Security-Policy" content="connect-src 'none'; form-action 'none'; object-src 'none'; base-uri 'none'; frame-src 'none'">
+     default-src 'none' stänger allt som inte räknas upp, även bilder, skript
+     och stilmallar från andra värdar, som annars bär data ut i en adress.
+     bygg.py byter skriptkällan mot en hash av det inbakade skriptet. Därmed
+     körs bara appens egen kod, och aldrig ett onerror-attribut i inläst data.
+     Öppnad som lös fil gäller hashen och data:-ikonen på samma sätt. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-RwQommxicqjVTMEQtq+IdLkcEb+kgklbYREZcZhtHi8='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; manifest-src 'self'; worker-src 'self'; connect-src 'none'; form-action 'none'; object-src 'none'; base-uri 'none'; frame-src 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>FM kompetensprov</title>
 <!-- Versionen skrivs bara i package.json; bygg.py byter innehållet här mot
      numret därifrån, precis som cachenamnet i sw.js. Lämna "utveckling"
      stående i src/ — den som serverar src/ direkt kör inte en utgåva. -->
-<meta name="version" content="1.4.0">
+<meta name="version" content="1.4.1">
 <meta name="description" content="Instruktörsverktyg för Försvarsmaktens kompetensprov, pistol och automatkarbin.">
 <meta name="theme-color" content="#0b0d0c">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -423,12 +424,22 @@ label.falt input.saknas { border-color: var(--underkand); }
 }
 .uppdatering:active { transform: scale(0.99); }
 
+/* Beskedet ligger under rubriken och släpper igenom tryck. Det stod förut över
+   zonerna och huvudknappen, och ett tryck på det gav ingen träff alls. */
 .flash {
-  position: fixed; left: 50%; transform: translateX(-50%);
-  bottom: calc(9rem + env(safe-area-inset-bottom)); z-index: 40;
+  position: fixed; left: 0.9rem; right: 0.9rem; z-index: 40;
+  top: calc(4.7rem + env(safe-area-inset-top));
+  max-width: 44rem; margin: 0 auto; pointer-events: none;
   background: var(--kort-ljus); border: 1px solid var(--accent);
-  color: var(--ink); padding: 0.7rem 1rem; border-radius: var(--radie);
-  max-width: 90%; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
+  color: var(--ink); padding: 0.6rem 0.9rem; border-radius: var(--radie);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
+}
+
+/* Lagringen fallerar: står kvar tills en sparning lyckats igen. */
+.lagringsfel {
+  position: sticky; top: calc(4.6rem + env(safe-area-inset-top)); z-index: 30;
+  padding: 0.6rem 0.9rem; font-size: 0.9rem; font-weight: 700;
+  background: var(--underkand); color: var(--accent-ink);
 }
 .varningsruta {
   background: rgba(227, 195, 60, 0.1); border: 1px solid var(--varning);
@@ -546,6 +557,7 @@ label.falt input.saknas { border-color: var(--underkand); }
        "vilken version kör du?" ställs oftast när något redan krånglar. -->
   <span class="utgava" id="utgava"></span>
 </header>
+<div class="lagringsfel" id="lagringsfel" role="alert" hidden></div>
 <main id="app"></main>
 <!-- Texterna bor som .md-filer i src/ och bakas in hit av bygg.py, som läser
      data-fil. Att hämta dem vid körning hade brutit löftet om en app utan
@@ -610,13 +622,13 @@ Växeln **TID | POÄNG** visar hur många som väntar i varje steg.
 - **3.** Tryck en gång per träff på zonerna.
 - **4.** Tryck *Registrera & nästa skytt*.
 
-**Tiden** knappas rakt av som den står på timern: **555** blir 5,55 och **6667** blir 66,67.
+**Tiden** knappas rakt av som den står på timern: **555** blir 5,55 och **6667** blir 66,67. Under 4 sekunder frågar appen om tiden stämmer, eftersom **30** utan komma betyder 0,30 s.
 
-**Träffarna** knappas in som de sitter i tavlan, **bättringsskotten med**. Appen väljer ut de bästa. Räknaren visar till exempel *4 av 4 — klart*, eller *(6 av 4) — de 4 bästa räknas* när fler träffar är inknappade än som räknas. Poängkvot och utfall räknas medan du knappar.
+**Träffarna** knappas in som de sitter i tavlan, **bättringsskotten med**. Appen väljer ut de bästa. Räknaren visar till exempel *4 av 4 — klart*, eller *(6 av 4) — de 4 bästa räknas* när fler träffar är inknappade än som räknas. Poängkvot och utfall räknas medan du knappar. Kvoten jämförs exakt med kravet, så 26 poäng på pistol kräver högst 13,00 s.
 
 **Vid osäker eller felaktig vapenhantering:** kryssa i rutan på poängskärmen. Försöket blir då underkänt oavsett resultat.
 
-**Registrera** låser försöket. Efter sista skytten visar appen hur många som blev godkända.
+**Registrera** låser försöket. Är inga träffar inknappade frågar appen först. Efter sista skytten visar appen hur många som blev godkända.
 
 ## Hitta i resultatlistan
 
@@ -652,11 +664,13 @@ Kolumnerna är tavelnummer, Fmid/Anstnr, namn, förband och försök, följda av
 
 ## Säkerhetskopia
 
-Allt finns **bara i den här telefonen**. Under **Appinställningar** sparar *Spara kopia* en fil med allt, och *Läs in kopia* läser tillbaka den. Det är också så du flyttar registret till en annan telefon. Inläsning lägger till och skriver aldrig över det som redan finns.
+Allt finns **bara i den här telefonen**. Under **Appinställningar** sparar *Spara kopia* en fil med allt, och *Läs in kopia* läser tillbaka den. Det är också så du flyttar registret till en annan telefon. Inläsning lägger till och skriver aldrig över det som redan finns. Appen granskar filen först, och en felaktig fil avvisas utan att något ändras. **Läs bara in kopior från någon du litar på.**
+
+Visas en **röd rad** högst upp gick det inte att spara i telefonen. Spara en kopia direkt.
 
 ## Ny version
 
-En **grön rad i nederkant** betyder att en ny version är klar. Den stör ingenting och kan stå kvar hela omgången, eftersom appen aldrig laddar om av sig själv. Ett tryck på raden uppdaterar appen. Allt inknappat ligger kvar, men du hamnar på startsidan, så vänta gärna tills gruppen är klar.
+En **grön rad i nederkant** betyder att en ny version är klar. Den stör ingenting och kan stå kvar hela omgången, eftersom appen aldrig laddar om av sig själv. Ett tryck på raden uppdaterar appen. Allt inknappat ligger kvar, utom en rättning som inte sparats, och du hamnar på startsidan, så vänta gärna tills gruppen är klar.
 
 ## Regler och krav
 
@@ -693,7 +707,7 @@ Installerad startar appen som vilken app som helst och **fungerar utan täckning
 
 ## Uppdateringar
 
-Appen letar efter en ny version när du startar den. Finns en ny visas raden *Ny version finns — tryck för att uppdatera* i nederkant. Appen laddar aldrig om av sig själv, så du väljer när det passar. Allt du knappat in ligger kvar, men du hamnar på startsidan.
+Appen letar efter en ny version när du startar den. Finns en ny visas raden *Ny version finns — tryck för att uppdatera* i nederkant. Appen laddar aldrig om av sig själv, så du väljer när det passar. Allt du knappat in ligger kvar, utom en rättning som inte sparats, och du hamnar på startsidan.
 
 ## Var dina uppgifter finns
 
@@ -900,9 +914,30 @@ function zonerFor(provKod) {
   return ZONORDNING.filter((z) => grupper.some((g) => g.zoner.includes(z)));
 }
 
-/** Avrundning till två decimaler — samma tal som visas är det som bedöms. */
-function tvaDecimaler(n) {
-  return Math.round(n * 100) / 100;
+/**
+ * Poängkvoten och om den når kravet. Räknas i heltal (hundradels sekunder), så
+ * att inget flyttalsfel kan flytta en skytt över gränsen.
+ *
+ * Kravet är ett minimum och jämförs mot den EXAKTA kvoten: 0,9951 är inte 1,00.
+ * Visningen avrundas som vanligt till två decimaler, så att talet stämmer med
+ * miniräknaren när det förs in i skjutboken. Enda undantaget är precis under
+ * kravet, där kvoten visas en hundradel under det: skärmen får aldrig säga
+ * 1,00 om en skytt som är underkänd för att kvoten inte räckte.
+ */
+function poangkvot(poang, tid, krav) {
+  const hundradelar = Math.round(tid * 100);
+  if (!(hundradelar > 0)) return { pk: null, nar: false };
+  const kravH = Math.round(krav * 100);
+  const nar = poang * 10000 >= kravH * hundradelar;
+  const avrundad = Math.floor((2 * poang * 10000 + hundradelar) / (2 * hundradelar));
+  return { pk: (nar ? avrundad : Math.min(avrundad, kravH - 1)) / 100, nar };
+}
+
+/** Dagens datum i telefonens egen tidszon, som ÅÅÅÅ-MM-DD. toISOString() ger
+ *  UTC och hade blivit gårdagens datum mellan midnatt och 02:00 svensk tid. */
+function lokaltDatum(d = new Date()) {
+  const tva = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${tva(d.getMonth() + 1)}-${tva(d.getDate())}`;
 }
 
 /**
@@ -949,9 +984,8 @@ function raknadeTraffar(provKod, traffar = {}) {
  *      förts in ännu.
  *
  * Returnerar poäng, poängkvot, godkänt och en lista brister i klartext. Kvoten
- * jämförs mot kravet EFTER avrundning till två decimaler: det är talet som står
- * på skärmen och i protokollet, och en app som visar 1,00 och säger underkänt
- * vore obegriplig i fält.
+ * jämförs exakt mot kravet (se poangkvot), och talet på skärmen och i
+ * protokollet visar aldrig att kravet är nått när det inte är det.
  */
 function bedom(provKod, traffar = {}, tid = null, vapenhanteringUnderkand = false) {
   const prov = PROV[provKod];
@@ -980,10 +1014,10 @@ function bedom(provKod, traffar = {}, tid = null, vapenhanteringUnderkand = fals
     };
   });
 
-  const pk = tid > 0 ? tvaDecimaler(poang / tid) : null;
+  const { pk, nar } = tid > 0 ? poangkvot(poang, tid, prov.pkKrav) : { pk: null, nar: false };
   if (tid === null || tid === undefined || tid === '') brister.push('Tid saknas');
-  else if (!(tid > 0)) brister.push('Ogiltig tid');
-  else if (pk < prov.pkKrav) brister.push(`Poängkvot ${komma(pk)} — kravet är ${komma(prov.pkKrav)}`);
+  else if (!(tid > 0) || pk === null) brister.push('Ogiltig tid');
+  else if (!nar) brister.push(`Poängkvot ${komma(pk)} — kravet är ${komma(prov.pkKrav)}`);
   if (vapenhanteringUnderkand) brister.push('Underkänd vapenhantering');
 
   return {
@@ -1022,6 +1056,7 @@ function taltolk(text) {
 // (file://). Därför finns säkerhetskopiering till fil, som också är vägen att
 // flytta ett register till en annan telefon.
 
+
 const NYCKEL = 'fm-kompetensprov';
 const VERSION = 1;
 
@@ -1031,6 +1066,25 @@ const VERSION = 1;
 const tomtLager = () => ({ version: VERSION, personer: [], omgangar: [], resultat: [] });
 
 let data = null;
+let vidSparning = null;        // appens besked om att lagringen fallerar
+let lagretSkadat = false;
+
+/** Appen får veta utfallet av varje sparning, så att ett skrivfel aldrig kan
+ *  se ut som en lyckad registrering. */
+function narSparat(funktion) {
+  vidSparning = funktion;
+}
+
+const varLagretSkadat = () => lagretSkadat;
+
+/** Sant för den nyckel som bär lagret, eller när all lagring rensats. */
+const arLagerNyckel = (nyckel) => nyckel === NYCKEL || nyckel === null;
+
+/** Läser om lagret. En annan flik har skrivit, och minnet här är inaktuellt. */
+function lasOm() {
+  data = null;
+  return las();
+}
 
 function nyttId() {
   // Tidsstämpel + slump: sorterbart, och kan inte krocka mellan två poster
@@ -1041,11 +1095,23 @@ function nyttId() {
 /** Läser hela lagret. Trasigt eller saknat innehåll ger ett tomt lager. */
 function las() {
   if (data) return data;
+  let ratt = null;
   try {
-    const ratt = localStorage.getItem(NYCKEL);
-    data = ratt ? JSON.parse(ratt) : tomtLager();
+    ratt = localStorage.getItem(NYCKEL);
+    const tolkat = ratt ? JSON.parse(ratt) : tomtLager();
+    if (!tolkat || typeof tolkat !== 'object' || Array.isArray(tolkat)) throw new Error('form');
+    data = tolkat;
   } catch {
     data = tomtLager();
+    // Nästa sparning skriver över nyckeln, så originalet läggs åt sidan först.
+    if (ratt) {
+      lagretSkadat = true;
+      try {
+        if (!localStorage.getItem(NYCKEL + '-skadat')) localStorage.setItem(NYCKEL + '-skadat', ratt);
+      } catch {
+        /* utrymmet räcker inte, och beskedet till användaren står kvar */
+      }
+    }
   }
   for (const falt of ['personer', 'omgangar', 'resultat']) {
     if (!Array.isArray(data[falt])) data[falt] = [];
@@ -1058,8 +1124,10 @@ function las() {
 function spara() {
   try {
     localStorage.setItem(NYCKEL, JSON.stringify(las()));
+    if (vidSparning) vidSparning(true);
     return true;
   } catch {
+    if (vidSparning) vidSparning(false);
     return false;
   }
 }
@@ -1259,7 +1327,7 @@ function laggTillOmgang({ gren, datum, plats = '', instruktor = '', deltagare = 
   const o = {
     id: nyttId(),
     gren,
-    datum: datum || new Date().toISOString().slice(0, 10),
+    datum: datum || lokaltDatum(),
     plats: plats.trim(),
     instruktor: instruktor.trim(),
     deltagare: deltagare.slice(),
@@ -1313,7 +1381,8 @@ function pagaende(omgangId, personId, skapaOmSaknas = true) {
     id: nyttId(),
     omgangId,
     personId,
-    forsok: alla.length + 1,
+    // Högsta numret plus ett: en sammanslagen kopia kan ha lämnat en lucka.
+    forsok: alla.reduce((n, x) => Math.max(n, x.forsok), 0) + 1,
     tid: null,
     traffar: {},
     vapenhanteringUnderkand: false,
@@ -1369,7 +1438,10 @@ function aterstallAndringar(undantagId = null) {
   let antal = 0;
   for (const r of las().resultat) {
     if (!r.fore || r.id === undantagId) continue;
-    Object.assign(r, r.fore);
+    r.tid = r.fore.tid;
+    r.traffar = r.fore.traffar;
+    r.vapenhanteringUnderkand = r.fore.vapenhanteringUnderkand;
+    r.registrerad = r.fore.registrerad;
     delete r.fore;
     antal++;
   }
@@ -1389,25 +1461,125 @@ function sakerhetskopia() {
   return JSON.stringify({ ...las(), exporterad: new Date().toISOString() }, null, 1);
 }
 
+const GILTIGT_ID = /^[A-Za-z0-9_-]{1,64}$/;
+const arId = (v) => typeof v === 'string' && GILTIGT_ID.test(v);
+const arValfriText = (v) => v === undefined || v === null
+  || (typeof v === 'string' && v.length <= 500);
+const arDatum = (v) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v)
+  && !Number.isNaN(Date.parse(v + 'T00:00:00Z'))
+  && new Date(v + 'T00:00:00Z').toISOString().slice(0, 10) === v;
+const arPost = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+
+/**
+ * Granskar HELA filen innan något skrivs och bygger nya poster av kända fält.
+ * En kopia kan komma från vem som helst, så den är data: ett id som innehåller
+ * markup eller en post utan namn ska stoppas här och inte nå gränssnittet.
+ */
+function granskadKopia(inkommande) {
+  const fel = (vad) => {
+    throw new Error(`Filen är ingen giltig säkerhetskopia (${vad}). Inget lästes in.`);
+  };
+  if (!arPost(inkommande)) fel('fel format');
+  const falt = ['personer', 'omgangar', 'resultat'];
+  if (!falt.some((f) => Array.isArray(inkommande[f]))) fel('listorna saknas');
+  for (const f of falt) {
+    if (inkommande[f] !== undefined && !Array.isArray(inkommande[f])) fel(f);
+  }
+
+  const personer = (inkommande.personer || []).map((p) => {
+    if (!arPost(p) || !arId(p.id)) fel('skytt utan giltigt id');
+    if (typeof p.namn !== 'string' || !p.namn.trim() || p.namn.length > 500) fel('skytt utan namn');
+    if (!arValfriText(p.forband) || !arValfriText(p.fmid) || !arValfriText(p.skapad)) fel('skytt');
+    return {
+      id: p.id, namn: p.namn, forband: p.forband || '', fmid: p.fmid || '', skapad: p.skapad || '',
+    };
+  });
+
+  const omgangar = (inkommande.omgangar || []).map((o) => {
+    if (!arPost(o) || !arId(o.id)) fel('omgång utan giltigt id');
+    if (!Object.hasOwn(PROV, String(o.gren))) fel('okänt prov');
+    if (!arDatum(o.datum)) fel('ogiltigt datum');
+    if (!Array.isArray(o.deltagare) || !o.deltagare.every(arId)) fel('deltagarlistan');
+    if (!arValfriText(o.plats) || !arValfriText(o.instruktor) || !arValfriText(o.skapad)) fel('omgång');
+    return {
+      id: o.id, gren: o.gren, datum: o.datum, plats: o.plats || '', instruktor: o.instruktor || '',
+      deltagare: [...new Set(o.deltagare)], skapad: o.skapad || '',
+    };
+  });
+
+  const resultat = (inkommande.resultat || []).map((post) => {
+    if (!arPost(post) || !arId(post.id)) fel('försök utan giltigt id');
+    // En kopia tagen mitt i en rättning bär originalet i `fore`, och det är
+    // originalet som är det registrerade resultatet.
+    const r = arPost(post.fore) ? { ...post, ...post.fore } : post;
+    if (!arId(r.omgangId) || !arId(r.personId)) fel('försök utan ägare');
+    if (!Number.isInteger(r.forsok) || r.forsok < 1 || r.forsok > 9999) fel('försöksnummer');
+    if (r.tid !== null && r.tid !== undefined
+      && !(typeof r.tid === 'number' && Number.isFinite(r.tid) && r.tid > 0 && r.tid < 100000)) fel('tid');
+    if (!arPost(r.traffar)) fel('träffar');
+    for (const [zon, antal] of Object.entries(r.traffar)) {
+      if (!Object.hasOwn(ZONPOANG, zon) || !Number.isInteger(antal) || antal < 0 || antal > 999) fel('träffar');
+    }
+    if (r.vapenhanteringUnderkand !== undefined && typeof r.vapenhanteringUnderkand !== 'boolean') fel('vapenhantering');
+    if (r.registrerad !== null && r.registrerad !== undefined
+      && !(typeof r.registrerad === 'string' && r.registrerad.length <= 40)) fel('registrering');
+    return {
+      id: r.id, omgangId: r.omgangId, personId: r.personId, forsok: r.forsok,
+      tid: r.tid ?? null, traffar: { ...r.traffar },
+      vapenhanteringUnderkand: r.vapenhanteringUnderkand === true,
+      registrerad: r.registrerad || null,
+    };
+  });
+  return { personer, omgangar, resultat };
+}
+
 /**
  * Läser in en säkerhetskopia. Lägger till i stället för att skriva över:
  * poster med id som redan finns hoppas över, så att en inläsning två gånger
- * inte ger dubbletter och så att två telefoners listor kan slås ihop.
+ * inte ger dubbletter och så att två telefoners listor kan slås ihop. För en
+ * omgång som redan finns läggs nya deltagare sist, så att ingen byter tavla
+ * och ingen med resultat faller ur protokollet.
  */
 function lasInSakerhetskopia(text) {
-  const inkommande = JSON.parse(text);
-  if (!inkommande || typeof inkommande !== 'object') throw new Error('Filen ser inte ut som en säkerhetskopia.');
+  let inkommande;
+  try {
+    inkommande = JSON.parse(text);
+  } catch {
+    throw new Error('Filen ser inte ut som en säkerhetskopia. Inget lästes in.');
+  }
+  const kopia = granskadKopia(inkommande);
   const d = las();
-  const rakning = { personer: 0, omgangar: 0, resultat: 0 };
-  for (const falt of ['personer', 'omgangar', 'resultat']) {
-    if (!Array.isArray(inkommande[falt])) continue;
-    const fanns = new Set(d[falt].map((x) => x.id));
-    for (const post of inkommande[falt]) {
-      if (post && post.id && !fanns.has(post.id)) {
-        d[falt].push(post);
-        rakning[falt]++;
-      }
+  const rakning = { personer: 0, omgangar: 0, resultat: 0, hoppade: 0 };
+
+  const personIdn = new Set(d.personer.map((p) => p.id));
+  for (const p of kopia.personer) {
+    if (personIdn.has(p.id)) continue;
+    personIdn.add(p.id);
+    d.personer.push(p);
+    rakning.personer++;
+  }
+  for (const o of kopia.omgangar) {
+    o.deltagare = o.deltagare.filter((id) => personIdn.has(id));
+    const finns = d.omgangar.find((x) => x.id === o.id);
+    if (finns) {
+      for (const id of o.deltagare) if (!finns.deltagare.includes(id)) finns.deltagare.push(id);
+    } else {
+      d.omgangar.push(o);
+      rakning.omgangar++;
     }
+  }
+  const resultatIdn = new Set(d.resultat.map((r) => r.id));
+  for (const r of kopia.resultat) {
+    if (resultatIdn.has(r.id)) continue;
+    const o = d.omgangar.find((x) => x.id === r.omgangId);
+    if (!o || !personIdn.has(r.personId)) {
+      rakning.hoppade++;
+      continue;
+    }
+    if (!o.deltagare.includes(r.personId)) o.deltagare.push(r.personId);
+    resultatIdn.add(r.id);
+    d.resultat.push(r);
+    rakning.resultat++;
   }
   spara();
   return rakning;
@@ -1451,7 +1623,7 @@ function raderaAllt() {
   spara();
 }
 
-const lager = { las, spara, lagringFungerar, personer, person, laggTillPerson, andraPerson, raderaPerson, tolkaSkyttelista, granskaSkyttelista, laggTillSkyttar, importeraSkyttar, omgangar, omgang, laggTillOmgang, andraOmgang, raderaOmgang, resultat, resultatFor, pagaende, andraResultat, registrera, oppnaForAndring, sparaAndring, aterstallAndringar, raderaResultat, sakerhetskopia, lasInSakerhetskopia, arbetssatt, sattArbetssatt, raderaAllt };
+const lager = { narSparat, varLagretSkadat, arLagerNyckel, lasOm, las, spara, lagringFungerar, personer, person, laggTillPerson, andraPerson, raderaPerson, tolkaSkyttelista, granskaSkyttelista, laggTillSkyttar, importeraSkyttar, omgangar, omgang, laggTillOmgang, andraOmgang, raderaOmgang, resultat, resultatFor, pagaende, andraResultat, registrera, oppnaForAndring, sparaAndring, aterstallAndringar, raderaResultat, sakerhetskopia, lasInSakerhetskopia, arbetssatt, sattArbetssatt, raderaAllt };
 
 // ---- export.js ---------------------------------------------------------
 // Export — samma underlag i fyra former: text, CSV, XLSX och PDF.
@@ -2051,6 +2223,24 @@ const hemKnapp = document.getElementById('hem');
 const uppdateringsrad = document.getElementById('uppdatering');
 document.getElementById('utgava').textContent = `v${UTGAVA}`;
 const stegaKnappar = [document.getElementById('stegabak'), document.getElementById('stegafram')];
+const lagringsfel = document.getElementById('lagringsfel');
+
+// Under så här många sekunder frågar appen om tiden stämmer. Det är inget krav
+// ur handboken utan ett skydd mot felknappning: 30 utan komma betyder 0,30 s.
+const KORT_TID = 4;
+const DUBBELTRYCK_MS = 400;
+let senasteVybyte = -Infinity;
+let avAnnanFlik = false;
+
+// En misslyckad sparning får aldrig se ut som en lyckad registrering.
+lager.narSparat((lyckades) => {
+  if (lyckades && !lager.varLagretSkadat()) lagringsfel.hidden = true;
+  if (!lyckades) {
+    lagringsfel.textContent = 'Det gick inte att spara i telefonen. Det du knappar in kan '
+      + 'försvinna. Spara en kopia under Appinställningar.';
+    lagringsfel.hidden = false;
+  }
+});
 
 // Vy, och vad vyn handlar om. Ingen router — appen är en enda skärm i taget
 // och webbläsarens bakåtknapp hanteras med history.state.
@@ -2142,14 +2332,31 @@ function flash(text, sekunder = 2.5) {
 function gaTill(namn, extra = {}, ersatt = false) {
   vy = { namn, ...extra };
   utkastTid = '';
+  senasteVybyte = performance.now();
   if (ersatt) history.replaceState(vy, '');
   else history.pushState(vy, '');
   rita();
 }
 
 window.addEventListener('popstate', (e) => {
+  // Bakåtgesten ska behandla en påbörjad tid som hemknappen gör.
+  sparaUtkastet();
+  avbrytDrag();
   vy = e.state || { namn: 'start' };
+  utkastTid = '';
+  senasteVybyte = performance.now();
   rita();
+});
+
+// Har en annan flik skrivit är minnet här inaktuellt, och nästa sparning härifrån
+// hade skrivit över det den andra fliken just registrerat.
+window.addEventListener('storage', (e) => {
+  if (!lager.arLagerNyckel(e.key)) return;
+  lager.lasOm();
+  avbrytDrag();
+  avAnnanFlik = true;
+  ritaPaPlats();
+  avAnnanFlik = false;
 });
 
 // ------------------------------------------------------------------ start
@@ -2168,7 +2375,9 @@ function ritaStart() {
   const lista = omgangar.length ? omgangar.map((o) => {
     const prov = PROV[o.gren];
     const alla = lager.resultat(o.id);
-    const res = alla.filter((r) => r.registrerad);
+    // Bara dem som står på linjen, samma urval som protokollet.
+    const res = alla.filter((r) => r.registrerad && o.deltagare.includes(r.personId)
+      && lager.person(r.personId));
     const godkanda = new Set(res
       .filter((r) => bedom(o.gren, r.traffar, r.tid, r.vapenhanteringUnderkand).godkand)
       .map((r) => r.personId)).size;
@@ -2176,7 +2385,7 @@ function ritaStart() {
     // "0/5 godkända" vore en lögn om den — den ser ut som ett skjutlag där
     // ingen klarade sig. Tills första tiden är inne räknas skyttarna i stället.
     const paborjad = alla.length > 0;
-    return `<button class="skyttrad" data-oppna="${o.id}" data-hall-radera="omgang:${o.id}">
+    return `<button class="skyttrad" data-oppna="${esc(o.id)}" data-hall-radera="omgang:${esc(o.id)}">
       <span class="namn">${esc(prov.namn)} · ${esc(o.datum)}</span>
       <span class="forband">${esc(o.plats || 'utan plats')}${o.instruktor ? ' · ' + esc(o.instruktor) : ''}</span>
       <span class="varden">${paborjad
@@ -2223,7 +2432,7 @@ function ritaNy() {
     </label>
     <div class="knapprad">
       <label class="falt" style="flex:1">Datum
-        <input type="date" id="datum" value="${new Date().toISOString().slice(0, 10)}">
+        <input type="date" id="datum" value="${lokaltDatum()}">
       </label>
     </div>
     <!-- Inga platshållartexter och ingen autoifyllning: i mörker går grå
@@ -2235,7 +2444,7 @@ function ritaNy() {
     <p class="dampad liten">Numret följer ordningen du bockar i dem, och är
     skyttens tavelnummer på banan.</p>
     ${personer.length ? personer.map((p) => `
-      <button class="skyttrad ${valda.has(p.id) ? 'klar' : ''}" data-vaxla="${p.id}">
+      <button class="skyttrad ${valda.has(p.id) ? 'klar' : ''}" data-vaxla="${esc(p.id)}">
         <span class="namn">${valda.has(p.id)
           ? `<span class="nr">${ordning.indexOf(p.id) + 1}.</span> ` : ''}${esc(p.namn)}</span>
         <span class="forband">${esc(p.forband || '')}</span>
@@ -2306,30 +2515,30 @@ function ritaOmgang() {
       varden = `<b>${komma(pagar.tid)} s</b><br>${b.poang} p · PK ${b.pk === null ? '–' : komma(b.pk)}`;
       chip = `<span class="chip v">pågår</span>`;
     }
-    if (senaste && !pagar) {
-      // Godkänd på något försök räcker, som i exporten. Raden visar då det
-      // godkända försöket, inte ett senare omtag som gick sämre.
-      const visat = status === 'godkand'
-        ? [...klara].reverse().find((r) => bedom(o.gren, r.traffar, r.tid, r.vapenhanteringUnderkand).godkand)
-        : senaste;
+    // Godkänd på något försök räcker, som i exporten. Raden visar då det
+    // godkända försöket, inte ett senare eller pågående omtag som gick sämre.
+    const visat = status === 'godkand'
+      ? [...klara].reverse().find((r) => bedom(o.gren, r.traffar, r.tid, r.vapenhanteringUnderkand).godkand)
+      : (pagar ? null : senaste);
+    if (visat) {
       const sb = bedom(o.gren, visat.traffar, visat.tid, visat.vapenhanteringUnderkand);
       varden = `<b>${komma(visat.tid)} s</b><br>${sb.poang} p · PK ${komma(sb.pk)}`;
       chip = `<span class="chip ${sb.godkand ? 'g' : 'u'}">${sb.godkand ? 'godkänd' : 'underkänd'}</span>`;
     }
-    if (status === 'godkand') chip = '<span class="chip g">godkänd</span>';
     const oppen = vy.oppen === id;
     return `<button class="skyttrad ${senaste && !pagar ? 'klar' : ''}${vy.flyttlage ? ' flyttbar' : ''}"
-        data-skytt="${id}">
-        ${vy.flyttlage ? `<span class="dra" data-dra="${id}" aria-label="Dra för att flytta">☰</span>` : ''}
+        data-skytt="${esc(id)}">
+        ${vy.flyttlage ? `<span class="dra" data-dra="${esc(id)}" aria-label="Dra för att flytta">☰</span>` : ''}
         <span class="namn"><span class="nr">${nr}.</span> ${esc(p.namn)}</span>
-        <span class="forband">${esc(p.forband || '')}${klara.length ? ` · ${klara.length} försök` : ''}</span>
+        <span class="forband">${esc(p.forband || '')}${klara.length ? ` · ${klara.length} försök` : ''}${
+          status === 'godkand' && pagar ? ' · omtag pågår' : ''}</span>
         <span class="varden">${varden}</span>
         ${chip}
       </button>
       ${klara.length ? `<div class="knapprad" style="margin-top:-0.35rem">
-         <button class="knapp liten" data-historik="${id}">${oppen ? 'Dölj' : 'Visa'} försök</button>
+         <button class="knapp liten" data-historik="${esc(id)}">${oppen ? 'Dölj' : 'Visa'} försök</button>
          ${!pagar
-           ? `<button class="knapp liten" data-nytt-forsok="${id}">+ Nytt försök</button>` : ''}
+           ? `<button class="knapp liten" data-nytt-forsok="${esc(id)}">+ Nytt försök</button>` : ''}
        </div>` : ''}
       ${oppen ? ritaHistorik(o, klara, !pagar) : ''}`;
   }).join('');
@@ -2423,11 +2632,11 @@ function ritaHistorik(o, forsok, kanAndras) {
     const traffar = Object.entries(r.traffar).filter(([, n]) => n)
       .map(([z, n]) => `${z}${n}`).join(' ');
     return `<div class="forsokrad">
-      <span>Försök ${r.forsok} · ${komma(r.tid)} s · ${esc(traffar || 'inga träffar')}</span>
+      <span>Försök ${esc(r.forsok)} · ${komma(r.tid)} s · ${esc(traffar || 'inga träffar')}</span>
       <span>${b.poang} p · <b>${komma(b.pk)}</b> ·
         <span class="${b.godkand ? 'chip g' : 'chip u'}">${b.godkand ? 'G' : 'U'}</span></span>
-      ${kanAndras ? `<button class="knapp liten andraforsok" data-andra-forsok="${r.id}"
-        >Ändra försök ${r.forsok}</button>` : ''}
+      ${kanAndras ? `<button class="knapp liten andraforsok" data-andra-forsok="${esc(r.id)}"
+        >Ändra försök ${esc(r.forsok)}</button>` : ''}
     </div>`;
   }).join('')}</div>`;
 }
@@ -2570,7 +2779,7 @@ function ritaTid() {
     </div>`;
 }
 
-function sparaTid() {
+function sparaTid({ fraga = true } = {}) {
   const o = lager.omgang(vy.omgangId);
   const r = lager.pagaende(o.id, vy.personId);
   const tal = tolkadTid(utkastTid);
@@ -2578,8 +2787,32 @@ function sparaTid() {
     flash(tal === 0 ? 'Tiden måste vara större än noll.' : 'Tiden ser inte ut som ett tal.');
     return false;
   }
+  if (fraga && !kortTidBekraftad(r, tal)) return false;
   lager.andraResultat(r.id, { tid: tal });
   return true;
+}
+
+/**
+ * Frågar om en tid under KORT_TID stämmer, en gång per värde. En tid som knappas
+ * utan komma läses som hundradelar, så 30 blir 0,30 s och skulle annars ge en
+ * enorm kvot och Godkänd. Instruktören kan alltid svara ja: det är en fråga,
+ * ingen spärr.
+ */
+function kortTidBekraftad(r, tal) {
+  if (tal === null || tal === undefined || tal >= KORT_TID || r.kortTidOk === tal) return true;
+  if (!confirm(`Tiden är ${komma(tal)} s, alltså under ${KORT_TID} sekunder. Stämmer det?\n\n`
+    + 'Utan komma är de två sista siffrorna hundradelar: 3000 blir 30,00.')) return false;
+  lager.andraResultat(r.id, { kortTidOk: tal });
+  return true;
+}
+
+/** Sparar en påbörjad tid när skärmen lämnas utan knapptryck, utan att fråga. */
+function sparaUtkastet() {
+  if (vy.namn !== 'tid' || !lager.omgang(vy.omgangId)) return;
+  const r = lager.pagaende(vy.omgangId, vy.personId, false);
+  if (!r) return;
+  const tal = tolkadTid(utkastTid);
+  if (!utkastTid || tal > 0) lager.andraResultat(r.id, { tid: utkastTid ? tal : null });
 }
 
 // ---------------------------------------------------------------- poängen
@@ -2623,14 +2856,14 @@ function ritaPoang() {
         ${g.zoner.map((z) => `
           <button class="zonknapp${r.traffar[z] ? ' har' : ''}" data-zon="${z}" data-poang="${ZONPOANG[z]}">
             <span class="bokstav">${z}</span>
-            <span class="antal">${r.traffar[z] || 0}</span>
+            <span class="antal">${esc(r.traffar[z] || 0)}</span>
             <span class="poang">${(r.traffar[z] || 0) * ZONPOANG[z]} p</span>
           </button>`).join('')}
       </div>
     </div>`).join('');
 
   app.innerHTML = `
-    ${r.fore ? `<div class="varningsruta"><b>Du ändrar försök ${r.forsok}.</b>
+    ${r.fore ? `<div class="varningsruta"><b>Du ändrar försök ${esc(r.forsok)}.</b>
       Inget ändras förrän du trycker Spara ändringen.</div>` : ''}
     ${tidfalt}
     ${r.tid === null && !samlat ? '<div class="varningsruta">Ingen tid inlagd ännu — utan tid går ingen poängkvot att räkna.</div>' : ''}
@@ -2747,7 +2980,7 @@ function ritaLaggTill() {
   // Den som redan står på linjen ska inte gå att lägga till en gång till.
   const kvar = lager.personer().filter((p) => !o.deltagare.includes(p.id));
   app.innerHTML = kvar.length ? kvar.map((p) => `
-    <button class="skyttrad" data-lagg-in="${p.id}">
+    <button class="skyttrad" data-lagg-in="${esc(p.id)}">
       <span class="namn">${esc(p.namn)}</span>
       <span class="forband">${esc(p.forband || '')}</span>
       <span class="chip">lägg till</span>
@@ -2844,7 +3077,7 @@ function ritaRegister() {
     // soptunnan. En Radera-knapp per rad låg annars framme hela tiden, mitt i
     // en lista man skrollar med tummen.
     + (personer.length ? personer.map((p) => `
-    <div class="kort personrad" data-hall-radera="person:${p.id}">
+    <div class="kort personrad" data-hall-radera="person:${esc(p.id)}">
       <div><b>${esc(p.namn)}</b><br><span class="dampad liten">${esc(p.forband || 'utan förband')}${p.fmid ? ' · ' + esc(p.fmid) : ''}</span></div>
     </div>`).join('')
       + '<p class="dampad liten">Håll in en skytt för att få fram soptunnan som raderar hen.</p>'
@@ -3196,9 +3429,10 @@ function rita() {
   // sätt, även genom att appen stängs, gäller det ursprungliga försöket.
   const iArbete = vy.namn === 'tid' || vy.namn === 'poang'
     ? lager.pagaende(vy.omgangId, vy.personId, false) : null;
-  if (lager.aterstallAndringar(iArbete ? iArbete.id : null)) {
+  if (!avAnnanFlik && lager.aterstallAndringar(iArbete ? iArbete.id : null)) {
     flash('Ändringen sparades inte. Försöket är oförändrat.', 4);
   }
+  try {
   if (vy.namn === 'start') ritaStart();
   else if (vy.namn === 'ny') ritaNy();
   else if (vy.namn === 'omgang') ritaOmgang();
@@ -3211,8 +3445,27 @@ function rita() {
   else if (vy.namn === 'anvisning') ritaAnvisning();
   else if (vy.namn === 'lagg-till') ritaLaggTill();
   else if (vy.namn === 'dok') ritaDokument();
+  } catch (fel) {
+    ritaFel();
+  }
   window.scrollTo(0, 0);
   mätBottenrad();
+}
+
+/**
+ * Sista utvägen när en vy inte går att rita, till exempel av skadade uppgifter.
+ * Utan den blev skärmen tom, och då gick varken kopia eller nollställning att nå.
+ */
+function ritaFel() {
+  sattRubrik('Något gick fel');
+  underrubrik.textContent = 'Sidan kunde inte visas';
+  hemKnapp.hidden = false;
+  app.innerHTML = `
+    <div class="varningsruta"><b>Uppgifterna i telefonen kan vara skadade.</b>
+    Spara en kopia innan du gör något annat.</div>
+    <div class="knapprad"><button class="knapp" data-kopia="ut">Spara kopia</button></div>
+    <div class="knapprad"><button class="knapp fara" data-radera-allt="1">Radera allt innehåll</button></div>`;
+  bottenrad.innerHTML = '';
 }
 
 /** Ritar om utan att flytta skärmen. För ändringar inom samma vy, där den som
@@ -3319,6 +3572,11 @@ document.addEventListener('click', async (ev) => {
     '.zonknapp');
   if (!t) return;
   const d = t.dataset;
+
+  // Andra halvan av ett dubbeltryck landar på nästa skytts knapp, och hade
+  // registrerat hen utan träffar. Bara riktiga tryck spärras.
+  if ((d.registrera || d.sparaTid) && ev.isTrusted
+    && ev.timeStamp - senasteVybyte < DUBBELTRYCK_MS) return;
 
   // --- navigering ---
   if (d.vy === 'ny') return gaTill('ny', { valda: [] });
@@ -3500,7 +3758,11 @@ document.addEventListener('click', async (ev) => {
   }
   if (d.radera) {
     vibrera(12);
-    utkastTid = utkastTid.slice(0, -1);
+    // Står markören direkt efter kommat tas siffran före bort och kommat får
+    // stå kvar. Annars blev 30, till 30, vilket utan komma betyder 0,30 s.
+    utkastTid = utkastTid.endsWith(',')
+      ? (utkastTid.length > 2 ? `${utkastTid.slice(0, -2)},` : '')
+      : utkastTid.slice(0, -1);
     return uppdateraTidvisning();
   }
   if (d.sparaTid) {
@@ -3556,6 +3818,10 @@ document.addEventListener('click', async (ev) => {
     if (r.tid === null && !r.vapenhanteringUnderkand) {
       return flash('Lägg in tiden först — utan den finns ingen poängkvot.');
     }
+    if (!kortTidBekraftad(r, r.tid)) return;
+    if (!Object.values(r.traffar).some((n) => n > 0) && !r.vapenhanteringUnderkand
+      && !confirm(`Inga träffar är inknappade för ${lager.person(vy.personId).namn}. `
+        + 'Registrera ändå?')) return;
     if (r.fore) {
       lager.sparaAndring(r.id);
       vibrera(30);
@@ -3594,7 +3860,10 @@ document.addEventListener('click', async (ev) => {
     return;
   }
   if (d.skrivUt) return window.print();
-  if (d.uppdatera) return location.reload();
+  if (d.uppdatera) {
+    sparaUtkastet();
+    return location.reload();
+  }
 
   // --- register och inställningar ---
   if (d.arbetssatt) {
@@ -3620,7 +3889,7 @@ document.addEventListener('click', async (ev) => {
     return;
   }
   if (d.kopia === 'ut') {
-    const namn = `kompetensprov-kopia-${new Date().toISOString().slice(0, 10)}.json`;
+    const namn = `kompetensprov-kopia-${lokaltDatum()}.json`;
     await dela(namn, lager.sakerhetskopia(), 'txt', 'Säkerhetskopia från FM kompetensprov');
     return;
   }
@@ -3710,7 +3979,7 @@ document.addEventListener('pointerdown', (ev) => {
     slappMarkering();
     rad.classList.add('raderbar');
     rad.insertAdjacentHTML('beforeend',
-      `<span class="soptunna" data-soptunna="${rad.dataset.hallRadera}"`
+      `<span class="soptunna" data-soptunna="${esc(rad.dataset.hallRadera)}"`
       + ' role="button" aria-label="Radera">🗑</span>');
     raderbarRad = rad;
     vibrera(40);
@@ -3748,6 +4017,14 @@ document.addEventListener('click', (ev) => {
 // raderna om medan draget pågår.
 
 let drag = null;
+
+/** Släpper ett pågående drag utan att spara. Vyn kan ha bytts under fingret,
+ *  och ett släpp då hade skrivit en tom eller fel deltagarlista. */
+function avbrytDrag() {
+  if (!drag) return;
+  drag.rad.classList.remove('lyft');
+  drag = null;
+}
 
 function renumrera() {
   app.querySelectorAll('.skyttrad[data-skytt] .nr').forEach((el, i) => {
@@ -3810,24 +4087,37 @@ document.addEventListener('pointerup', () => {
 // någon halvfärdig ordning. Omritningen lägger tillbaka raden från lagret.
 document.addEventListener('pointercancel', () => {
   if (!drag) return;
-  drag = null;
+  avbrytDrag();
   ritaPaPlats();
 });
 
 // Håll in en zonknapp för att nolla den — enda vägen tillbaka efter en
 // feltryckning med handskar på.
-let hallTimer = null;
+//
+// En timer per finger: med en enda variabel skrev ett andra tryck över den
+// första timern, som då löpte ut och nollade zonen trots att fingret släppts.
+const hallTimers = new Map();
+function slappZon(fingret) {
+  clearTimeout(hallTimers.get(fingret));
+  hallTimers.delete(fingret);
+}
 document.addEventListener('pointerdown', (ev) => {
   const knapp = ev.target.closest('.zonknapp');
   if (!knapp) return;
-  hallTimer = setTimeout(() => {
+  // Ett långtryck som släpps utanför knappen ger inget klick, och flaggan hade
+  // annars ätit nästa riktiga tryck.
+  delete knapp.dataset.hollsIn;
+  slappZon(ev.pointerId);
+  hallTimers.set(ev.pointerId, setTimeout(() => {
+    hallTimers.delete(ev.pointerId);
+    if (!knapp.isConnected) return;
     knapp.dataset.hollsIn = '1';
     vibrera(40);
     sattZon(knapp, 0);
-  }, 500);
+  }, 500));
 });
-for (const h of ['pointerup', 'pointercancel', 'pointerleave']) {
-  document.addEventListener(h, () => clearTimeout(hallTimer));
+for (const h of ['pointerup', 'pointercancel']) {
+  document.addEventListener(h, (ev) => slappZon(ev.pointerId));
 }
 
 // Granskningen följer fältet medan man klistrar in och rättar. Den är billig
@@ -3862,7 +4152,8 @@ document.addEventListener('change', (ev) => {
       try {
         const n = lager.lasInSakerhetskopia(lasare.result);
         flash(`Inläst: ${antalOrd(n.personer, 'skytt', 'skyttar')}, `
-          + `${antalOrd(n.omgangar, 'omgång', 'omgångar')}, ${n.resultat} försök.`, 4);
+          + `${antalOrd(n.omgangar, 'omgång', 'omgångar')}, ${n.resultat} försök.`
+          + (n.hoppade ? ` ${n.hoppade} försök saknade skytt eller omgång och hoppades över.` : ''), 5);
         rita();
       } catch (fel) {
         flash('Filen gick inte att läsa: ' + fel.message, 5);
@@ -3878,7 +4169,7 @@ document.addEventListener('change', (ev) => {
 hemKnapp.addEventListener('click', () => {
   // En påbörjad tid sparas på vägen ut; annars försvinner det man knappat in
   // bara för att man tryckte fel knapp.
-  if (vy.namn === 'tid') sparaTid();
+  if (vy.namn === 'tid') sparaTid({ fraga: false });
   gaTill('start', {}, true);
 });
 
@@ -3919,6 +4210,11 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   }
 }
 
+if (lager.las() && lager.varLagretSkadat()) {
+  lagringsfel.textContent = 'De sparade uppgifterna gick inte att läsa. Originalet är bevarat '
+    + 'i telefonen. Radera inte appen, utan anmäl felet under Om appen.';
+  lagringsfel.hidden = false;
+}
 history.replaceState(vy, '');
 rita();
 

@@ -13,6 +13,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 
 const ROT = path.join(import.meta.dirname, '..');
 const html = fs.readFileSync(path.join(ROT, 'docs', 'index.html'), 'utf8');
@@ -42,6 +43,17 @@ test('CSP:n stänger vägarna ut', () => {
     "object-src 'none'", "base-uri 'none'"]) {
     assert.ok(tagg[1].includes(direktiv), `CSP ska innehålla ${direktiv}`);
   }
+});
+
+test('CSP:n släpper bara igenom appens eget skript', () => {
+  const tagg = html.match(/<meta http-equiv="Content-Security-Policy" content="([^"]+)"/i)[1];
+  assert.match(tagg, /default-src 'none'/, 'allt som inte räknas upp ska vara stängt');
+  const skript = tagg.match(/script-src ([^;]+)/)[1];
+  assert.ok(!skript.includes('unsafe'), 'inga inline-händelser eller eval');
+  const inbakat = html.match(/<script>\n([\s\S]*)\n<\/script>/)[1];
+  const hash = crypto.createHash('sha256').update(`\n${inbakat}\n`).digest('base64');
+  assert.equal(skript, `'sha256-${hash}'`, 'hashen ska stämma med skriptet');
+  assert.match(tagg.match(/img-src ([^;]+)/)[1], /^'self' data:$/, 'inga bilder från andra värdar');
 });
 
 test('inga okända adresser i den byggda filen', () => {

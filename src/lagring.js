@@ -6,6 +6,8 @@
 // (file://). Därför finns säkerhetskopiering till fil, som också är vägen att
 // flytta ett register till en annan telefon.
 
+import { PROV, ZONPOANG, lokaltDatum } from './regler.js';
+
 const NYCKEL = 'fm-kompetensprov';
 const VERSION = 1;
 
@@ -15,6 +17,25 @@ const VERSION = 1;
 const tomtLager = () => ({ version: VERSION, personer: [], omgangar: [], resultat: [] });
 
 let data = null;
+let vidSparning = null;        // appens besked om att lagringen fallerar
+let lagretSkadat = false;
+
+/** Appen får veta utfallet av varje sparning, så att ett skrivfel aldrig kan
+ *  se ut som en lyckad registrering. */
+export function narSparat(funktion) {
+  vidSparning = funktion;
+}
+
+export const varLagretSkadat = () => lagretSkadat;
+
+/** Sant för den nyckel som bär lagret, eller när all lagring rensats. */
+export const arLagerNyckel = (nyckel) => nyckel === NYCKEL || nyckel === null;
+
+/** Läser om lagret. En annan flik har skrivit, och minnet här är inaktuellt. */
+export function lasOm() {
+  data = null;
+  return las();
+}
 
 function nyttId() {
   // Tidsstämpel + slump: sorterbart, och kan inte krocka mellan två poster
@@ -25,11 +46,23 @@ function nyttId() {
 /** Läser hela lagret. Trasigt eller saknat innehåll ger ett tomt lager. */
 export function las() {
   if (data) return data;
+  let ratt = null;
   try {
-    const ratt = localStorage.getItem(NYCKEL);
-    data = ratt ? JSON.parse(ratt) : tomtLager();
+    ratt = localStorage.getItem(NYCKEL);
+    const tolkat = ratt ? JSON.parse(ratt) : tomtLager();
+    if (!tolkat || typeof tolkat !== 'object' || Array.isArray(tolkat)) throw new Error('form');
+    data = tolkat;
   } catch {
     data = tomtLager();
+    // Nästa sparning skriver över nyckeln, så originalet läggs åt sidan först.
+    if (ratt) {
+      lagretSkadat = true;
+      try {
+        if (!localStorage.getItem(NYCKEL + '-skadat')) localStorage.setItem(NYCKEL + '-skadat', ratt);
+      } catch {
+        /* utrymmet räcker inte, och beskedet till användaren står kvar */
+      }
+    }
   }
   for (const falt of ['personer', 'omgangar', 'resultat']) {
     if (!Array.isArray(data[falt])) data[falt] = [];
@@ -42,8 +75,10 @@ export function las() {
 export function spara() {
   try {
     localStorage.setItem(NYCKEL, JSON.stringify(las()));
+    if (vidSparning) vidSparning(true);
     return true;
   } catch {
+    if (vidSparning) vidSparning(false);
     return false;
   }
 }
@@ -243,7 +278,7 @@ export function laggTillOmgang({ gren, datum, plats = '', instruktor = '', delta
   const o = {
     id: nyttId(),
     gren,
-    datum: datum || new Date().toISOString().slice(0, 10),
+    datum: datum || lokaltDatum(),
     plats: plats.trim(),
     instruktor: instruktor.trim(),
     deltagare: deltagare.slice(),
@@ -297,7 +332,8 @@ export function pagaende(omgangId, personId, skapaOmSaknas = true) {
     id: nyttId(),
     omgangId,
     personId,
-    forsok: alla.length + 1,
+    // Högsta numret plus ett: en sammanslagen kopia kan ha lämnat en lucka.
+    forsok: alla.reduce((n, x) => Math.max(n, x.forsok), 0) + 1,
     tid: null,
     traffar: {},
     vapenhanteringUnderkand: false,
@@ -353,7 +389,10 @@ export function aterstallAndringar(undantagId = null) {
   let antal = 0;
   for (const r of las().resultat) {
     if (!r.fore || r.id === undantagId) continue;
-    Object.assign(r, r.fore);
+    r.tid = r.fore.tid;
+    r.traffar = r.fore.traffar;
+    r.vapenhanteringUnderkand = r.fore.vapenhanteringUnderkand;
+    r.registrerad = r.fore.registrerad;
     delete r.fore;
     antal++;
   }
@@ -373,25 +412,125 @@ export function sakerhetskopia() {
   return JSON.stringify({ ...las(), exporterad: new Date().toISOString() }, null, 1);
 }
 
+const GILTIGT_ID = /^[A-Za-z0-9_-]{1,64}$/;
+const arId = (v) => typeof v === 'string' && GILTIGT_ID.test(v);
+const arValfriText = (v) => v === undefined || v === null
+  || (typeof v === 'string' && v.length <= 500);
+const arDatum = (v) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v)
+  && !Number.isNaN(Date.parse(v + 'T00:00:00Z'))
+  && new Date(v + 'T00:00:00Z').toISOString().slice(0, 10) === v;
+const arPost = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+
+/**
+ * Granskar HELA filen innan något skrivs och bygger nya poster av kända fält.
+ * En kopia kan komma från vem som helst, så den är data: ett id som innehåller
+ * markup eller en post utan namn ska stoppas här och inte nå gränssnittet.
+ */
+function granskadKopia(inkommande) {
+  const fel = (vad) => {
+    throw new Error(`Filen är ingen giltig säkerhetskopia (${vad}). Inget lästes in.`);
+  };
+  if (!arPost(inkommande)) fel('fel format');
+  const falt = ['personer', 'omgangar', 'resultat'];
+  if (!falt.some((f) => Array.isArray(inkommande[f]))) fel('listorna saknas');
+  for (const f of falt) {
+    if (inkommande[f] !== undefined && !Array.isArray(inkommande[f])) fel(f);
+  }
+
+  const personer = (inkommande.personer || []).map((p) => {
+    if (!arPost(p) || !arId(p.id)) fel('skytt utan giltigt id');
+    if (typeof p.namn !== 'string' || !p.namn.trim() || p.namn.length > 500) fel('skytt utan namn');
+    if (!arValfriText(p.forband) || !arValfriText(p.fmid) || !arValfriText(p.skapad)) fel('skytt');
+    return {
+      id: p.id, namn: p.namn, forband: p.forband || '', fmid: p.fmid || '', skapad: p.skapad || '',
+    };
+  });
+
+  const omgangar = (inkommande.omgangar || []).map((o) => {
+    if (!arPost(o) || !arId(o.id)) fel('omgång utan giltigt id');
+    if (!Object.hasOwn(PROV, String(o.gren))) fel('okänt prov');
+    if (!arDatum(o.datum)) fel('ogiltigt datum');
+    if (!Array.isArray(o.deltagare) || !o.deltagare.every(arId)) fel('deltagarlistan');
+    if (!arValfriText(o.plats) || !arValfriText(o.instruktor) || !arValfriText(o.skapad)) fel('omgång');
+    return {
+      id: o.id, gren: o.gren, datum: o.datum, plats: o.plats || '', instruktor: o.instruktor || '',
+      deltagare: [...new Set(o.deltagare)], skapad: o.skapad || '',
+    };
+  });
+
+  const resultat = (inkommande.resultat || []).map((post) => {
+    if (!arPost(post) || !arId(post.id)) fel('försök utan giltigt id');
+    // En kopia tagen mitt i en rättning bär originalet i `fore`, och det är
+    // originalet som är det registrerade resultatet.
+    const r = arPost(post.fore) ? { ...post, ...post.fore } : post;
+    if (!arId(r.omgangId) || !arId(r.personId)) fel('försök utan ägare');
+    if (!Number.isInteger(r.forsok) || r.forsok < 1 || r.forsok > 9999) fel('försöksnummer');
+    if (r.tid !== null && r.tid !== undefined
+      && !(typeof r.tid === 'number' && Number.isFinite(r.tid) && r.tid > 0 && r.tid < 100000)) fel('tid');
+    if (!arPost(r.traffar)) fel('träffar');
+    for (const [zon, antal] of Object.entries(r.traffar)) {
+      if (!Object.hasOwn(ZONPOANG, zon) || !Number.isInteger(antal) || antal < 0 || antal > 999) fel('träffar');
+    }
+    if (r.vapenhanteringUnderkand !== undefined && typeof r.vapenhanteringUnderkand !== 'boolean') fel('vapenhantering');
+    if (r.registrerad !== null && r.registrerad !== undefined
+      && !(typeof r.registrerad === 'string' && r.registrerad.length <= 40)) fel('registrering');
+    return {
+      id: r.id, omgangId: r.omgangId, personId: r.personId, forsok: r.forsok,
+      tid: r.tid ?? null, traffar: { ...r.traffar },
+      vapenhanteringUnderkand: r.vapenhanteringUnderkand === true,
+      registrerad: r.registrerad || null,
+    };
+  });
+  return { personer, omgangar, resultat };
+}
+
 /**
  * Läser in en säkerhetskopia. Lägger till i stället för att skriva över:
  * poster med id som redan finns hoppas över, så att en inläsning två gånger
- * inte ger dubbletter och så att två telefoners listor kan slås ihop.
+ * inte ger dubbletter och så att två telefoners listor kan slås ihop. För en
+ * omgång som redan finns läggs nya deltagare sist, så att ingen byter tavla
+ * och ingen med resultat faller ur protokollet.
  */
 export function lasInSakerhetskopia(text) {
-  const inkommande = JSON.parse(text);
-  if (!inkommande || typeof inkommande !== 'object') throw new Error('Filen ser inte ut som en säkerhetskopia.');
+  let inkommande;
+  try {
+    inkommande = JSON.parse(text);
+  } catch {
+    throw new Error('Filen ser inte ut som en säkerhetskopia. Inget lästes in.');
+  }
+  const kopia = granskadKopia(inkommande);
   const d = las();
-  const rakning = { personer: 0, omgangar: 0, resultat: 0 };
-  for (const falt of ['personer', 'omgangar', 'resultat']) {
-    if (!Array.isArray(inkommande[falt])) continue;
-    const fanns = new Set(d[falt].map((x) => x.id));
-    for (const post of inkommande[falt]) {
-      if (post && post.id && !fanns.has(post.id)) {
-        d[falt].push(post);
-        rakning[falt]++;
-      }
+  const rakning = { personer: 0, omgangar: 0, resultat: 0, hoppade: 0 };
+
+  const personIdn = new Set(d.personer.map((p) => p.id));
+  for (const p of kopia.personer) {
+    if (personIdn.has(p.id)) continue;
+    personIdn.add(p.id);
+    d.personer.push(p);
+    rakning.personer++;
+  }
+  for (const o of kopia.omgangar) {
+    o.deltagare = o.deltagare.filter((id) => personIdn.has(id));
+    const finns = d.omgangar.find((x) => x.id === o.id);
+    if (finns) {
+      for (const id of o.deltagare) if (!finns.deltagare.includes(id)) finns.deltagare.push(id);
+    } else {
+      d.omgangar.push(o);
+      rakning.omgangar++;
     }
+  }
+  const resultatIdn = new Set(d.resultat.map((r) => r.id));
+  for (const r of kopia.resultat) {
+    if (resultatIdn.has(r.id)) continue;
+    const o = d.omgangar.find((x) => x.id === r.omgangId);
+    if (!o || !personIdn.has(r.personId)) {
+      rakning.hoppade++;
+      continue;
+    }
+    if (!o.deltagare.includes(r.personId)) o.deltagare.push(r.personId);
+    resultatIdn.add(r.id);
+    d.resultat.push(r);
+    rakning.resultat++;
   }
   spara();
   return rakning;

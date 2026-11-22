@@ -7,7 +7,7 @@
 // "Nästa som saknar …", som är hela svepet i en knapp.
 
 import {
-  PROV, BEDOMNING, ZONPOANG, ZONORDNING, bedom, komma, taltolk,
+  PROV, BEDOMNING, ZONPOANG, ZONORDNING, bedom, komma, taltolk, lokaltDatum,
 } from './regler.js';
 import * as lager from './lagring.js';
 import { underlag, somText, somCsv, somXlsx, somPdf, dela } from './export.js';
@@ -26,6 +26,24 @@ const hemKnapp = document.getElementById('hem');
 const uppdateringsrad = document.getElementById('uppdatering');
 document.getElementById('utgava').textContent = `v${UTGAVA}`;
 const stegaKnappar = [document.getElementById('stegabak'), document.getElementById('stegafram')];
+const lagringsfel = document.getElementById('lagringsfel');
+
+// Under så här många sekunder frågar appen om tiden stämmer. Det är inget krav
+// ur handboken utan ett skydd mot felknappning: 30 utan komma betyder 0,30 s.
+const KORT_TID = 4;
+const DUBBELTRYCK_MS = 400;
+let senasteVybyte = -Infinity;
+let avAnnanFlik = false;
+
+// En misslyckad sparning får aldrig se ut som en lyckad registrering.
+lager.narSparat((lyckades) => {
+  if (lyckades && !lager.varLagretSkadat()) lagringsfel.hidden = true;
+  if (!lyckades) {
+    lagringsfel.textContent = 'Det gick inte att spara i telefonen. Det du knappar in kan '
+      + 'försvinna. Spara en kopia under Appinställningar.';
+    lagringsfel.hidden = false;
+  }
+});
 
 // Vy, och vad vyn handlar om. Ingen router — appen är en enda skärm i taget
 // och webbläsarens bakåtknapp hanteras med history.state.
@@ -117,14 +135,31 @@ function flash(text, sekunder = 2.5) {
 function gaTill(namn, extra = {}, ersatt = false) {
   vy = { namn, ...extra };
   utkastTid = '';
+  senasteVybyte = performance.now();
   if (ersatt) history.replaceState(vy, '');
   else history.pushState(vy, '');
   rita();
 }
 
 window.addEventListener('popstate', (e) => {
+  // Bakåtgesten ska behandla en påbörjad tid som hemknappen gör.
+  sparaUtkastet();
+  avbrytDrag();
   vy = e.state || { namn: 'start' };
+  utkastTid = '';
+  senasteVybyte = performance.now();
   rita();
+});
+
+// Har en annan flik skrivit är minnet här inaktuellt, och nästa sparning härifrån
+// hade skrivit över det den andra fliken just registrerat.
+window.addEventListener('storage', (e) => {
+  if (!lager.arLagerNyckel(e.key)) return;
+  lager.lasOm();
+  avbrytDrag();
+  avAnnanFlik = true;
+  ritaPaPlats();
+  avAnnanFlik = false;
 });
 
 // ------------------------------------------------------------------ start
@@ -143,7 +178,9 @@ function ritaStart() {
   const lista = omgangar.length ? omgangar.map((o) => {
     const prov = PROV[o.gren];
     const alla = lager.resultat(o.id);
-    const res = alla.filter((r) => r.registrerad);
+    // Bara dem som står på linjen, samma urval som protokollet.
+    const res = alla.filter((r) => r.registrerad && o.deltagare.includes(r.personId)
+      && lager.person(r.personId));
     const godkanda = new Set(res
       .filter((r) => bedom(o.gren, r.traffar, r.tid, r.vapenhanteringUnderkand).godkand)
       .map((r) => r.personId)).size;
@@ -151,7 +188,7 @@ function ritaStart() {
     // "0/5 godkända" vore en lögn om den — den ser ut som ett skjutlag där
     // ingen klarade sig. Tills första tiden är inne räknas skyttarna i stället.
     const paborjad = alla.length > 0;
-    return `<button class="skyttrad" data-oppna="${o.id}" data-hall-radera="omgang:${o.id}">
+    return `<button class="skyttrad" data-oppna="${esc(o.id)}" data-hall-radera="omgang:${esc(o.id)}">
       <span class="namn">${esc(prov.namn)} · ${esc(o.datum)}</span>
       <span class="forband">${esc(o.plats || 'utan plats')}${o.instruktor ? ' · ' + esc(o.instruktor) : ''}</span>
       <span class="varden">${paborjad
@@ -198,7 +235,7 @@ function ritaNy() {
     </label>
     <div class="knapprad">
       <label class="falt" style="flex:1">Datum
-        <input type="date" id="datum" value="${new Date().toISOString().slice(0, 10)}">
+        <input type="date" id="datum" value="${lokaltDatum()}">
       </label>
     </div>
     <!-- Inga platshållartexter och ingen autoifyllning: i mörker går grå
@@ -210,7 +247,7 @@ function ritaNy() {
     <p class="dampad liten">Numret följer ordningen du bockar i dem, och är
     skyttens tavelnummer på banan.</p>
     ${personer.length ? personer.map((p) => `
-      <button class="skyttrad ${valda.has(p.id) ? 'klar' : ''}" data-vaxla="${p.id}">
+      <button class="skyttrad ${valda.has(p.id) ? 'klar' : ''}" data-vaxla="${esc(p.id)}">
         <span class="namn">${valda.has(p.id)
           ? `<span class="nr">${ordning.indexOf(p.id) + 1}.</span> ` : ''}${esc(p.namn)}</span>
         <span class="forband">${esc(p.forband || '')}</span>
@@ -281,30 +318,30 @@ function ritaOmgang() {
       varden = `<b>${komma(pagar.tid)} s</b><br>${b.poang} p · PK ${b.pk === null ? '–' : komma(b.pk)}`;
       chip = `<span class="chip v">pågår</span>`;
     }
-    if (senaste && !pagar) {
-      // Godkänd på något försök räcker, som i exporten. Raden visar då det
-      // godkända försöket, inte ett senare omtag som gick sämre.
-      const visat = status === 'godkand'
-        ? [...klara].reverse().find((r) => bedom(o.gren, r.traffar, r.tid, r.vapenhanteringUnderkand).godkand)
-        : senaste;
+    // Godkänd på något försök räcker, som i exporten. Raden visar då det
+    // godkända försöket, inte ett senare eller pågående omtag som gick sämre.
+    const visat = status === 'godkand'
+      ? [...klara].reverse().find((r) => bedom(o.gren, r.traffar, r.tid, r.vapenhanteringUnderkand).godkand)
+      : (pagar ? null : senaste);
+    if (visat) {
       const sb = bedom(o.gren, visat.traffar, visat.tid, visat.vapenhanteringUnderkand);
       varden = `<b>${komma(visat.tid)} s</b><br>${sb.poang} p · PK ${komma(sb.pk)}`;
       chip = `<span class="chip ${sb.godkand ? 'g' : 'u'}">${sb.godkand ? 'godkänd' : 'underkänd'}</span>`;
     }
-    if (status === 'godkand') chip = '<span class="chip g">godkänd</span>';
     const oppen = vy.oppen === id;
     return `<button class="skyttrad ${senaste && !pagar ? 'klar' : ''}${vy.flyttlage ? ' flyttbar' : ''}"
-        data-skytt="${id}">
-        ${vy.flyttlage ? `<span class="dra" data-dra="${id}" aria-label="Dra för att flytta">☰</span>` : ''}
+        data-skytt="${esc(id)}">
+        ${vy.flyttlage ? `<span class="dra" data-dra="${esc(id)}" aria-label="Dra för att flytta">☰</span>` : ''}
         <span class="namn"><span class="nr">${nr}.</span> ${esc(p.namn)}</span>
-        <span class="forband">${esc(p.forband || '')}${klara.length ? ` · ${klara.length} försök` : ''}</span>
+        <span class="forband">${esc(p.forband || '')}${klara.length ? ` · ${klara.length} försök` : ''}${
+          status === 'godkand' && pagar ? ' · omtag pågår' : ''}</span>
         <span class="varden">${varden}</span>
         ${chip}
       </button>
       ${klara.length ? `<div class="knapprad" style="margin-top:-0.35rem">
-         <button class="knapp liten" data-historik="${id}">${oppen ? 'Dölj' : 'Visa'} försök</button>
+         <button class="knapp liten" data-historik="${esc(id)}">${oppen ? 'Dölj' : 'Visa'} försök</button>
          ${!pagar
-           ? `<button class="knapp liten" data-nytt-forsok="${id}">+ Nytt försök</button>` : ''}
+           ? `<button class="knapp liten" data-nytt-forsok="${esc(id)}">+ Nytt försök</button>` : ''}
        </div>` : ''}
       ${oppen ? ritaHistorik(o, klara, !pagar) : ''}`;
   }).join('');
@@ -398,11 +435,11 @@ function ritaHistorik(o, forsok, kanAndras) {
     const traffar = Object.entries(r.traffar).filter(([, n]) => n)
       .map(([z, n]) => `${z}${n}`).join(' ');
     return `<div class="forsokrad">
-      <span>Försök ${r.forsok} · ${komma(r.tid)} s · ${esc(traffar || 'inga träffar')}</span>
+      <span>Försök ${esc(r.forsok)} · ${komma(r.tid)} s · ${esc(traffar || 'inga träffar')}</span>
       <span>${b.poang} p · <b>${komma(b.pk)}</b> ·
         <span class="${b.godkand ? 'chip g' : 'chip u'}">${b.godkand ? 'G' : 'U'}</span></span>
-      ${kanAndras ? `<button class="knapp liten andraforsok" data-andra-forsok="${r.id}"
-        >Ändra försök ${r.forsok}</button>` : ''}
+      ${kanAndras ? `<button class="knapp liten andraforsok" data-andra-forsok="${esc(r.id)}"
+        >Ändra försök ${esc(r.forsok)}</button>` : ''}
     </div>`;
   }).join('')}</div>`;
 }
@@ -545,7 +582,7 @@ function ritaTid() {
     </div>`;
 }
 
-function sparaTid() {
+function sparaTid({ fraga = true } = {}) {
   const o = lager.omgang(vy.omgangId);
   const r = lager.pagaende(o.id, vy.personId);
   const tal = tolkadTid(utkastTid);
@@ -553,8 +590,32 @@ function sparaTid() {
     flash(tal === 0 ? 'Tiden måste vara större än noll.' : 'Tiden ser inte ut som ett tal.');
     return false;
   }
+  if (fraga && !kortTidBekraftad(r, tal)) return false;
   lager.andraResultat(r.id, { tid: tal });
   return true;
+}
+
+/**
+ * Frågar om en tid under KORT_TID stämmer, en gång per värde. En tid som knappas
+ * utan komma läses som hundradelar, så 30 blir 0,30 s och skulle annars ge en
+ * enorm kvot och Godkänd. Instruktören kan alltid svara ja: det är en fråga,
+ * ingen spärr.
+ */
+function kortTidBekraftad(r, tal) {
+  if (tal === null || tal === undefined || tal >= KORT_TID || r.kortTidOk === tal) return true;
+  if (!confirm(`Tiden är ${komma(tal)} s, alltså under ${KORT_TID} sekunder. Stämmer det?\n\n`
+    + 'Utan komma är de två sista siffrorna hundradelar: 3000 blir 30,00.')) return false;
+  lager.andraResultat(r.id, { kortTidOk: tal });
+  return true;
+}
+
+/** Sparar en påbörjad tid när skärmen lämnas utan knapptryck, utan att fråga. */
+function sparaUtkastet() {
+  if (vy.namn !== 'tid' || !lager.omgang(vy.omgangId)) return;
+  const r = lager.pagaende(vy.omgangId, vy.personId, false);
+  if (!r) return;
+  const tal = tolkadTid(utkastTid);
+  if (!utkastTid || tal > 0) lager.andraResultat(r.id, { tid: utkastTid ? tal : null });
 }
 
 // ---------------------------------------------------------------- poängen
@@ -598,14 +659,14 @@ function ritaPoang() {
         ${g.zoner.map((z) => `
           <button class="zonknapp${r.traffar[z] ? ' har' : ''}" data-zon="${z}" data-poang="${ZONPOANG[z]}">
             <span class="bokstav">${z}</span>
-            <span class="antal">${r.traffar[z] || 0}</span>
+            <span class="antal">${esc(r.traffar[z] || 0)}</span>
             <span class="poang">${(r.traffar[z] || 0) * ZONPOANG[z]} p</span>
           </button>`).join('')}
       </div>
     </div>`).join('');
 
   app.innerHTML = `
-    ${r.fore ? `<div class="varningsruta"><b>Du ändrar försök ${r.forsok}.</b>
+    ${r.fore ? `<div class="varningsruta"><b>Du ändrar försök ${esc(r.forsok)}.</b>
       Inget ändras förrän du trycker Spara ändringen.</div>` : ''}
     ${tidfalt}
     ${r.tid === null && !samlat ? '<div class="varningsruta">Ingen tid inlagd ännu — utan tid går ingen poängkvot att räkna.</div>' : ''}
@@ -722,7 +783,7 @@ function ritaLaggTill() {
   // Den som redan står på linjen ska inte gå att lägga till en gång till.
   const kvar = lager.personer().filter((p) => !o.deltagare.includes(p.id));
   app.innerHTML = kvar.length ? kvar.map((p) => `
-    <button class="skyttrad" data-lagg-in="${p.id}">
+    <button class="skyttrad" data-lagg-in="${esc(p.id)}">
       <span class="namn">${esc(p.namn)}</span>
       <span class="forband">${esc(p.forband || '')}</span>
       <span class="chip">lägg till</span>
@@ -819,7 +880,7 @@ function ritaRegister() {
     // soptunnan. En Radera-knapp per rad låg annars framme hela tiden, mitt i
     // en lista man skrollar med tummen.
     + (personer.length ? personer.map((p) => `
-    <div class="kort personrad" data-hall-radera="person:${p.id}">
+    <div class="kort personrad" data-hall-radera="person:${esc(p.id)}">
       <div><b>${esc(p.namn)}</b><br><span class="dampad liten">${esc(p.forband || 'utan förband')}${p.fmid ? ' · ' + esc(p.fmid) : ''}</span></div>
     </div>`).join('')
       + '<p class="dampad liten">Håll in en skytt för att få fram soptunnan som raderar hen.</p>'
@@ -1171,9 +1232,10 @@ function rita() {
   // sätt, även genom att appen stängs, gäller det ursprungliga försöket.
   const iArbete = vy.namn === 'tid' || vy.namn === 'poang'
     ? lager.pagaende(vy.omgangId, vy.personId, false) : null;
-  if (lager.aterstallAndringar(iArbete ? iArbete.id : null)) {
+  if (!avAnnanFlik && lager.aterstallAndringar(iArbete ? iArbete.id : null)) {
     flash('Ändringen sparades inte. Försöket är oförändrat.', 4);
   }
+  try {
   if (vy.namn === 'start') ritaStart();
   else if (vy.namn === 'ny') ritaNy();
   else if (vy.namn === 'omgang') ritaOmgang();
@@ -1186,8 +1248,27 @@ function rita() {
   else if (vy.namn === 'anvisning') ritaAnvisning();
   else if (vy.namn === 'lagg-till') ritaLaggTill();
   else if (vy.namn === 'dok') ritaDokument();
+  } catch (fel) {
+    ritaFel();
+  }
   window.scrollTo(0, 0);
   mätBottenrad();
+}
+
+/**
+ * Sista utvägen när en vy inte går att rita, till exempel av skadade uppgifter.
+ * Utan den blev skärmen tom, och då gick varken kopia eller nollställning att nå.
+ */
+function ritaFel() {
+  sattRubrik('Något gick fel');
+  underrubrik.textContent = 'Sidan kunde inte visas';
+  hemKnapp.hidden = false;
+  app.innerHTML = `
+    <div class="varningsruta"><b>Uppgifterna i telefonen kan vara skadade.</b>
+    Spara en kopia innan du gör något annat.</div>
+    <div class="knapprad"><button class="knapp" data-kopia="ut">Spara kopia</button></div>
+    <div class="knapprad"><button class="knapp fara" data-radera-allt="1">Radera allt innehåll</button></div>`;
+  bottenrad.innerHTML = '';
 }
 
 /** Ritar om utan att flytta skärmen. För ändringar inom samma vy, där den som
@@ -1294,6 +1375,11 @@ document.addEventListener('click', async (ev) => {
     '.zonknapp');
   if (!t) return;
   const d = t.dataset;
+
+  // Andra halvan av ett dubbeltryck landar på nästa skytts knapp, och hade
+  // registrerat hen utan träffar. Bara riktiga tryck spärras.
+  if ((d.registrera || d.sparaTid) && ev.isTrusted
+    && ev.timeStamp - senasteVybyte < DUBBELTRYCK_MS) return;
 
   // --- navigering ---
   if (d.vy === 'ny') return gaTill('ny', { valda: [] });
@@ -1475,7 +1561,11 @@ document.addEventListener('click', async (ev) => {
   }
   if (d.radera) {
     vibrera(12);
-    utkastTid = utkastTid.slice(0, -1);
+    // Står markören direkt efter kommat tas siffran före bort och kommat får
+    // stå kvar. Annars blev 30, till 30, vilket utan komma betyder 0,30 s.
+    utkastTid = utkastTid.endsWith(',')
+      ? (utkastTid.length > 2 ? `${utkastTid.slice(0, -2)},` : '')
+      : utkastTid.slice(0, -1);
     return uppdateraTidvisning();
   }
   if (d.sparaTid) {
@@ -1531,6 +1621,10 @@ document.addEventListener('click', async (ev) => {
     if (r.tid === null && !r.vapenhanteringUnderkand) {
       return flash('Lägg in tiden först — utan den finns ingen poängkvot.');
     }
+    if (!kortTidBekraftad(r, r.tid)) return;
+    if (!Object.values(r.traffar).some((n) => n > 0) && !r.vapenhanteringUnderkand
+      && !confirm(`Inga träffar är inknappade för ${lager.person(vy.personId).namn}. `
+        + 'Registrera ändå?')) return;
     if (r.fore) {
       lager.sparaAndring(r.id);
       vibrera(30);
@@ -1569,7 +1663,10 @@ document.addEventListener('click', async (ev) => {
     return;
   }
   if (d.skrivUt) return window.print();
-  if (d.uppdatera) return location.reload();
+  if (d.uppdatera) {
+    sparaUtkastet();
+    return location.reload();
+  }
 
   // --- register och inställningar ---
   if (d.arbetssatt) {
@@ -1595,7 +1692,7 @@ document.addEventListener('click', async (ev) => {
     return;
   }
   if (d.kopia === 'ut') {
-    const namn = `kompetensprov-kopia-${new Date().toISOString().slice(0, 10)}.json`;
+    const namn = `kompetensprov-kopia-${lokaltDatum()}.json`;
     await dela(namn, lager.sakerhetskopia(), 'txt', 'Säkerhetskopia från FM kompetensprov');
     return;
   }
@@ -1685,7 +1782,7 @@ document.addEventListener('pointerdown', (ev) => {
     slappMarkering();
     rad.classList.add('raderbar');
     rad.insertAdjacentHTML('beforeend',
-      `<span class="soptunna" data-soptunna="${rad.dataset.hallRadera}"`
+      `<span class="soptunna" data-soptunna="${esc(rad.dataset.hallRadera)}"`
       + ' role="button" aria-label="Radera">🗑</span>');
     raderbarRad = rad;
     vibrera(40);
@@ -1723,6 +1820,14 @@ document.addEventListener('click', (ev) => {
 // raderna om medan draget pågår.
 
 let drag = null;
+
+/** Släpper ett pågående drag utan att spara. Vyn kan ha bytts under fingret,
+ *  och ett släpp då hade skrivit en tom eller fel deltagarlista. */
+function avbrytDrag() {
+  if (!drag) return;
+  drag.rad.classList.remove('lyft');
+  drag = null;
+}
 
 function renumrera() {
   app.querySelectorAll('.skyttrad[data-skytt] .nr').forEach((el, i) => {
@@ -1785,24 +1890,37 @@ document.addEventListener('pointerup', () => {
 // någon halvfärdig ordning. Omritningen lägger tillbaka raden från lagret.
 document.addEventListener('pointercancel', () => {
   if (!drag) return;
-  drag = null;
+  avbrytDrag();
   ritaPaPlats();
 });
 
 // Håll in en zonknapp för att nolla den — enda vägen tillbaka efter en
 // feltryckning med handskar på.
-let hallTimer = null;
+//
+// En timer per finger: med en enda variabel skrev ett andra tryck över den
+// första timern, som då löpte ut och nollade zonen trots att fingret släppts.
+const hallTimers = new Map();
+function slappZon(fingret) {
+  clearTimeout(hallTimers.get(fingret));
+  hallTimers.delete(fingret);
+}
 document.addEventListener('pointerdown', (ev) => {
   const knapp = ev.target.closest('.zonknapp');
   if (!knapp) return;
-  hallTimer = setTimeout(() => {
+  // Ett långtryck som släpps utanför knappen ger inget klick, och flaggan hade
+  // annars ätit nästa riktiga tryck.
+  delete knapp.dataset.hollsIn;
+  slappZon(ev.pointerId);
+  hallTimers.set(ev.pointerId, setTimeout(() => {
+    hallTimers.delete(ev.pointerId);
+    if (!knapp.isConnected) return;
     knapp.dataset.hollsIn = '1';
     vibrera(40);
     sattZon(knapp, 0);
-  }, 500);
+  }, 500));
 });
-for (const h of ['pointerup', 'pointercancel', 'pointerleave']) {
-  document.addEventListener(h, () => clearTimeout(hallTimer));
+for (const h of ['pointerup', 'pointercancel']) {
+  document.addEventListener(h, (ev) => slappZon(ev.pointerId));
 }
 
 // Granskningen följer fältet medan man klistrar in och rättar. Den är billig
@@ -1837,7 +1955,8 @@ document.addEventListener('change', (ev) => {
       try {
         const n = lager.lasInSakerhetskopia(lasare.result);
         flash(`Inläst: ${antalOrd(n.personer, 'skytt', 'skyttar')}, `
-          + `${antalOrd(n.omgangar, 'omgång', 'omgångar')}, ${n.resultat} försök.`, 4);
+          + `${antalOrd(n.omgangar, 'omgång', 'omgångar')}, ${n.resultat} försök.`
+          + (n.hoppade ? ` ${n.hoppade} försök saknade skytt eller omgång och hoppades över.` : ''), 5);
         rita();
       } catch (fel) {
         flash('Filen gick inte att läsa: ' + fel.message, 5);
@@ -1853,7 +1972,7 @@ document.addEventListener('change', (ev) => {
 hemKnapp.addEventListener('click', () => {
   // En påbörjad tid sparas på vägen ut; annars försvinner det man knappat in
   // bara för att man tryckte fel knapp.
-  if (vy.namn === 'tid') sparaTid();
+  if (vy.namn === 'tid') sparaTid({ fraga: false });
   gaTill('start', {}, true);
 });
 
@@ -1894,5 +2013,10 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   }
 }
 
+if (lager.las() && lager.varLagretSkadat()) {
+  lagringsfel.textContent = 'De sparade uppgifterna gick inte att läsa. Originalet är bevarat '
+    + 'i telefonen. Radera inte appen, utan anmäl felet under Om appen.';
+  lagringsfel.hidden = false;
+}
 history.replaceState(vy, '');
 rita();

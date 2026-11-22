@@ -57,13 +57,13 @@ Växeln **TID | POÄNG** visar hur många som väntar i varje steg.
 - **3.** Tryck en gång per träff på zonerna.
 - **4.** Tryck *Registrera & nästa skytt*.
 
-**Tiden** knappas rakt av som den står på timern: **555** blir 5,55 och **6667** blir 66,67.
+**Tiden** knappas rakt av som den står på timern: **555** blir 5,55 och **6667** blir 66,67. Under 4 sekunder frågar appen om tiden stämmer, eftersom **30** utan komma betyder 0,30 s.
 
-**Träffarna** knappas in som de sitter i tavlan, **bättringsskotten med**. Appen väljer ut de bästa. Räknaren visar till exempel *4 av 4 — klart*, eller *(6 av 4) — de 4 bästa räknas* när fler träffar är inknappade än som räknas. Poängkvot och utfall räknas medan du knappar.
+**Träffarna** knappas in som de sitter i tavlan, **bättringsskotten med**. Appen väljer ut de bästa. Räknaren visar till exempel *4 av 4 — klart*, eller *(6 av 4) — de 4 bästa räknas* när fler träffar är inknappade än som räknas. Poängkvot och utfall räknas medan du knappar. Kvoten jämförs exakt med kravet, så 26 poäng på pistol kräver högst 13,00 s.
 
 **Vid osäker eller felaktig vapenhantering:** kryssa i rutan på poängskärmen. Försöket blir då underkänt oavsett resultat.
 
-**Registrera** låser försöket. Efter sista skytten visar appen hur många som blev godkända.
+**Registrera** låser försöket. Är inga träffar inknappade frågar appen först. Efter sista skytten visar appen hur många som blev godkända.
 
 ## Hitta i resultatlistan
 
@@ -99,11 +99,13 @@ Kolumnerna är tavelnummer, Fmid/Anstnr, namn, förband och försök, följda av
 
 ## Säkerhetskopia
 
-Allt finns **bara i den här telefonen**. Under **Appinställningar** sparar *Spara kopia* en fil med allt, och *Läs in kopia* läser tillbaka den. Det är också så du flyttar registret till en annan telefon. Inläsning lägger till och skriver aldrig över det som redan finns.
+Allt finns **bara i den här telefonen**. Under **Appinställningar** sparar *Spara kopia* en fil med allt, och *Läs in kopia* läser tillbaka den. Det är också så du flyttar registret till en annan telefon. Inläsning lägger till och skriver aldrig över det som redan finns. Appen granskar filen först, och en felaktig fil avvisas utan att något ändras. **Läs bara in kopior från någon du litar på.**
+
+Visas en **röd rad** högst upp gick det inte att spara i telefonen. Spara en kopia direkt.
 
 ## Ny version
 
-En **grön rad i nederkant** betyder att en ny version är klar. Den stör ingenting och kan stå kvar hela omgången, eftersom appen aldrig laddar om av sig själv. Ett tryck på raden uppdaterar appen. Allt inknappat ligger kvar, men du hamnar på startsidan, så vänta gärna tills gruppen är klar.
+En **grön rad i nederkant** betyder att en ny version är klar. Den stör ingenting och kan stå kvar hela omgången, eftersom appen aldrig laddar om av sig själv. Ett tryck på raden uppdaterar appen. Allt inknappat ligger kvar, utom en rättning som inte sparats, och du hamnar på startsidan, så vänta gärna tills gruppen är klar.
 
 ## Regler och krav
 

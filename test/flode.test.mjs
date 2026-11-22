@@ -27,6 +27,8 @@ function starta(personer = PERSONER) {
     url: 'https://exempel.test/',
     pretendToBeVisual: true,
     beforeParse(window) {
+      // Frågorna om kort tid och noll träffar besvaras ja, utom i prov som säger annat.
+      window.confirm = () => true;
       window.localStorage.setItem('fm-kompetensprov', JSON.stringify({
         version: 1, personer, omgangar: [], resultat: [],
       }));
@@ -2119,4 +2121,284 @@ test('en avbruten rättning återställs när appen startas om', () => {
   const efter = lagret().resultat.find((r) => r.id === fore.id);
   assert.deepEqual(efter.traffar, fore.traffar);
   assert.ok(efter.registrerad, 'försöket ska vara registrerat igen');
+});
+
+// ------------------------------------------- rättningar efter granskningen
+
+/** Läser in en kopia genom filfältet, som en riktig fil. */
+async function lasInKopia(innehall) {
+  klicka('Appinställningar');
+  const falt = doc.querySelector('#kopiafil');
+  Object.defineProperty(falt, 'files', { configurable: true,
+    value: [new win.File([innehall], 'kopia.json', { type: 'application/json' })] });
+  falt.dispatchEvent(new win.Event('change', { bubbles: true }));
+  await new Promise((r) => setTimeout(r, 60));
+}
+
+const giltigKopia = () => ({
+  personer: [{ id: 'k1', namn: 'Kopia, Kim', forband: '', fmid: '' }],
+  omgangar: [{ id: 'ok', gren: 'pist', datum: '2026-08-11', deltagare: ['k1'] }],
+  resultat: [{ id: 'kr', omgangId: 'ok', personId: 'k1', forsok: 1, tid: 10,
+    traffar: { B: 4, A: 2 }, vapenhanteringUnderkand: false, registrerad: '2026-08-11T10:00:00Z' }],
+});
+
+for (const [namn, skada] of [
+  ['markup i ett person-id', (k) => { k.personer[0].id = '"><img src=x onerror=alert(1)>'; }],
+  ['markup i ett omgångs-id', (k) => { k.omgangar[0].id = '"><img src=x onerror=alert(1)>'; }],
+  ['markup i försöksnumret', (k) => { k.resultat[0].forsok = '<img src=x>'; }],
+  ['markup som zon', (k) => { k.resultat[0].traffar = { '<img>': 1 }; }],
+  ['okänt prov', (k) => { k.omgangar[0].gren = 'constructor'; }],
+  ['skytt utan namn', (k) => { delete k.personer[0].namn; }],
+  ['tid som text', (k) => { k.resultat[0].tid = '10'; }],
+  ['negativa träffar', (k) => { k.resultat[0].traffar = { A: -1, B: 10 }; }],
+  ['saknade träffar', (k) => { delete k.resultat[0].traffar; }],
+  ['ogiltigt datum', (k) => { k.omgangar[0].datum = '../x'; }],
+]) {
+  test(`säkerhetskopia med ${namn} avvisas och ändrar ingenting`, async () => {
+    const fore = win.localStorage.getItem('fm-kompetensprov');
+    const k = giltigKopia();
+    skada(k);
+    await lasInKopia(JSON.stringify(k));
+    assert.equal(win.localStorage.getItem('fm-kompetensprov'), fore);
+    assert.match(doc.querySelector('.flash').textContent, /Inget lästes in/);
+    hem();
+    assert.ok(doc.querySelector('[data-vy="ny"]'), 'appen ska fortsätta fungera');
+  });
+}
+
+test('en giltig kopia läses in, och okända fält följer inte med', async () => {
+  const k = giltigKopia();
+  k.personer[0].extra = '<script>';
+  await lasInKopia(JSON.stringify(k));
+  const lager = lagret();
+  assert.ok(lager.omgangar.some((o) => o.id === 'ok'));
+  assert.equal(lager.personer.find((p) => p.id === 'k1').extra, undefined);
+});
+
+test('en kopia med fler deltagare i samma omgång tappar ingen ur protokollet', async () => {
+  const k = giltigKopia();
+  await lasInKopia(JSON.stringify({ ...k, resultat: [],
+    personer: k.personer, omgangar: k.omgangar }));
+  hem();
+  const utokad = giltigKopia();
+  utokad.personer.push({ id: 'k2', namn: 'Andra, Ann' });
+  utokad.omgangar[0].deltagare = ['k2', 'k1'];
+  utokad.resultat.push({ ...utokad.resultat[0], id: 'kr2', personId: 'k2' });
+  await lasInKopia(JSON.stringify(utokad));
+  const o = lagret().omgangar.find((x) => x.id === 'ok');
+  assert.deepEqual(o.deltagare, ['k1', 'k2'], 'den som stod kvar behåller sin tavla');
+  hem();
+  assert.match(doc.querySelector('[data-oppna="ok"]').textContent, /2\/2/);
+});
+
+test('en kopia tagen mitt i en rättning läses in med originalet', async () => {
+  const k = giltigKopia();
+  k.resultat[0].registrerad = null;
+  k.resultat[0].traffar = { H: 1 };
+  k.resultat[0].fore = { tid: 10, traffar: { B: 4, A: 2 }, vapenhanteringUnderkand: false,
+    registrerad: '2026-08-11T10:00:00Z' };
+  await lasInKopia(JSON.stringify(k));
+  const r = lagret().resultat.find((x) => x.id === 'kr');
+  assert.deepEqual(r.traffar, { B: 4, A: 2 });
+  assert.ok(r.registrerad);
+  assert.equal(r.fore, undefined);
+});
+
+test('skadade uppgifter ger en väg till kopian i stället för en tom skärm', () => {
+  dom = new JSDOM(fs.readFileSync(FIL, 'utf8'), {
+    runScripts: 'dangerously', url: 'https://exempel.test/', pretendToBeVisual: true,
+    beforeParse(window) {
+      window.localStorage.setItem('fm-kompetensprov', JSON.stringify({
+        version: 1, personer: [], resultat: [], omgangar: [{ id: 'x', deltagare: [] }],
+      }));
+    },
+  });
+  win = dom.window; doc = win.document;
+  assert.match(doc.body.textContent, /kan vara skadade/);
+  assert.ok(knapp('Spara kopia'));
+  assert.ok(knapp('Radera allt innehåll'));
+});
+
+test('ett oläsbart lager läggs åt sidan innan något skrivs över', () => {
+  dom = new JSDOM(fs.readFileSync(FIL, 'utf8'), {
+    runScripts: 'dangerously', url: 'https://exempel.test/', pretendToBeVisual: true,
+    beforeParse(window) { window.localStorage.setItem('fm-kompetensprov', '{trasigt'); },
+  });
+  win = dom.window; doc = win.document;
+  assert.equal(win.localStorage.getItem('fm-kompetensprov-skadat'), '{trasigt');
+  assert.equal(doc.querySelector('#lagringsfel').hidden, false);
+});
+
+test('en kort tid kräver bekräftelse, och nej stannar kvar på knappsatsen', () => {
+  omgangMedAlla();
+  let fragor = 0;
+  win.confirm = () => { fragor++; return false; };
+  nastaIListan();
+  knappaTid('30');
+  const skytt = doc.querySelector('#rubrik').textContent;
+  klicka('Spara & nästa skytt');
+  assert.equal(fragor, 1);
+  assert.equal(doc.querySelector('#rubrik').textContent, skytt);
+  assert.equal(lagret().resultat[0].tid, null);
+  win.confirm = () => { fragor++; return true; };
+  klicka('Spara & nästa skytt');
+  assert.equal(lagret().resultat[0].tid, 0.3);
+  assert.equal(fragor, 2);
+});
+
+test('en bekräftad kort tid frågas inte om igen vid registreringen', () => {
+  omgangMedAlla();
+  let fragor = 0;
+  win.confirm = () => { fragor++; return true; };
+  nastaIListan();
+  knappaTid('350');
+  klicka('Poäng för');
+  assert.equal(fragor, 1);
+  knappaZon('B', 4);
+  knappaZon('A', 2);
+  klicka('Registrera');
+  assert.equal(fragor, 1);
+});
+
+test('en kort tid som sparats via hemknappen frågas vid registreringen', () => {
+  omgangMedAlla();
+  nastaIListan();
+  knappaTid('30');
+  hem();
+  doc.querySelector('[data-oppna]').click();
+  klicka('POÄNG');
+  nastaIListan();
+  knappaZon('B', 4);
+  knappaZon('A', 2);
+  win.confirm = () => false;
+  klicka('Registrera');
+  assert.equal(lagret().resultat.filter((r) => r.registrerad).length, 0);
+});
+
+test('fyra sekunder eller mer frågar inte', () => {
+  omgangMedAlla();
+  win.confirm = () => { throw new Error('ska inte fråga'); };
+  nastaIListan();
+  knappaTid('400');
+  klicka('Spara & nästa skytt');
+  assert.equal(lagret().resultat[0].tid, 4);
+});
+
+test('backsteg över kommat ändrar inte tiden hundrafalt', () => {
+  omgangMedAlla();
+  nastaIListan();
+  const visas = () => doc.querySelector('.tidvisning').firstChild.textContent;
+  knappaTid('30,00');
+  for (const vantat of ['30,0', '30,', '3,', '0,00']) {
+    klicka('⌫', doc.querySelector('.knappsats'));
+    assert.equal(visas(), vantat);
+  }
+});
+
+test('registrering utan träffar frågar först', () => {
+  omgangMedAlla();
+  nastaIListan();
+  knappaTid('1000');
+  klicka('Poäng för');
+  win.confirm = () => false;
+  klicka('Registrera');
+  assert.equal(lagret().resultat.filter((r) => r.registrerad).length, 0);
+});
+
+test('två överlappande tryck nollar ingen zon', async () => {
+  omgangMedAlla();
+  nastaIListan();
+  knappaTid('1000');
+  klicka('Poäng för');
+  const zon = (z) => doc.querySelector(`.zonknapp[data-zon="${z}"]`);
+  const peka = (el, typ, id) => {
+    const h = new win.MouseEvent(typ, { bubbles: true });
+    Object.defineProperty(h, 'pointerId', { value: id });
+    el.dispatchEvent(h);
+  };
+  knappaZon('A', 2);
+  peka(zon('A'), 'pointerdown', 1);
+  peka(zon('B'), 'pointerdown', 2);
+  peka(zon('A'), 'pointerup', 1);
+  peka(zon('B'), 'pointerup', 2);
+  await new Promise((r) => setTimeout(r, 600));
+  assert.equal(zon('A').querySelector('.antal').textContent, '2');
+});
+
+test('trycket efter ett långtryck utan klick räknas', async () => {
+  omgangMedAlla();
+  nastaIListan();
+  knappaTid('1000');
+  klicka('Poäng för');
+  const z = knappaZon('C', 3);
+  z.dispatchEvent(new win.MouseEvent('pointerdown', { bubbles: true }));
+  await new Promise((r) => setTimeout(r, 600));
+  z.dispatchEvent(new win.MouseEvent('pointerup', { bubbles: true }));
+  assert.equal(z.querySelector('.antal').textContent, '0');
+  z.dispatchEvent(new win.MouseEvent('pointerdown', { bubbles: true }));
+  z.dispatchEvent(new win.MouseEvent('pointerup', { bubbles: true }));
+  z.click();
+  assert.equal(z.querySelector('.antal').textContent, '1');
+});
+
+test('en misslyckad sparning syns direkt och försvinner när det fungerar igen', () => {
+  omgangMedAlla();
+  const orig = win.Storage.prototype.setItem;
+  win.Storage.prototype.setItem = () => { throw new win.DOMException('fullt', 'QuotaExceededError'); };
+  nastaIListan();
+  knappaTid('1000');
+  klicka('Spara & tillbaka');
+  assert.equal(doc.querySelector('#lagringsfel').hidden, false);
+  assert.match(doc.querySelector('#lagringsfel').textContent, /gick inte att spara/);
+  win.Storage.prototype.setItem = orig;
+  rader()[0].click();
+  klicka('Spara & tillbaka');
+  assert.equal(doc.querySelector('#lagringsfel').hidden, true);
+});
+
+test('en annan flik skriver, och nästa sparning här behåller det', () => {
+  omgangMedAlla();
+  const lager = lagret();
+  lager.resultat.push({ id: 'annanflik', omgangId: lager.omgangar[0].id,
+    personId: lager.omgangar[0].deltagare[0], forsok: 1, tid: 10, traffar: { B: 4, A: 2 },
+    vapenhanteringUnderkand: false, registrerad: '2026-08-11T10:00:00Z' });
+  const ny = JSON.stringify(lager);
+  win.localStorage.setItem('fm-kompetensprov', ny);
+  win.dispatchEvent(new win.StorageEvent('storage', { key: 'fm-kompetensprov', newValue: ny }));
+  assert.match(rader()[0].textContent, /godkänd/);
+  rader()[1].click();
+  knappaTid('1000');
+  klicka('Spara & tillbaka');
+  assert.ok(lagret().resultat.some((r) => r.id === 'annanflik'));
+});
+
+test('bakåtgesten sparar en påbörjad tid, som hemknappen', () => {
+  omgangMedAlla();
+  const omgangId = lagret().omgangar[0].id;
+  nastaIListan();
+  knappaTid('555');
+  win.dispatchEvent(new win.PopStateEvent('popstate',
+    { state: { namn: 'omgang', omgangId, lage: 'tid' } }));
+  assert.equal(lagret().resultat[0].tid, 5.55);
+});
+
+test('ett pågående sämre omtag döljer inte det godkända försöket', () => {
+  blandadOmgang();
+  klicka('+ Nytt försök');
+  knappaTid('6000');
+  klicka('Spara & tillbaka');
+  const rad = rader()[0];
+  assert.equal(rad.querySelector('.chip').textContent, 'godkänd');
+  assert.match(rad.querySelector('.varden').textContent, /5,00 s/);
+  assert.match(rad.querySelector('.forband').textContent, /omtag pågår/);
+});
+
+test('startsidan räknar bara dem som står på linjen', async () => {
+  const k = giltigKopia();
+  k.personer.push({ id: 'k2', namn: 'Borta, Bo' });
+  k.resultat.push({ ...k.resultat[0], id: 'kr2', personId: 'k2' });
+  k.omgangar[0].deltagare = ['k1', 'k2'];
+  await lasInKopia(JSON.stringify(k));
+  hem();
+  assert.match(doc.querySelector('[data-oppna="ok"]').textContent, /2\/2/);
 });

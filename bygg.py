@@ -69,6 +69,11 @@ def version():
     return json.loads((HAR / 'package.json').read_text(encoding='utf-8'))['version']
 
 
+def skript_hash(js):
+    """CSP-hashen för det inbakade skriptet, med radbrytningarna runt koden."""
+    return 'sha256-' + base64.b64encode(hashlib.sha256(f'\n{js}\n'.encode()).digest()).decode()
+
+
 def bygg_html(js):
     html = (SRC / 'index.html').read_text(encoding='utf-8')
     css = (SRC / 'style.css').read_text(encoding='utf-8')
@@ -98,6 +103,10 @@ def bygg_html(js):
         '<script type="module" src="app.js"></script>',
         f'<script>\n{js}\n</script>',
     )
+    # Bara exakt det här skriptet får köras. Hashen gäller inte attribut, så ett
+    # onerror i inläst data stoppas av webbläsaren även om något skulle slinka
+    # förbi granskningen av säkerhetskopian.
+    html = html.replace("script-src 'self'", f"script-src '{skript_hash(js)}'", 1)
     # Favikonen bäddas in; hemskärmsikonen och manifestet måste vara riktiga
     # filer för att iOS ska ta dem, och lämnas därför som länkar. Öppnad som
     # lös fil ger de en tyst 404 utan att något går sönder.
@@ -144,7 +153,8 @@ NATVERKS_API = [
     (r'\bimportScripts\s*\(', 'importScripts()'),
 ]
 
-CSP_KRAV = ["connect-src 'none'", "form-action 'none'"]
+CSP_KRAV = ["default-src 'none'", "connect-src 'none'", "form-action 'none'",
+            "object-src 'none'", "base-uri 'none'"]
 
 
 def kontrollera_inga_utgaende(html):
@@ -190,6 +200,10 @@ def kontrollera_inga_utgaende(html):
         for direktiv in CSP_KRAV:
             if direktiv not in tagg.group(1):
                 fel.append(f'CSP saknar direktivet: {direktiv}')
+        skript = re.search(r"script-src ([^;]*)", tagg.group(1))
+        inbakat = re.findall(r'<script>\n(.*)\n</script>', html, flags=re.S)
+        if not skript or len(inbakat) != 1 or skript.group(1) != f"'{skript_hash(inbakat[0])}'":
+            fel.append('CSP:ns skripthash stämmer inte med det inbakade skriptet')
 
     if fel:
         raise SystemExit('\n'.join(['Bygget stoppat:'] + [f'  - {f}' for f in fel]))
