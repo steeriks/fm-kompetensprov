@@ -47,6 +47,13 @@ header h1 {
   min-width: 0; overflow-wrap: anywhere;      /* långa namn ska brytas, inte tränga ut */
 }
 header .under { display: block; font-size: 0.8rem; color: var(--dampad); font-weight: 400; }
+/* Ett långt namn får inte äta höjden från knappsatsen. */
+#rubriktext {
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+}
+body[data-vy="tid"] header .under, body[data-vy="poang"] header .under {
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 /* Tavelnumret i rubriken får samma färg som i listan, så att blicken hittar
    det utan att läsa. */
 header h1 .nr { color: var(--accent); }
@@ -170,7 +177,7 @@ label.falt input.saknas { border-color: var(--underkand); }
 /* ------------------------------------------------------------ vallista */
 
 .skyttrad {
-  display: grid; grid-template-columns: 1fr auto auto;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center; gap: 0.2rem 0.6rem;
   background: var(--kort); border: 1px solid var(--linje);
   border-radius: var(--radie); margin-bottom: 0.5rem;
@@ -182,6 +189,7 @@ label.falt input.saknas { border-color: var(--underkand); }
 }
 .skyttrad.klar { border-color: #2f4a2c; }
 .skyttrad .namn { font-weight: 600; }
+.skyttrad .namn, .skyttrad .forband { min-width: 0; overflow-wrap: anywhere; }
 .skyttrad .forband { grid-column: 1; font-size: 0.8rem; color: var(--dampad); }
 .skyttrad .varden {
   grid-column: 2; grid-row: 1 / span 2; text-align: right;
@@ -282,7 +290,7 @@ label.falt input.saknas { border-color: var(--underkand); }
 .tidvisning.tom { color: var(--linje); }
 .knappsats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
 .knappsats button {
-  min-height: 68px; font-size: 1.6rem; font-weight: 600;
+  min-height: clamp(44px, 8.6vh, 68px); font-size: 1.6rem; font-weight: 600;
   background: var(--kort-ljus); color: var(--ink);
   border: 1px solid var(--linje); border-radius: var(--radie); cursor: pointer;
   touch-action: manipulation;
@@ -302,7 +310,7 @@ label.falt input.saknas { border-color: var(--underkand); }
 .tidfalt .tidvisning .enhet { font-size: 0.95rem; }
 .tidfalt .pil { color: var(--accent); font-size: 1.2rem; }
 .tidpanel { margin-bottom: 0.9rem; }
-.tidpanel .knappsats button { min-height: 54px; }
+.tidpanel .knappsats button { min-height: clamp(44px, 7.6vh, 54px); }
 .tidpanel > .knapp { width: 100%; margin-top: 0.5rem; }
 
 /* ------------------------------------------------------------ zonknappar */
@@ -425,9 +433,12 @@ label.falt input.saknas { border-color: var(--underkand); }
 [data-hall-radera] { touch-action: pan-y; }
 .raderbar { border-color: var(--underkand); background: rgba(224, 122, 109, 0.14); }
 .soptunna {
-  padding: 0.5rem 0.2rem 0.5rem 0.7rem; margin-left: 0.2rem;
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 44px; min-height: 44px; margin-left: 0.2rem;
   font-size: 1.5rem; line-height: 1;
 }
+/* Soptunnan tar samma plats som statusmärket, och båda kan inte stå där. */
+.raderbar .chip { display: none; }
 .skyttrad .soptunna { grid-column: 3; grid-row: 1 / span 2; align-self: center; }
 
 /* Registrets rader är kort, inte vallistans knappar — men soptunnan ska hamna
@@ -454,12 +465,13 @@ label.falt input.saknas { border-color: var(--underkand); }
 /* Vem som står på tur, direkt under knappen som leder dit. */
 .nastaskytt {
   margin: -0.1rem 0 0; text-align: center; font-size: 0.9rem; color: var(--dampad);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .nastaskytt b { color: var(--ink); }
 
 /* Flyttläge: *Ändra ordning* ger raden ett handtag att dra i. Långtryck på
    raden är borta, eftersom en blöt skärm utlöste det av misstag. */
-.skyttrad.flyttbar { grid-template-columns: auto 1fr auto auto; }
+.skyttrad.flyttbar { grid-template-columns: auto minmax(0, 1fr) auto auto; }
 .skyttrad .dra {
   grid-row: 1 / span 2; align-self: center;
   padding: 0.4rem 0.7rem 0.4rem 0.1rem; margin-right: 0.2rem;
@@ -483,3 +495,24 @@ label.falt input.saknas { border-color: var(--underkand); }
 .dokument .punkter { margin: 0 0 0.9rem; padding-left: 1.2rem; }
 .dokument .punkter li { margin-bottom: 0.35rem; }
 .dokument a { color: var(--accent); overflow-wrap: anywhere; }
+
+/* Utgåvan lämnar raden i inmatningsvyerna, så att namnet får hela bredden
+   mellan pilarna. Den står kvar i hörnet och går fortfarande att läsa av. */
+body[data-vy="tid"] header, body[data-vy="poang"] header { position: sticky; }
+body[data-vy="tid"] .utgava, body[data-vy="poang"] .utgava {
+  position: absolute; top: calc(0.25rem + env(safe-area-inset-top)); right: 0.5rem;
+}
+body[data-vy="tid"] header h1, body[data-vy="poang"] header h1 { flex: 1; }
+
+/* Låga skärmar: hela knappsatsen ska nås utan att skrolla. Står sist i arket,
+   annars vinner grundreglerna för samma element. */
+@media (max-height: 740px) {
+  .tidvisning { font-size: 2.3rem; padding: 0.1rem 0 0.2rem; min-height: 0; }
+  .bottenrad { gap: 0.3rem; padding-top: 0.35rem; }
+  .bottenrad .knapp.primar { min-height: 48px; padding-top: 0.4rem; padding-bottom: 0.4rem; }
+  .bottenrad .knapprad { margin: 0.1rem 0; }
+  body[data-vy="tid"] main, body[data-vy="poang"] main { padding-top: 0.4rem; }
+  .knappsats { gap: 0.35rem; }
+  .tidfalt { min-height: 48px; margin-bottom: 0.35rem; }
+  .tidpanel > .knapp { margin-top: 0.35rem; }
+}

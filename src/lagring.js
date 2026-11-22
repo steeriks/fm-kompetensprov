@@ -400,6 +400,20 @@ export function aterstallAndringar(undantagId = null) {
   return antal;
 }
 
+/**
+ * Tar bort omtag som öppnats men aldrig fått något innehåll. Ett tryck på
+ * *+ Nytt försök* följt av bakåt ska inte lämna skytten som "pågående". Första
+ * försöket lämnas: det är så en skytt står kvar i svepet.
+ */
+export function stadaTommaOmtag(undantagId = null) {
+  const d = las();
+  const fore = d.resultat.length;
+  d.resultat = d.resultat.filter((r) => r.id === undantagId || r.registrerad || r.fore
+    || r.forsok === 1 || (r.tid !== null && r.tid !== undefined) || r.vapenhanteringUnderkand
+    || Object.values(r.traffar || {}).some((n) => n > 0));
+  if (d.resultat.length !== fore) spara();
+}
+
 export function raderaResultat(id) {
   const d = las();
   d.resultat = d.resultat.filter((r) => r.id !== id);

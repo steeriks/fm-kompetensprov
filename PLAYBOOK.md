@@ -283,6 +283,10 @@ måste kunna granskas: den stryker rubrikrader, numrering och BOM, och det är r
 så länge användaren ser resultatet innan det skrivs. `granskaSkyttelista` rör därför inte
 lagret, och `importeraSkyttar` är den enda som skriver.
 
+**Ett tomt omtag städas bort i `rita()`** med `stadaTommaOmtag()`, utom det man står i. Första
+försöket lämnas, för det är så en skytt står kvar i svepet. Ett påbörjat omtag tas bort med
+*Ta bort påbörjat försök*, som aldrig rör registrerade försök.
+
 **Flyttläge** är ett tillstånd på vallistan (`vy.flyttlage`), inte en egen vy: knappen
 *Ändra ordning* slår på det, varje rad får ett handtag (☰) och draget börjar när man tar i
 handtaget. Läget startades först med ett långt tryck på raden. Den timern rensades inte vid
@@ -380,6 +384,13 @@ egen "Bra": botten `FFC6EFCE`, text `FF006100`, och samma nyans i PDF:en som `GR
 (0–1-skalan). Text- och CSV-formaten står utanför: där finns ordet *GODKÄND* utskrivet, och
 en färg går ändå inte att bära i en textfil.
 
+Fritext är inte betrodd i exporten heller. CSV sätter en apostrof före Fmid, namn och förband
+som börjar med ett formeltecken. XLSX stryker tecken som är ogiltiga i XML, och bara kolumnerna
+Tid och PK blir tal (formatet `0.00`), så att ett Fmid som `12,50` förblir text. PDF:en mäter med
+Helveticas riktiga teckenbredder och radbryter Fmid, namn, förband, utfall och anmärkning i
+stället för att kapa dem. Ett öppet försök med innehåll heter *Ej registrerad*, och exportvyn
+varnar. Filformaten delar bara filen: textprotokollet följer inte med som meddelandetext.
+
 Två saker som är lätta att göra fel:
 
 - I xlsx räknar `styles.xml` sina egna listor. Läggs en font eller fyllning till måste
@@ -417,7 +428,7 @@ inte i bygget — filerna ska gå att läsa som de är i `src/`. `src/hjalp.md` 
 
 ```bash
 python3 bygg.py     # måste köras först — proven kör mot docs/
-npm test            # 184 prov: regler, export, import, hela flödet, spärrarna mot utgående trafik
+npm test            # 201 prov: regler, export, import, hela flödet, spärrarna mot utgående trafik
 ```
 
 **Bygg före du provar.** Det här är den enklaste fällan i arkivet och den värsta, eftersom

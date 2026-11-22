@@ -203,7 +203,7 @@ Inga beroenden i appen — ren HTML, CSS och JavaScript, ingen CDN, inget ramver
 npm install       # bara jsdom, och bara för testerna
 npm run serve     # http://localhost:8390 mot src/
 npm run bygg      # bakar ihop src/ till docs/index.html
-npm test          # 132 prov: regelmotor, export, import och hela flödet i jsdom
+npm test          # 201 prov: regelmotor, export, import och hela flödet i jsdom
 ```
 
 Testerna kör mot `docs/`, så **bygg innan du provar**.

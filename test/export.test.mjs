@@ -116,14 +116,14 @@ test('godkända rader gröns i xlsx, underkända och ej skjutna inte', () => {
   assert.match(text, /<fgColor rgb="FFC6EFCE"\/>/, 'ljusgrön fyllning saknas');
   assert.match(text, /<color rgb="FF006100"\/>/, 'mörkgrön text saknas');
   assert.match(text, /<fills count="3">/);
-  assert.match(text, /<cellXfs count="3">/);
+  assert.match(text, /<cellXfs count="5">/);
 
   // Tre huvudrader, en tom, kolumnrubrikerna på rad 5 — sedan de fyra
   // dataraderna: p1 (godkänd), p2 försök 1 (underkänd), p2 försök 2
   // (godkänd) och p3 (ej skjuten).
   const stilar = [6, 7, 8, 9].map((radnr) => {
     const rad = text.match(new RegExp(`<row r="${radnr}">.*?</row>`))[0];
-    return /s="2"/.test(rad);
+    return /s="2"/.test(rad) && /s="4"/.test(rad);
   });
   assert.deepEqual(stilar, [true, false, true, false],
     'bara de godkända försöken ska vara gröna');
@@ -204,4 +204,104 @@ test('pistolens två målytor väljer var för sig i exporten', () => {
   const pu = underlag({ ...omgang, deltagare: ['p1'] }, personer, resultatet);
   assert.deepEqual(pu.rader[0].traffar, { B: 2, D: 2, A: 2 });
   assert.match(somText(pu), /A2 B2 D2 · 24 p/);
+});
+
+// ------------------------------------------------ fritext och kantfall
+
+const enSkytt = (person, r = {}) => underlag(
+  { ...omgang, id: 'x', deltagare: [person.id] },
+  [person],
+  [{ id: 'rx', omgangId: 'x', personId: person.id, forsok: 1, tid: 10,
+    traffar: { B: 4, A: 2 }, vapenhanteringUnderkand: false,
+    registrerad: '2026-08-11T10:00:00Z', ...r }],
+);
+const xlsxText = (x) => Buffer.from(somXlsx(x)).toString('utf8');
+const pdfRader = (x) => [...Buffer.from(somPdf(x)).toString('latin1').matchAll(/\((.*?)\) Tj/g)]
+  .map((m) => m[1]);
+
+test('kontrolltecken i ett namn gör inte excelfilen oläsbar', () => {
+  const t = xlsxText(enSkytt({ id: 'p', namn: 'Ek\u000BAnna\u0001', forband: '' }));
+  const ark = t.slice(t.indexOf('<sheetData>'), t.indexOf('</sheetData>'));
+  assert.ok(!/[\u0001\u000B]/.test(ark), 'kontrolltecken är ogiltiga i XML');
+  assert.match(ark, /EkAnna/);
+});
+
+test('formler i fritext körs inte när csv:n öppnas', () => {
+  const c = somCsv(enSkytt({ id: 'p', namn: '=1+1', forband: '+SUM(A1)', fmid: '@x' }));
+  assert.match(c, /;'@x;'=1\+1;'\+SUM\(A1\);/);
+  const b = somCsv(enSkytt({ id: 'p', namn: '-Ek', forband: '', fmid: '-2+3' }));
+  assert.match(b, /;'-2\+3;'-Ek;/);
+});
+
+test('radbrytning ensam i ett fält delar inte csv-raden', () => {
+  const c = somCsv(enSkytt({ id: 'p', namn: 'Ek\rAnna', forband: '' }));
+  assert.match(c, /"Ek\rAnna"/);
+});
+
+test('bara tid och kvot blir tal i excel, med två decimaler', () => {
+  const t = xlsxText(enSkytt({ id: 'p', namn: 'Ek', forband: '1,5', fmid: '12,50' }));
+  assert.match(t, /<t xml:space="preserve">12,50<\/t>/, 'Fmid ska förbli text');
+  assert.match(t, /<t xml:space="preserve">1,5<\/t>/, 'förbandet ska förbli text');
+  assert.match(t, /<c r="M6" s="4"><v>10<\/v>/, 'tiden är ett tal i grön talstil');
+  assert.match(t, /<c r="N6" s="4"><v>2\.6<\/v>/, 'kvoten likaså');
+  assert.match(t, /numFmtId="2"/);
+});
+
+test('pdf:en visar poäng 0 och hela orsaken till underkännandet', () => {
+  const rader = pdfRader(enSkytt({ id: 'p', namn: 'Ek', forband: '' },
+    { traffar: {}, vapenhanteringUnderkand: true }));
+  assert.ok(rader.includes('0'), 'poäng 0 ska stå kvar');
+  const text = rader.join(' ');
+  assert.match(text, /XBCD 0\/4/);
+  assert.match(text, /AH 0\/2/);
+  assert.match(text, /Vapenhantering/);
+});
+
+test('pdf:en kapar inga långa id och förvanskar inga namn', () => {
+  const rader = pdfRader(enSkytt({ id: 'p', namn: 'Åsa Šimić Łódź €', forband: '',
+    fmid: 'ABCDEFGHIJKLMNOPQRS' }));
+  const text = rader.join('');
+  assert.ok(!text.includes('\x85'), 'inget ska kapas');
+  assert.ok(text.includes('ABCDEFGHIJ'), 'id:t står kvar');
+  assert.equal(rader.filter((r) => /^[A-S]{5,}$/.test(r)).join(''), 'ABCDEFGHIJKLMNOPQRS');
+  const namn = rader.join(' ');
+  assert.ok(namn.includes('\xc5sa'), 'sammansatt Å');
+  assert.ok(namn.includes('\x8aimic'), 'Š finns i WinAnsi, ć får sin grundbokstav');
+  assert.ok(namn.includes('Lodz') || namn.includes('L\xf3dz'), 'Ł byts mot L');
+  assert.ok(namn.includes('\x80'), '€ finns i WinAnsi');
+  assert.ok(!namn.includes('?'), 'inga frågetecken');
+});
+
+test('långa huvudrader håller sig inom sidan', () => {
+  const x = underlag({ ...omgang, plats: 'Mycket lång plats '.repeat(12) }, personer, resultat);
+  const pdf = Buffer.from(somPdf(x)).toString('latin1');
+  const antal = [...pdf.matchAll(/\(([^)]*Mycket[^)]*)\) Tj/g)];
+  assert.ok(antal.length > 1, 'raden ska brytas');
+});
+
+test('ett inknappat men oregistrerat försök kallas inte ej skjutet', () => {
+  const x = underlag(omgang, personer, [{ id: 'o', omgangId: 'o1', personId: 'p3', forsok: 1,
+    tid: 9.9, traffar: { A: 1 }, vapenhanteringUnderkand: false, registrerad: null }]);
+  const rad = x.rader.find((r) => r.person.id === 'p3');
+  assert.equal(rad.celler.at(-2), 'Ej registrerad');
+  assert.equal(x.oregistrerade, 1);
+  assert.match(somText(x), /Ej registrerad/);
+  assert.equal(x.rader.find((r) => r.person.id === 'p1').celler.at(-2), 'Ej skjuten');
+});
+
+test('ett försök utan tid ger läsbar text', () => {
+  const t = somText(enSkytt({ id: 'p', namn: 'Ek', forband: '' },
+    { tid: null, vapenhanteringUnderkand: true }));
+  assert.match(t, /26 p · tid saknas · UNDERKÄND/);
+});
+
+test('filnamnet har bara ofarliga tecken och skiljer platser åt', () => {
+  const x = underlag({ ...omgang, datum: '../2026/08', plats: 'Hätilä / bana 2' }, personer, []);
+  assert.match(x.filnamn, /^[A-Za-z0-9-]+$/);
+  assert.match(x.filnamn, /Hatila-bana-2$/);
+});
+
+test('en skytt som saknas i registret räknas inte', () => {
+  const x = underlag({ ...omgang, deltagare: ['p1', 'borta'] }, personer, []);
+  assert.equal(x.antalSkyttar, 1);
 });

@@ -338,10 +338,11 @@ function ritaOmgang() {
         <span class="varden">${varden}</span>
         ${chip}
       </button>
-      ${klara.length ? `<div class="knapprad" style="margin-top:-0.35rem">
+      ${klara.length && !vy.flyttlage ? `<div class="knapprad" style="margin-top:-0.35rem">
          <button class="knapp liten" data-historik="${esc(id)}">${oppen ? 'Dölj' : 'Visa'} försök</button>
          ${!pagar
-           ? `<button class="knapp liten" data-nytt-forsok="${esc(id)}">+ Nytt försök</button>` : ''}
+           ? `<button class="knapp liten" data-nytt-forsok="${esc(id)}">+ Nytt försök</button>`
+           : `<button class="knapp liten fara" data-ta-bort-forsok="${esc(pagar.id)}">Ta bort påbörjat försök</button>`}
        </div>` : ''}
       ${oppen ? ritaHistorik(o, klara, !pagar) : ''}`;
   }).join('');
@@ -551,14 +552,14 @@ function ritaTid() {
   app.innerHTML = `
     <div class="tidvisning ${utkastTid ? '' : 'tom'}"
       >${esc(visadTid(utkastTid) || '0,00')}<span class="enhet"> s</span></div>
-    <p class="dampad liten" style="text-align:center">Tiden mäts mellan startsignal och sista skott.<br>
-    Knappa siffrorna rakt av — <b>555</b> blir 5,55 och <b>6667</b> blir 66,67. Komma går också bra.</p>
     <div class="knappsats">
       ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => `<button data-siffra="${n}">${n}</button>`).join('')}
       <button data-siffra=",">,</button>
       <button data-siffra="0">0</button>
-      <button data-radera="1">⌫</button>
-    </div>`;
+      <button data-radera="1" aria-label="Radera siffra">⌫</button>
+    </div>
+    <p class="dampad liten" style="text-align:center">Tiden mäts mellan startsignal och sista skott.<br>
+    Knappa siffrorna rakt av — <b>555</b> blir 5,55 och <b>6667</b> blir 66,67. Komma går också bra.</p>`;
   // Vad knappen leder till ska stå på den, och VEM den leder till under den.
   // I mörker vill man inte gissa om nästa tryck ger nästa skytt eller poängen.
   if (r.fore) {
@@ -1191,9 +1192,11 @@ async function exportera(format) {
   const u = underlag(o, lager.las().personer, lager.resultat(o.id));
   const text = somText(u);
   if (format === 'txt') return dela(`${u.filnamn}.txt`, text, 'txt', text);
-  if (format === 'csv') return dela(`${u.filnamn}.csv`, somCsv(u), 'csv', text);
-  if (format === 'xlsx') return dela(`${u.filnamn}.xlsx`, somXlsx(u), 'xlsx', text);
-  if (format === 'pdf') return dela(`${u.filnamn}.pdf`, somPdf(u), 'pdf', text);
+  // Filformaten delar bara filen. Textprotokollet följde förut med som
+  // meddelandetext, så namn och Fmid gick ut även där man inte valt det.
+  if (format === 'csv') return dela(`${u.filnamn}.csv`, somCsv(u), 'csv');
+  if (format === 'xlsx') return dela(`${u.filnamn}.xlsx`, somXlsx(u), 'xlsx');
+  if (format === 'pdf') return dela(`${u.filnamn}.pdf`, somPdf(u), 'pdf');
 }
 
 function ritaExportval() {
@@ -1203,6 +1206,8 @@ function ritaExportval() {
   underrubrik.textContent = `${u.godkanda} av ${u.antalSkyttar} godkända`;
   hemKnapp.hidden = false;
   app.innerHTML = `
+    ${u.oregistrerade ? `<div class="varningsruta"><b>${antalOrd(u.oregistrerade, 'försök', 'försök')}
+      är inte registrerade</b> och räknas inte i resultatet. Registrera dem innan du delar.</div>` : ''}
     <p class="dampad liten">Delningsrutan öppnar Mail, Meddelanden eller det du väljer.
     Kan telefonen inte dela filer laddas de ned i stället.</p>
     <div class="knapprad"><button class="knapp" data-format="txt">Text i mailet</button></div>
@@ -1235,6 +1240,9 @@ function rita() {
   if (!avAnnanFlik && lager.aterstallAndringar(iArbete ? iArbete.id : null)) {
     flash('Ändringen sparades inte. Försöket är oförändrat.', 4);
   }
+  if (!avAnnanFlik) lager.stadaTommaOmtag(iArbete ? iArbete.id : null);
+  // Rubriken får hålla sig kortare där knappsatsen behöver höjden.
+  document.body.dataset.vy = vy.namn;
   try {
   if (vy.namn === 'start') ritaStart();
   else if (vy.namn === 'ny') ritaNy();
@@ -1371,7 +1379,7 @@ document.addEventListener('click', async (ev) => {
     '[data-format], [data-historik], [data-nytt-forsok], [data-soptunna], [data-kopia], ' +
     '[data-radera-allt], [data-radera-alla-skyttar], [data-skriv-ut], [data-anvisning], ' +
     '[data-lagg-till], [data-lagg-in], [data-flyttlage], [data-dok], [data-import], ' +
-    '[data-uppdatera], [data-andra-forsok], [data-filter], [data-arbetssatt], [data-tidfalt], ' +
+    '[data-uppdatera], [data-andra-forsok], [data-ta-bort-forsok], [data-filter], [data-arbetssatt], [data-tidfalt], ' +
     '.zonknapp');
   if (!t) return;
   const d = t.dataset;
@@ -1406,7 +1414,7 @@ document.addEventListener('click', async (ev) => {
     return gaTill('omgang', { omgangId: vy.omgangId, lage: lampligtLage(o, vy.lage) }, true);
   }
   if (d.oppna) {
-    if (t.dataset.spärrKlick) { delete t.dataset.spärrKlick; return; }
+    if (t === raderbarRad) return;       // trycket stänger soptunnan, se nedan
     return gaTill('omgang', { omgangId: d.oppna, lage: 'tid' });
   }
   // Soptunnan som långtrycket lade fram. Samma knapp för båda listorna —
@@ -1504,6 +1512,14 @@ document.addEventListener('click', async (ev) => {
       + 'Det gamla resultatet ersätts när du trycker Spara ändringen.')) return;
     lager.oppnaForAndring(r.id);
     return gaTill('poang', { omgangId: vy.omgangId, personId: r.personId, lage: 'poang' });
+  }
+  if (d.taBortForsok) {
+    const r = lager.resultat(vy.omgangId).find((x) => x.id === d.taBortForsok);
+    if (!r || r.registrerad) return;
+    if (!confirm(`Ta bort påbörjat försök ${r.forsok} för ${lager.person(r.personId).namn}?\n\n`
+      + 'Det som knappats in i försöket försvinner. Registrerade försök påverkas inte.')) return;
+    lager.raderaResultat(r.id);
+    return ritaPaPlats();
   }
   if (d.laggTill) return gaTill('lagg-till', { omgangId: vy.omgangId, lage: vy.lage });
   if (d.laggIn) {
@@ -1760,6 +1776,7 @@ document.addEventListener('click', async (ev) => {
 // raden ska öppna eller ingenting göra — bara soptunnan raderar.
 let hallRad = null;
 let raderbarRad = null;
+let soptunnaNyss = false;    // släppet efter långtrycket kan ge ett klick på raden
 
 /** Tar bort soptunnan igen — ångrat, eller raden är omritad under fötterna. */
 function taBortSoptunnan() {
@@ -1772,12 +1789,12 @@ function taBortSoptunnan() {
 }
 
 document.addEventListener('pointerdown', (ev) => {
+  soptunnaNyss = false;                          // ett nytt tryck är en ny gest
   if (ev.target.closest('.soptunna')) return;    // trycket gäller soptunnan
   const rad = ev.target.closest('[data-hall-radera]');
   if (!rad) return;
   hallRad = { rad, y: ev.clientY, timer: setTimeout(() => {
     hallRad = null;                              // gesten är slut; nu syns knappen
-    rad.dataset.spärrKlick = '1';
     taBortSoptunnan();
     slappMarkering();
     rad.classList.add('raderbar');
@@ -1785,6 +1802,7 @@ document.addEventListener('pointerdown', (ev) => {
       `<span class="soptunna" data-soptunna="${esc(rad.dataset.hallRadera)}"`
       + ' role="button" aria-label="Radera">🗑</span>');
     raderbarRad = rad;
+    soptunnaNyss = true;
     vibrera(40);
   }, 500) };
 });
@@ -1808,6 +1826,11 @@ for (const h of ['pointerup', 'pointercancel']) {
 // den borta innan klicket hann räknas.
 document.addEventListener('click', (ev) => {
   if (!raderbarRad || ev.target.closest('.soptunna')) return;
+  // Klicket som hör till samma långtryck ska inte ta bort knappen det lade fram.
+  if (soptunnaNyss && raderbarRad.contains(ev.target)) {
+    soptunnaNyss = false;
+    return;
+  }
   taBortSoptunnan();
 });
 

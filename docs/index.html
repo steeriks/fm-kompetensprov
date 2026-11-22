@@ -19,13 +19,13 @@
      bygg.py byter skriptkällan mot en hash av det inbakade skriptet. Därmed
      körs bara appens egen kod, och aldrig ett onerror-attribut i inläst data.
      Öppnad som lös fil gäller hashen och data:-ikonen på samma sätt. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-RwQommxicqjVTMEQtq+IdLkcEb+kgklbYREZcZhtHi8='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; manifest-src 'self'; worker-src 'self'; connect-src 'none'; form-action 'none'; object-src 'none'; base-uri 'none'; frame-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-r5vybixgm28uzzSf8VuArawFNkRtYTfn/pBi++IW9mg='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; manifest-src 'self'; worker-src 'self'; connect-src 'none'; form-action 'none'; object-src 'none'; base-uri 'none'; frame-src 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>FM kompetensprov</title>
 <!-- Versionen skrivs bara i package.json; bygg.py byter innehållet här mot
      numret därifrån, precis som cachenamnet i sw.js. Lämna "utveckling"
      stående i src/ — den som serverar src/ direkt kör inte en utgåva. -->
-<meta name="version" content="1.4.1">
+<meta name="version" content="1.4.2">
 <meta name="description" content="Instruktörsverktyg för Försvarsmaktens kompetensprov, pistol och automatkarbin.">
 <meta name="theme-color" content="#0b0d0c">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -84,6 +84,13 @@ header h1 {
   min-width: 0; overflow-wrap: anywhere;      /* långa namn ska brytas, inte tränga ut */
 }
 header .under { display: block; font-size: 0.8rem; color: var(--dampad); font-weight: 400; }
+/* Ett långt namn får inte äta höjden från knappsatsen. */
+#rubriktext {
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+}
+body[data-vy="tid"] header .under, body[data-vy="poang"] header .under {
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 /* Tavelnumret i rubriken får samma färg som i listan, så att blicken hittar
    det utan att läsa. */
 header h1 .nr { color: var(--accent); }
@@ -207,7 +214,7 @@ label.falt input.saknas { border-color: var(--underkand); }
 /* ------------------------------------------------------------ vallista */
 
 .skyttrad {
-  display: grid; grid-template-columns: 1fr auto auto;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center; gap: 0.2rem 0.6rem;
   background: var(--kort); border: 1px solid var(--linje);
   border-radius: var(--radie); margin-bottom: 0.5rem;
@@ -219,6 +226,7 @@ label.falt input.saknas { border-color: var(--underkand); }
 }
 .skyttrad.klar { border-color: #2f4a2c; }
 .skyttrad .namn { font-weight: 600; }
+.skyttrad .namn, .skyttrad .forband { min-width: 0; overflow-wrap: anywhere; }
 .skyttrad .forband { grid-column: 1; font-size: 0.8rem; color: var(--dampad); }
 .skyttrad .varden {
   grid-column: 2; grid-row: 1 / span 2; text-align: right;
@@ -319,7 +327,7 @@ label.falt input.saknas { border-color: var(--underkand); }
 .tidvisning.tom { color: var(--linje); }
 .knappsats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
 .knappsats button {
-  min-height: 68px; font-size: 1.6rem; font-weight: 600;
+  min-height: clamp(44px, 8.6vh, 68px); font-size: 1.6rem; font-weight: 600;
   background: var(--kort-ljus); color: var(--ink);
   border: 1px solid var(--linje); border-radius: var(--radie); cursor: pointer;
   touch-action: manipulation;
@@ -339,7 +347,7 @@ label.falt input.saknas { border-color: var(--underkand); }
 .tidfalt .tidvisning .enhet { font-size: 0.95rem; }
 .tidfalt .pil { color: var(--accent); font-size: 1.2rem; }
 .tidpanel { margin-bottom: 0.9rem; }
-.tidpanel .knappsats button { min-height: 54px; }
+.tidpanel .knappsats button { min-height: clamp(44px, 7.6vh, 54px); }
 .tidpanel > .knapp { width: 100%; margin-top: 0.5rem; }
 
 /* ------------------------------------------------------------ zonknappar */
@@ -462,9 +470,12 @@ label.falt input.saknas { border-color: var(--underkand); }
 [data-hall-radera] { touch-action: pan-y; }
 .raderbar { border-color: var(--underkand); background: rgba(224, 122, 109, 0.14); }
 .soptunna {
-  padding: 0.5rem 0.2rem 0.5rem 0.7rem; margin-left: 0.2rem;
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 44px; min-height: 44px; margin-left: 0.2rem;
   font-size: 1.5rem; line-height: 1;
 }
+/* Soptunnan tar samma plats som statusmärket, och båda kan inte stå där. */
+.raderbar .chip { display: none; }
 .skyttrad .soptunna { grid-column: 3; grid-row: 1 / span 2; align-self: center; }
 
 /* Registrets rader är kort, inte vallistans knappar — men soptunnan ska hamna
@@ -491,12 +502,13 @@ label.falt input.saknas { border-color: var(--underkand); }
 /* Vem som står på tur, direkt under knappen som leder dit. */
 .nastaskytt {
   margin: -0.1rem 0 0; text-align: center; font-size: 0.9rem; color: var(--dampad);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .nastaskytt b { color: var(--ink); }
 
 /* Flyttläge: *Ändra ordning* ger raden ett handtag att dra i. Långtryck på
    raden är borta, eftersom en blöt skärm utlöste det av misstag. */
-.skyttrad.flyttbar { grid-template-columns: auto 1fr auto auto; }
+.skyttrad.flyttbar { grid-template-columns: auto minmax(0, 1fr) auto auto; }
 .skyttrad .dra {
   grid-row: 1 / span 2; align-self: center;
   padding: 0.4rem 0.7rem 0.4rem 0.1rem; margin-right: 0.2rem;
@@ -520,6 +532,27 @@ label.falt input.saknas { border-color: var(--underkand); }
 .dokument .punkter { margin: 0 0 0.9rem; padding-left: 1.2rem; }
 .dokument .punkter li { margin-bottom: 0.35rem; }
 .dokument a { color: var(--accent); overflow-wrap: anywhere; }
+
+/* Utgåvan lämnar raden i inmatningsvyerna, så att namnet får hela bredden
+   mellan pilarna. Den står kvar i hörnet och går fortfarande att läsa av. */
+body[data-vy="tid"] header, body[data-vy="poang"] header { position: sticky; }
+body[data-vy="tid"] .utgava, body[data-vy="poang"] .utgava {
+  position: absolute; top: calc(0.25rem + env(safe-area-inset-top)); right: 0.5rem;
+}
+body[data-vy="tid"] header h1, body[data-vy="poang"] header h1 { flex: 1; }
+
+/* Låga skärmar: hela knappsatsen ska nås utan att skrolla. Står sist i arket,
+   annars vinner grundreglerna för samma element. */
+@media (max-height: 740px) {
+  .tidvisning { font-size: 2.3rem; padding: 0.1rem 0 0.2rem; min-height: 0; }
+  .bottenrad { gap: 0.3rem; padding-top: 0.35rem; }
+  .bottenrad .knapp.primar { min-height: 48px; padding-top: 0.4rem; padding-bottom: 0.4rem; }
+  .bottenrad .knapprad { margin: 0.1rem 0; }
+  body[data-vy="tid"] main, body[data-vy="poang"] main { padding-top: 0.4rem; }
+  .knappsats { gap: 0.35rem; }
+  .tidfalt { min-height: 48px; margin-bottom: 0.35rem; }
+  .tidpanel > .knapp { margin-top: 0.35rem; }
+}
 
 </style>
 </head>
@@ -641,7 +674,7 @@ En skytt räknas som **godkänd** om något av försöken var godkänt, även om
 - **Fel träff, före registrering:** håll in zonknappen. Det nollar hela zonen, och sedan knappar du in rätt antal.
 - **Fel tid, före registrering:** i två steg, tryck *Ändra tiden* på poängskärmen. I ett steg, tryck på tidsfältet.
 - **Fel efter registrering:** tryck *Visa försök* på skyttens rad och sedan *Ändra försök*. Rätta tid eller träffar och tryck *Spara ändringen*. Försöket behåller sitt nummer, och protokollet visar bara de nya värdena. Lämnar du skärmen utan att spara gäller det gamla resultatet.
-- **Omtag:** tryck *+ Nytt försök* på skyttens rad. Appen sätter ingen gräns för antalet försök.
+- **Omtag:** tryck *+ Nytt försök* på skyttens rad. Appen sätter ingen gräns för antalet försök. Ett omtag du inte knappat något i försvinner av sig självt, och ett påbörjat tas bort med *Ta bort påbörjat försök*.
 - **Lägga till en skytt:** tryck *+ Lägg till skytt* överst i listan. Skytten får nästa lediga tavla.
 - **Byta ordning:** tryck *Ändra ordning* överst i listan, dra i handtaget (**☰**) och tryck *Klar med ordningen*. Numret följer tavlan, inte personen.
 - **Byta skytt medan du knappar tid:** i två steg stegar pilarna bredvid namnet en tavla fram eller tillbaka. Tiden sparas på vägen.
@@ -659,6 +692,8 @@ Tryck **Dela resultat** i omgången och välj format:
 Telefonen öppnar sin vanliga delningsruta, så att du kan mejla, skicka eller spara filen.
 
 Kolumnerna är tavelnummer, Fmid/Anstnr, namn, förband och försök, följda av **träffar per zon, poäng, tid och kvot (PK)** i samma ordning som i skjutboken. Sist står utfall och anmärkning.
+
+Ett försök som inte är registrerat räknas inte. Skytten står då som *Ej registrerad*, och appen varnar innan du delar.
 
 **Bättringsskotten följer inte med.** Protokollet visar bara de träffar som bedömningen bygger på, så att poängen går att räkna efter. I PDF och Excel är godkända försök markerade med grön rad.
 
@@ -1449,6 +1484,20 @@ function aterstallAndringar(undantagId = null) {
   return antal;
 }
 
+/**
+ * Tar bort omtag som öppnats men aldrig fått något innehåll. Ett tryck på
+ * *+ Nytt försök* följt av bakåt ska inte lämna skytten som "pågående". Första
+ * försöket lämnas: det är så en skytt står kvar i svepet.
+ */
+function stadaTommaOmtag(undantagId = null) {
+  const d = las();
+  const fore = d.resultat.length;
+  d.resultat = d.resultat.filter((r) => r.id === undantagId || r.registrerad || r.fore
+    || r.forsok === 1 || (r.tid !== null && r.tid !== undefined) || r.vapenhanteringUnderkand
+    || Object.values(r.traffar || {}).some((n) => n > 0));
+  if (d.resultat.length !== fore) spara();
+}
+
 function raderaResultat(id) {
   const d = las();
   d.resultat = d.resultat.filter((r) => r.id !== id);
@@ -1623,7 +1672,7 @@ function raderaAllt() {
   spara();
 }
 
-const lager = { narSparat, varLagretSkadat, arLagerNyckel, lasOm, las, spara, lagringFungerar, personer, person, laggTillPerson, andraPerson, raderaPerson, tolkaSkyttelista, granskaSkyttelista, laggTillSkyttar, importeraSkyttar, omgangar, omgang, laggTillOmgang, andraOmgang, raderaOmgang, resultat, resultatFor, pagaende, andraResultat, registrera, oppnaForAndring, sparaAndring, aterstallAndringar, raderaResultat, sakerhetskopia, lasInSakerhetskopia, arbetssatt, sattArbetssatt, raderaAllt };
+const lager = { narSparat, varLagretSkadat, arLagerNyckel, lasOm, las, spara, lagringFungerar, personer, person, laggTillPerson, andraPerson, raderaPerson, tolkaSkyttelista, granskaSkyttelista, laggTillSkyttar, importeraSkyttar, omgangar, omgang, laggTillOmgang, andraOmgang, raderaOmgang, resultat, resultatFor, pagaende, andraResultat, registrera, oppnaForAndring, sparaAndring, aterstallAndringar, stadaTommaOmtag, raderaResultat, sakerhetskopia, lasInSakerhetskopia, arbetssatt, sattArbetssatt, raderaAllt };
 
 // ---- export.js ---------------------------------------------------------
 // Export — samma underlag i fyra former: text, CSV, XLSX och PDF.
@@ -1653,16 +1702,19 @@ function underlag(omgang, personer, resultat) {
   ];
   const rader = [];
   let godkanda = 0;
+  let oregistrerade = 0;
   for (const [index, id] of omgang.deltagare.entries()) {
     const p = personer.find((x) => x.id === id);
     if (!p) continue;
     const nr = index + 1;
     const forsok = resultat.filter((r) => r.personId === id && r.registrerad);
+    const oppna = resultat.filter((r) => r.personId === id && !r.registrerad && harInnehall(r));
+    oregistrerade += oppna.length;
     if (!forsok.length) {
       rader.push({
         person: p, nr, forsok: null,
         celler: [nr, p.fmid || '', p.namn, p.forband, '',
-          ...zoner.map(() => ''), '', '', '', 'Ej skjuten', ''],
+          ...zoner.map(() => ''), '', '', '', oppna.length ? 'Ej registrerad' : 'Ej skjuten', ''],
       });
       continue;
     }
@@ -1691,11 +1743,26 @@ function underlag(omgang, personer, resultat) {
   }
   return {
     omgang, prov, kolumner, rader,
-    antalSkyttar: omgang.deltagare.length,
+    antalSkyttar: omgang.deltagare.filter((id) => personer.some((p) => p.id === id)).length,
     godkanda,
+    oregistrerade,
     rubrik: `${prov.namn} — ${prov.delmoment}`,
-    filnamn: `kompetensprov-${prov.kod}-${omgang.datum}`,
+    filnamn: filnamnFor(prov, omgang),
   };
+}
+
+/** Har ett öppet försök fått något inknappat? Ett tomt försök är inget skott. */
+function harInnehall(r) {
+  return (r.tid !== null && r.tid !== undefined) || r.vapenhanteringUnderkand
+    || Object.values(r.traffar || {}).some((n) => n > 0);
+}
+
+/** Filnamn av enbart ofarliga tecken. Platsen skiljer två omgångar samma dag. */
+function filnamnFor(prov, omgang) {
+  const ren = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^A-Za-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30).replace(/-+$/, '');
+  return ['kompetensprov', ren(prov.kod), ren(omgang.datum), ren(omgang.plats)]
+    .filter(Boolean).join('-');
 }
 
 /**
@@ -1743,7 +1810,7 @@ function somText(u) {
         + `${rad.person.forband ? ' (' + rad.person.forband + ')' : ''}`);
     }
     if (!rad.forsok) {
-      rader.push('   Ej skjuten');
+      rader.push(`   ${rad.celler.at(-2)}`);
       continue;
     }
     const b = rad.bedomning;
@@ -1751,7 +1818,8 @@ function somText(u) {
       .map((z) => `${z}${rad.traffar[z]}`).join(' ');
     rader.push(
       `   Försök ${rad.forsok.forsok}: ${traffar || 'inga träffar'} · ${b.poang} p` +
-      ` · ${komma(rad.forsok.tid)} s · PK ${komma(b.pk)} · ${b.godkand ? 'GODKÄND' : 'UNDERKÄND'}` +
+      (rad.forsok.tid === null ? ' · tid saknas' : ` · ${komma(rad.forsok.tid)} s · PK ${komma(b.pk)}`) +
+      ` · ${b.godkand ? 'GODKÄND' : 'UNDERKÄND'}` +
       (b.godkand ? '' : ` (${b.brister.join('; ')})`),
     );
   }
@@ -1764,13 +1832,16 @@ function somText(u) {
 function somCsv(u) {
   const cell = (v) => {
     const s = String(v ?? '');
-    return /[";\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    return /[";\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
   };
+  // Fritext som börjar med ett formeltecken skulle köras av Excel. Apostrofen
+  // gör den till text. Bara Fmid, namn och förband: övriga kolumner är appens.
+  const textcell = (v, i) => cell(i >= 1 && i <= 3 && /^[=+\-@\t\r]/.test(String(v ?? '')) ? `'${v}` : v);
   const rader = [
     ...huvudrader(u).map((r) => cell(r)),
     '',
     u.kolumner.map(cell).join(';'),
-    ...u.rader.map((rad) => rad.celler.map(cell).join(';')),
+    ...u.rader.map((rad) => rad.celler.map(textcell).join(';')),
     '',
     cell(`${u.godkanda} av ${u.antalSkyttar} godkända`),
   ];
@@ -1851,7 +1922,9 @@ function zip(filer) {
   return ut;
 }
 
+// Kontrolltecken är ogiltiga i XML 1.0, och ett enda gör hela arbetsboken oläsbar.
 const xmlEsc = (s) => String(s ?? '')
+  .replace(/[^\t\n\r\u0020-\uD7FF\uE000-\uFFFD\u{10000}-\u{10FFFF}]/gu, '')
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
   .replace(/"/g, '&quot;');
 
@@ -1869,14 +1942,18 @@ function kolumnBokstav(i) {
 // Cellstilar i styles.xml nedan: index i <cellXfs>. Grönt är Excels egen
 // "Bra" — ljusgrön botten och mörkgrön text — så ett godkänt försök ser ut
 // som ett godkänt försök även för den som aldrig sett protokollet förr.
-const STIL = { normal: 0, fet: 1, gron: 2 };
+const STIL = { normal: 0, fet: 1, gron: 2, tal: 3, gronTal: 4 };
 
 function somXlsx(u) {
   const arkRader = [];
+  // Tid och PK är de enda kolumner med decimaltal. Ett Fmid som 12,50 är text.
+  const decimalKolumner = new Set([u.kolumner.indexOf('Tid (s)'), u.kolumner.indexOf('PK')]);
   const skrivRad = (radnr, celler, stilnr = STIL.normal) => {
     const c = celler.map((v, i) => {
       const ref = kolumnBokstav(i) + radnr;
-      const stil = stilnr ? ` s="${stilnr}"` : '';
+      const decimal = typeof v === 'number' && decimalKolumner.has(i);
+      const s = decimal ? (stilnr === STIL.gron ? STIL.gronTal : STIL.tal) : stilnr;
+      const stil = s ? ` s="${s}"` : '';
       if (typeof v === 'number' && Number.isFinite(v)) {
         return `<c r="${ref}"${stil}><v>${v}</v></c>`;
       }
@@ -1892,8 +1969,10 @@ function somXlsx(u) {
   skrivRad(rad++, u.kolumner, STIL.fet);
   for (const r of u.rader) {
     // Tid och PK som text med komma vore obrukbart i kalkyl — skriv tal.
-    const celler = r.celler.map((v) => {
-      if (typeof v === 'string' && /^-?\d+,\d+$/.test(v)) return Number(v.replace(',', '.'));
+    const celler = r.celler.map((v, i) => {
+      if (decimalKolumner.has(i) && typeof v === 'string' && /^\d+,\d+$/.test(v)) {
+        return Number(v.replace(',', '.'));
+      }
       return v;
     });
     // Hela raden grönas, inte bara utfallskolumnen: den som bläddrar i ett
@@ -1946,7 +2025,7 @@ function somXlsx(u) {
 <fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFC6EFCE"/><bgColor indexed="64"/></patternFill></fill></fills>
 <borders count="1"><border/></borders>
 <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
-<cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="0" fontId="2" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/></cellXfs>
+<cellXfs count="5"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="0" fontId="2" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/><xf numFmtId="2" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="2" fontId="2" fillId="2" borderId="0" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1"/></cellXfs>
 <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
 </styleSheet>`,
     },
@@ -1972,18 +2051,42 @@ const MARGINAL = 36;
 // ett svagt raster i stället för ett svart fält.
 const GRON = [0.776, 0.937, 0.808];
 
+// Hela WinAnsi-blocket 0x80–0x9F, där teckentabellen skiljer sig från Latin-1.
+const SARSKILDA = {
+  0x20ac: 0x80, 0x201a: 0x82, 0x0192: 0x83, 0x201e: 0x84,
+  0x2026: 0x85,   // … avbrott — utan den här raden blev kapad text "?"
+  0x2020: 0x86, 0x2021: 0x87, 0x02c6: 0x88, 0x2030: 0x89, 0x0160: 0x8a, 0x2039: 0x8b,
+  0x0152: 0x8c, 0x017d: 0x8e, 0x2018: 0x91, 0x2019: 0x92, 0x201c: 0x93, 0x201d: 0x94,
+  0x2022: 0x95,   // punktlista
+  0x2013: 0x96,   // – kort tankstreck
+  0x2014: 0x97,   // — långt tankstreck
+  0x02dc: 0x98, 0x2122: 0x99, 0x0161: 0x9a, 0x203a: 0x9b, 0x0153: 0x9c, 0x017e: 0x9e,
+  0x0178: 0x9f,
+};
+// Bokstäver som saknar både WinAnsi-tecken och en uppdelning i bas + accent.
+const BOKSTAVSBYTE = { Ł: 'L', ł: 'l', Đ: 'D', đ: 'd', Ħ: 'H', ħ: 'h', ı: 'i', Ŧ: 'T', ŧ: 't' };
+
+/** Gör fritext skrivbar i WinAnsi: sammansatta tecken, accenter som saknas
+ *  (Šimić blir Šimic hellre än ?imi?) och inga kontrolltecken. */
+function pdfTecken(text) {
+  let ut = '';
+  for (const tecken of String(text).normalize('NFC')) {
+    const k = tecken.codePointAt(0);
+    if (k < 0x20 || (k >= 0x7f && k < 0xa0)) ut += ' ';
+    else if (k < 256 || SARSKILDA[k]) ut += tecken;
+    else if (BOKSTAVSBYTE[tecken]) ut += BOKSTAVSBYTE[tecken];
+    else {
+      const bas = tecken.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      ut += bas && [...bas].every((b) => b.codePointAt(0) < 256) ? bas : '?';
+    }
+  }
+  return ut;
+}
+
 function winAnsi(text) {
   // WinAnsi ligger nära Latin-1 för det vi behöver. Tecken utanför byts mot
   // frågetecken hellre än att ge en trasig fil.
   const ut = [];
-  const SARSKILDA = {
-    0x2013: 0x96,   // – kort tankstreck
-    0x2014: 0x97,   // — långt tankstreck
-    0x2018: 0x91, 0x2019: 0x92,
-    0x201c: 0x93, 0x201d: 0x94,
-    0x2022: 0x95,   // punktlista
-    0x2026: 0x85,   // … avbrott — utan den här raden blev kapad text "?"
-  };
   for (const tecken of String(text)) {
     const k = tecken.codePointAt(0);
     if (SARSKILDA[k]) ut.push(SARSKILDA[k]);
@@ -1995,24 +2098,64 @@ function winAnsi(text) {
 
 function pdfText(text) {
   const ut = [];
-  for (const b of winAnsi(text)) {
+  for (const b of winAnsi(pdfTecken(text))) {
     if (b === 0x28 || b === 0x29 || b === 0x5c) ut.push(0x5c);  // ( ) \
     ut.push(b);
   }
   return ut;
 }
 
-/** Ungefärlig textbredd i punkter — räcker för att kapa text som inte får
- *  plats i sin kolumn. Helvetica är ~0,5 em i snitt för gemener. */
-function bredd(text, storlek) {
-  return String(text).length * storlek * 0.52;
+// Helveticas teckenbredder ur Adobes AFM-fil, tecken 32–126, i tusendels em.
+const HELVETICA = [
+  278, 278, 355, 556, 556, 889, 667, 191, 333, 333, 389, 584, 278, 333, 278, 278,
+  556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 278, 278, 584, 584, 584, 556,
+  1015, 667, 667, 722, 722, 667, 611, 778, 722, 278, 500, 667, 556, 833, 722, 778,
+  667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611, 278, 278, 278, 469, 556,
+  333, 556, 556, 500, 556, 556, 278, 556, 556, 222, 222, 500, 222, 833, 556, 556,
+  556, 556, 333, 500, 278, 556, 500, 722, 500, 500, 500, 334, 260, 334, 584,
+];
+
+/** Textbredd i punkter. Fet stil räknas med marginal i stället för egen tabell. */
+function bredd(text, storlek, fet = false) {
+  let tusendelar = 0;
+  for (const tecken of pdfTecken(text)) {
+    const bas = tecken.normalize('NFD').codePointAt(0);
+    if (tecken === '…' || tecken === '—') tusendelar += 1000;
+    else tusendelar += HELVETICA[bas - 32] ?? 667;
+  }
+  return (tusendelar / 1000) * storlek * (fet ? 1.08 : 1);
 }
 
-function kapa(text, storlek, maxbredd) {
-  let s = String(text ?? '');
-  if (bredd(s, storlek) <= maxbredd) return s;
-  while (s.length > 1 && bredd(s + '…', storlek) > maxbredd) s = s.slice(0, -1);
+function kapa(text, storlek, maxbredd, fet = false) {
+  let s = pdfTecken(text ?? '');
+  if (bredd(s, storlek, fet) <= maxbredd) return s;
+  while (s.length > 1 && bredd(s + '…', storlek, fet) > maxbredd) s = s.slice(0, -1);
   return s + '…';
+}
+
+/** Bryter text till rader som ryms i bredden. Inget kapas: ett Fmid eller en
+ *  orsak till underkännande ska stå kvar i sin helhet. */
+function radbryt(text, storlek, maxbredd, fet = false) {
+  const rader = [];
+  let nu = '';
+  for (let ord of pdfTecken(text ?? '').split(/\s+/).filter(Boolean)) {
+    const prov = nu ? `${nu} ${ord}` : ord;
+    if (bredd(prov, storlek, fet) <= maxbredd) {
+      nu = prov;
+      continue;
+    }
+    if (nu) rader.push(nu);
+    nu = '';
+    while (bredd(ord, storlek, fet) > maxbredd && ord.length > 1) {
+      let n = ord.length - 1;
+      while (n > 1 && bredd(ord.slice(0, n), storlek, fet) > maxbredd) n--;
+      rader.push(ord.slice(0, n));
+      ord = ord.slice(n);
+    }
+    nu = ord;
+  }
+  if (nu) rader.push(nu);
+  return rader.length ? rader : [''];
 }
 
 function somPdf(u) {
@@ -2024,16 +2167,16 @@ function somPdf(u) {
   // kolumn som ska peka ut en människa, och Fmid/Anstnr skrivs olika långt.
   const kol = [
     { rubrik: 'Nr', bredd: 16 },
-    { rubrik: 'Fmid/Anstnr', bredd: 64 },
-    { rubrik: 'Namn', bredd: 84 },
-    { rubrik: 'Förband', bredd: 46 },
+    { rubrik: 'Fmid/Anstnr', bredd: 64, bryt: true },
+    { rubrik: 'Namn', bredd: 84, bryt: true },
+    { rubrik: 'Förband', bredd: 46, bryt: true },
     { rubrik: 'F', bredd: 12 },
     ...ZONORDNING.map((z) => ({ rubrik: z, bredd: 16 })),
     { rubrik: 'Poäng', bredd: 30 },
     { rubrik: 'Tid', bredd: 30 },
     { rubrik: 'PK', bredd: 28 },
-    { rubrik: 'Utfall', bredd: 46 },
-    { rubrik: 'Anmärkning', bredd: 71 },
+    { rubrik: 'Utfall', bredd: 46, bryt: true },
+    { rubrik: 'Anmärkning', bredd: 71, bryt: true },
   ];
   const summa = kol.reduce((n, k) => n + k.bredd, 0);
   if (summa > SIDBREDD - 2 * MARGINAL) {
@@ -2059,39 +2202,59 @@ function somPdf(u) {
   // PDF målar i den ordning operatorerna står, och en ruta efteråt hade lagt
   // sig över siffrorna. q/Q sparar och återställer grafiktillståndet, så
   // fyllfärgen inte följer med in i nästa rad (Tj fyller med samma färg).
-  const band = (storlek) => {
-    strommar.push(`q ${GRON.join(' ')} rg ${MARGINAL} ${y - 3} ${summa} ${storlek + 4} re f Q`);
+  const band = (storlek, hojd) => {
+    strommar.push(`q ${GRON.join(' ')} rg ${MARGINAL} ${y + storlek + 1 - hojd} ${summa} ${hojd} re f Q`);
   };
-  const rad = (celler, storlek, fet, gron = false) => {
-    if (gron) band(storlek);
+  const cellrader = (celler, storlek, fet) => celler.map((v, i) => (kol[i].bryt
+    ? radbryt(v, storlek, kol[i].bredd - 3, fet)
+    : [kapa(v, storlek, kol[i].bredd - 3, fet)]));
+  const radhojd = (delar, storlek) =>
+    storlek + 4 + (Math.max(...delar.map((d) => d.length)) - 1) * (storlek + 1);
+  const rad = (delar, storlek, fet, gron = false) => {
+    const hojd = radhojd(delar, storlek);
+    if (gron) band(storlek, hojd);
+    const start = y;
     let x = MARGINAL;
-    celler.forEach((v, i) => {
-      skriv(kapa(v, storlek, kol[i].bredd - 3), x, storlek, fet);
+    delar.forEach((rader, i) => {
+      y = start;
+      for (const text of rader) {
+        skriv(text, x, storlek, fet);
+        y -= storlek + 1;
+      }
       x += kol[i].bredd;
     });
-    y -= storlek + 4;
+    y = start - hojd;
   };
+  const rubrikrad = () => rad(kol.map((k) => [k.rubrik]), 8, true);
 
   nySida();
   for (const text of huvudrader(u)) {
-    skriv(text, MARGINAL, text === u.rubrik ? 14 : 9, text === u.rubrik);
-    y -= (text === u.rubrik ? 14 : 9) + 6;
+    const storlek = text === u.rubrik ? 14 : 9;
+    for (const del of radbryt(text, storlek, SIDBREDD - 2 * MARGINAL, text === u.rubrik)) {
+      skriv(del, MARGINAL, storlek, text === u.rubrik);
+      y -= storlek + 3;
+    }
+    y -= 3;
   }
   y -= 6;
-  rad(kol.map((k) => k.rubrik), 8, true);
+  rubrikrad();
   y -= 2;
 
+  const forstaZon = u.kolumner.indexOf('Försök') + 1;
   for (const r of u.rader) {
-    if (y < MARGINAL + 40) {
+    // Nollor i zonkolumnerna görs tomma — en tabell full av nollor är svårare
+    // att läsa än en gles. Poäng 0 är däremot ett resultat och står kvar.
+    // Sista kolumnen får den korta anmärkningen, radbruten så att allt syns.
+    const celler = r.celler.map((v, i) =>
+      (v === 0 && i >= forstaZon && i < forstaZon + ZONORDNING.length ? '' : v));
+    celler[celler.length - 1] = kortAnmarkning(r.bedomning);
+    const delar = cellrader(celler, 8, false);
+    if (y - radhojd(delar, 8) < MARGINAL) {
       nySida();
-      rad(kol.map((k) => k.rubrik), 8, true);
+      rubrikrad();
       y -= 2;
     }
-    // Nollor i zonkolumnerna görs tomma — en tabell full av nollor är svårare
-    // att läsa än en gles. Sista kolumnen får den korta anmärkningen.
-    const celler = r.celler.map((v) => (v === 0 ? '' : v));
-    celler[celler.length - 1] = kortAnmarkning(r.bedomning);
-    rad(celler, 8, false, radGodkand(r));
+    rad(delar, 8, false, radGodkand(r));
   }
   y -= 8;
   if (y < MARGINAL) nySida();
@@ -2179,7 +2342,7 @@ async function dela(filnamn, innehall, format, text = '') {
   const fil = new File([blob], filnamn, { type: MIME[format] });
   if (navigator.canShare && navigator.canShare({ files: [fil] })) {
     try {
-      await navigator.share({ files: [fil], title: filnamn, text });
+      await navigator.share({ files: [fil], title: filnamn, ...(text ? { text } : {}) });
       return 'delad';
     } catch (fel) {
       if (fel && fel.name === 'AbortError') return 'avbruten';
@@ -2535,10 +2698,11 @@ function ritaOmgang() {
         <span class="varden">${varden}</span>
         ${chip}
       </button>
-      ${klara.length ? `<div class="knapprad" style="margin-top:-0.35rem">
+      ${klara.length && !vy.flyttlage ? `<div class="knapprad" style="margin-top:-0.35rem">
          <button class="knapp liten" data-historik="${esc(id)}">${oppen ? 'Dölj' : 'Visa'} försök</button>
          ${!pagar
-           ? `<button class="knapp liten" data-nytt-forsok="${esc(id)}">+ Nytt försök</button>` : ''}
+           ? `<button class="knapp liten" data-nytt-forsok="${esc(id)}">+ Nytt försök</button>`
+           : `<button class="knapp liten fara" data-ta-bort-forsok="${esc(pagar.id)}">Ta bort påbörjat försök</button>`}
        </div>` : ''}
       ${oppen ? ritaHistorik(o, klara, !pagar) : ''}`;
   }).join('');
@@ -2748,14 +2912,14 @@ function ritaTid() {
   app.innerHTML = `
     <div class="tidvisning ${utkastTid ? '' : 'tom'}"
       >${esc(visadTid(utkastTid) || '0,00')}<span class="enhet"> s</span></div>
-    <p class="dampad liten" style="text-align:center">Tiden mäts mellan startsignal och sista skott.<br>
-    Knappa siffrorna rakt av — <b>555</b> blir 5,55 och <b>6667</b> blir 66,67. Komma går också bra.</p>
     <div class="knappsats">
       ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => `<button data-siffra="${n}">${n}</button>`).join('')}
       <button data-siffra=",">,</button>
       <button data-siffra="0">0</button>
-      <button data-radera="1">⌫</button>
-    </div>`;
+      <button data-radera="1" aria-label="Radera siffra">⌫</button>
+    </div>
+    <p class="dampad liten" style="text-align:center">Tiden mäts mellan startsignal och sista skott.<br>
+    Knappa siffrorna rakt av — <b>555</b> blir 5,55 och <b>6667</b> blir 66,67. Komma går också bra.</p>`;
   // Vad knappen leder till ska stå på den, och VEM den leder till under den.
   // I mörker vill man inte gissa om nästa tryck ger nästa skytt eller poängen.
   if (r.fore) {
@@ -3388,9 +3552,11 @@ async function exportera(format) {
   const u = underlag(o, lager.las().personer, lager.resultat(o.id));
   const text = somText(u);
   if (format === 'txt') return dela(`${u.filnamn}.txt`, text, 'txt', text);
-  if (format === 'csv') return dela(`${u.filnamn}.csv`, somCsv(u), 'csv', text);
-  if (format === 'xlsx') return dela(`${u.filnamn}.xlsx`, somXlsx(u), 'xlsx', text);
-  if (format === 'pdf') return dela(`${u.filnamn}.pdf`, somPdf(u), 'pdf', text);
+  // Filformaten delar bara filen. Textprotokollet följde förut med som
+  // meddelandetext, så namn och Fmid gick ut även där man inte valt det.
+  if (format === 'csv') return dela(`${u.filnamn}.csv`, somCsv(u), 'csv');
+  if (format === 'xlsx') return dela(`${u.filnamn}.xlsx`, somXlsx(u), 'xlsx');
+  if (format === 'pdf') return dela(`${u.filnamn}.pdf`, somPdf(u), 'pdf');
 }
 
 function ritaExportval() {
@@ -3400,6 +3566,8 @@ function ritaExportval() {
   underrubrik.textContent = `${u.godkanda} av ${u.antalSkyttar} godkända`;
   hemKnapp.hidden = false;
   app.innerHTML = `
+    ${u.oregistrerade ? `<div class="varningsruta"><b>${antalOrd(u.oregistrerade, 'försök', 'försök')}
+      är inte registrerade</b> och räknas inte i resultatet. Registrera dem innan du delar.</div>` : ''}
     <p class="dampad liten">Delningsrutan öppnar Mail, Meddelanden eller det du väljer.
     Kan telefonen inte dela filer laddas de ned i stället.</p>
     <div class="knapprad"><button class="knapp" data-format="txt">Text i mailet</button></div>
@@ -3432,6 +3600,9 @@ function rita() {
   if (!avAnnanFlik && lager.aterstallAndringar(iArbete ? iArbete.id : null)) {
     flash('Ändringen sparades inte. Försöket är oförändrat.', 4);
   }
+  if (!avAnnanFlik) lager.stadaTommaOmtag(iArbete ? iArbete.id : null);
+  // Rubriken får hålla sig kortare där knappsatsen behöver höjden.
+  document.body.dataset.vy = vy.namn;
   try {
   if (vy.namn === 'start') ritaStart();
   else if (vy.namn === 'ny') ritaNy();
@@ -3568,7 +3739,7 @@ document.addEventListener('click', async (ev) => {
     '[data-format], [data-historik], [data-nytt-forsok], [data-soptunna], [data-kopia], ' +
     '[data-radera-allt], [data-radera-alla-skyttar], [data-skriv-ut], [data-anvisning], ' +
     '[data-lagg-till], [data-lagg-in], [data-flyttlage], [data-dok], [data-import], ' +
-    '[data-uppdatera], [data-andra-forsok], [data-filter], [data-arbetssatt], [data-tidfalt], ' +
+    '[data-uppdatera], [data-andra-forsok], [data-ta-bort-forsok], [data-filter], [data-arbetssatt], [data-tidfalt], ' +
     '.zonknapp');
   if (!t) return;
   const d = t.dataset;
@@ -3603,7 +3774,7 @@ document.addEventListener('click', async (ev) => {
     return gaTill('omgang', { omgangId: vy.omgangId, lage: lampligtLage(o, vy.lage) }, true);
   }
   if (d.oppna) {
-    if (t.dataset.spärrKlick) { delete t.dataset.spärrKlick; return; }
+    if (t === raderbarRad) return;       // trycket stänger soptunnan, se nedan
     return gaTill('omgang', { omgangId: d.oppna, lage: 'tid' });
   }
   // Soptunnan som långtrycket lade fram. Samma knapp för båda listorna —
@@ -3701,6 +3872,14 @@ document.addEventListener('click', async (ev) => {
       + 'Det gamla resultatet ersätts när du trycker Spara ändringen.')) return;
     lager.oppnaForAndring(r.id);
     return gaTill('poang', { omgangId: vy.omgangId, personId: r.personId, lage: 'poang' });
+  }
+  if (d.taBortForsok) {
+    const r = lager.resultat(vy.omgangId).find((x) => x.id === d.taBortForsok);
+    if (!r || r.registrerad) return;
+    if (!confirm(`Ta bort påbörjat försök ${r.forsok} för ${lager.person(r.personId).namn}?\n\n`
+      + 'Det som knappats in i försöket försvinner. Registrerade försök påverkas inte.')) return;
+    lager.raderaResultat(r.id);
+    return ritaPaPlats();
   }
   if (d.laggTill) return gaTill('lagg-till', { omgangId: vy.omgangId, lage: vy.lage });
   if (d.laggIn) {
@@ -3957,6 +4136,7 @@ document.addEventListener('click', async (ev) => {
 // raden ska öppna eller ingenting göra — bara soptunnan raderar.
 let hallRad = null;
 let raderbarRad = null;
+let soptunnaNyss = false;    // släppet efter långtrycket kan ge ett klick på raden
 
 /** Tar bort soptunnan igen — ångrat, eller raden är omritad under fötterna. */
 function taBortSoptunnan() {
@@ -3969,12 +4149,12 @@ function taBortSoptunnan() {
 }
 
 document.addEventListener('pointerdown', (ev) => {
+  soptunnaNyss = false;                          // ett nytt tryck är en ny gest
   if (ev.target.closest('.soptunna')) return;    // trycket gäller soptunnan
   const rad = ev.target.closest('[data-hall-radera]');
   if (!rad) return;
   hallRad = { rad, y: ev.clientY, timer: setTimeout(() => {
     hallRad = null;                              // gesten är slut; nu syns knappen
-    rad.dataset.spärrKlick = '1';
     taBortSoptunnan();
     slappMarkering();
     rad.classList.add('raderbar');
@@ -3982,6 +4162,7 @@ document.addEventListener('pointerdown', (ev) => {
       `<span class="soptunna" data-soptunna="${esc(rad.dataset.hallRadera)}"`
       + ' role="button" aria-label="Radera">🗑</span>');
     raderbarRad = rad;
+    soptunnaNyss = true;
     vibrera(40);
   }, 500) };
 });
@@ -4005,6 +4186,11 @@ for (const h of ['pointerup', 'pointercancel']) {
 // den borta innan klicket hann räknas.
 document.addEventListener('click', (ev) => {
   if (!raderbarRad || ev.target.closest('.soptunna')) return;
+  // Klicket som hör till samma långtryck ska inte ta bort knappen det lade fram.
+  if (soptunnaNyss && raderbarRad.contains(ev.target)) {
+    soptunnaNyss = false;
+    return;
+  }
   taBortSoptunnan();
 });
 

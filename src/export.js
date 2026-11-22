@@ -26,16 +26,19 @@ export function underlag(omgang, personer, resultat) {
   ];
   const rader = [];
   let godkanda = 0;
+  let oregistrerade = 0;
   for (const [index, id] of omgang.deltagare.entries()) {
     const p = personer.find((x) => x.id === id);
     if (!p) continue;
     const nr = index + 1;
     const forsok = resultat.filter((r) => r.personId === id && r.registrerad);
+    const oppna = resultat.filter((r) => r.personId === id && !r.registrerad && harInnehall(r));
+    oregistrerade += oppna.length;
     if (!forsok.length) {
       rader.push({
         person: p, nr, forsok: null,
         celler: [nr, p.fmid || '', p.namn, p.forband, '',
-          ...zoner.map(() => ''), '', '', '', 'Ej skjuten', ''],
+          ...zoner.map(() => ''), '', '', '', oppna.length ? 'Ej registrerad' : 'Ej skjuten', ''],
       });
       continue;
     }
@@ -64,11 +67,26 @@ export function underlag(omgang, personer, resultat) {
   }
   return {
     omgang, prov, kolumner, rader,
-    antalSkyttar: omgang.deltagare.length,
+    antalSkyttar: omgang.deltagare.filter((id) => personer.some((p) => p.id === id)).length,
     godkanda,
+    oregistrerade,
     rubrik: `${prov.namn} — ${prov.delmoment}`,
-    filnamn: `kompetensprov-${prov.kod}-${omgang.datum}`,
+    filnamn: filnamnFor(prov, omgang),
   };
+}
+
+/** Har ett öppet försök fått något inknappat? Ett tomt försök är inget skott. */
+function harInnehall(r) {
+  return (r.tid !== null && r.tid !== undefined) || r.vapenhanteringUnderkand
+    || Object.values(r.traffar || {}).some((n) => n > 0);
+}
+
+/** Filnamn av enbart ofarliga tecken. Platsen skiljer två omgångar samma dag. */
+function filnamnFor(prov, omgang) {
+  const ren = (s) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^A-Za-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30).replace(/-+$/, '');
+  return ['kompetensprov', ren(prov.kod), ren(omgang.datum), ren(omgang.plats)]
+    .filter(Boolean).join('-');
 }
 
 /**
@@ -116,7 +134,7 @@ export function somText(u) {
         + `${rad.person.forband ? ' (' + rad.person.forband + ')' : ''}`);
     }
     if (!rad.forsok) {
-      rader.push('   Ej skjuten');
+      rader.push(`   ${rad.celler.at(-2)}`);
       continue;
     }
     const b = rad.bedomning;
@@ -124,7 +142,8 @@ export function somText(u) {
       .map((z) => `${z}${rad.traffar[z]}`).join(' ');
     rader.push(
       `   Försök ${rad.forsok.forsok}: ${traffar || 'inga träffar'} · ${b.poang} p` +
-      ` · ${komma(rad.forsok.tid)} s · PK ${komma(b.pk)} · ${b.godkand ? 'GODKÄND' : 'UNDERKÄND'}` +
+      (rad.forsok.tid === null ? ' · tid saknas' : ` · ${komma(rad.forsok.tid)} s · PK ${komma(b.pk)}`) +
+      ` · ${b.godkand ? 'GODKÄND' : 'UNDERKÄND'}` +
       (b.godkand ? '' : ` (${b.brister.join('; ')})`),
     );
   }
@@ -137,13 +156,16 @@ export function somText(u) {
 export function somCsv(u) {
   const cell = (v) => {
     const s = String(v ?? '');
-    return /[";\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    return /[";\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
   };
+  // Fritext som börjar med ett formeltecken skulle köras av Excel. Apostrofen
+  // gör den till text. Bara Fmid, namn och förband: övriga kolumner är appens.
+  const textcell = (v, i) => cell(i >= 1 && i <= 3 && /^[=+\-@\t\r]/.test(String(v ?? '')) ? `'${v}` : v);
   const rader = [
     ...huvudrader(u).map((r) => cell(r)),
     '',
     u.kolumner.map(cell).join(';'),
-    ...u.rader.map((rad) => rad.celler.map(cell).join(';')),
+    ...u.rader.map((rad) => rad.celler.map(textcell).join(';')),
     '',
     cell(`${u.godkanda} av ${u.antalSkyttar} godkända`),
   ];
@@ -224,7 +246,9 @@ function zip(filer) {
   return ut;
 }
 
+// Kontrolltecken är ogiltiga i XML 1.0, och ett enda gör hela arbetsboken oläsbar.
 const xmlEsc = (s) => String(s ?? '')
+  .replace(/[^\t\n\r\u0020-\uD7FF\uE000-\uFFFD\u{10000}-\u{10FFFF}]/gu, '')
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
   .replace(/"/g, '&quot;');
 
@@ -242,14 +266,18 @@ function kolumnBokstav(i) {
 // Cellstilar i styles.xml nedan: index i <cellXfs>. Grönt är Excels egen
 // "Bra" — ljusgrön botten och mörkgrön text — så ett godkänt försök ser ut
 // som ett godkänt försök även för den som aldrig sett protokollet förr.
-const STIL = { normal: 0, fet: 1, gron: 2 };
+const STIL = { normal: 0, fet: 1, gron: 2, tal: 3, gronTal: 4 };
 
 export function somXlsx(u) {
   const arkRader = [];
+  // Tid och PK är de enda kolumner med decimaltal. Ett Fmid som 12,50 är text.
+  const decimalKolumner = new Set([u.kolumner.indexOf('Tid (s)'), u.kolumner.indexOf('PK')]);
   const skrivRad = (radnr, celler, stilnr = STIL.normal) => {
     const c = celler.map((v, i) => {
       const ref = kolumnBokstav(i) + radnr;
-      const stil = stilnr ? ` s="${stilnr}"` : '';
+      const decimal = typeof v === 'number' && decimalKolumner.has(i);
+      const s = decimal ? (stilnr === STIL.gron ? STIL.gronTal : STIL.tal) : stilnr;
+      const stil = s ? ` s="${s}"` : '';
       if (typeof v === 'number' && Number.isFinite(v)) {
         return `<c r="${ref}"${stil}><v>${v}</v></c>`;
       }
@@ -265,8 +293,10 @@ export function somXlsx(u) {
   skrivRad(rad++, u.kolumner, STIL.fet);
   for (const r of u.rader) {
     // Tid och PK som text med komma vore obrukbart i kalkyl — skriv tal.
-    const celler = r.celler.map((v) => {
-      if (typeof v === 'string' && /^-?\d+,\d+$/.test(v)) return Number(v.replace(',', '.'));
+    const celler = r.celler.map((v, i) => {
+      if (decimalKolumner.has(i) && typeof v === 'string' && /^\d+,\d+$/.test(v)) {
+        return Number(v.replace(',', '.'));
+      }
       return v;
     });
     // Hela raden grönas, inte bara utfallskolumnen: den som bläddrar i ett
@@ -319,7 +349,7 @@ export function somXlsx(u) {
 <fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFC6EFCE"/><bgColor indexed="64"/></patternFill></fill></fills>
 <borders count="1"><border/></borders>
 <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
-<cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="0" fontId="2" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/></cellXfs>
+<cellXfs count="5"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="0" fontId="2" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/><xf numFmtId="2" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="2" fontId="2" fillId="2" borderId="0" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1"/></cellXfs>
 <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
 </styleSheet>`,
     },
@@ -345,18 +375,42 @@ const MARGINAL = 36;
 // ett svagt raster i stället för ett svart fält.
 const GRON = [0.776, 0.937, 0.808];
 
+// Hela WinAnsi-blocket 0x80–0x9F, där teckentabellen skiljer sig från Latin-1.
+const SARSKILDA = {
+  0x20ac: 0x80, 0x201a: 0x82, 0x0192: 0x83, 0x201e: 0x84,
+  0x2026: 0x85,   // … avbrott — utan den här raden blev kapad text "?"
+  0x2020: 0x86, 0x2021: 0x87, 0x02c6: 0x88, 0x2030: 0x89, 0x0160: 0x8a, 0x2039: 0x8b,
+  0x0152: 0x8c, 0x017d: 0x8e, 0x2018: 0x91, 0x2019: 0x92, 0x201c: 0x93, 0x201d: 0x94,
+  0x2022: 0x95,   // punktlista
+  0x2013: 0x96,   // – kort tankstreck
+  0x2014: 0x97,   // — långt tankstreck
+  0x02dc: 0x98, 0x2122: 0x99, 0x0161: 0x9a, 0x203a: 0x9b, 0x0153: 0x9c, 0x017e: 0x9e,
+  0x0178: 0x9f,
+};
+// Bokstäver som saknar både WinAnsi-tecken och en uppdelning i bas + accent.
+const BOKSTAVSBYTE = { Ł: 'L', ł: 'l', Đ: 'D', đ: 'd', Ħ: 'H', ħ: 'h', ı: 'i', Ŧ: 'T', ŧ: 't' };
+
+/** Gör fritext skrivbar i WinAnsi: sammansatta tecken, accenter som saknas
+ *  (Šimić blir Šimic hellre än ?imi?) och inga kontrolltecken. */
+function pdfTecken(text) {
+  let ut = '';
+  for (const tecken of String(text).normalize('NFC')) {
+    const k = tecken.codePointAt(0);
+    if (k < 0x20 || (k >= 0x7f && k < 0xa0)) ut += ' ';
+    else if (k < 256 || SARSKILDA[k]) ut += tecken;
+    else if (BOKSTAVSBYTE[tecken]) ut += BOKSTAVSBYTE[tecken];
+    else {
+      const bas = tecken.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      ut += bas && [...bas].every((b) => b.codePointAt(0) < 256) ? bas : '?';
+    }
+  }
+  return ut;
+}
+
 function winAnsi(text) {
   // WinAnsi ligger nära Latin-1 för det vi behöver. Tecken utanför byts mot
   // frågetecken hellre än att ge en trasig fil.
   const ut = [];
-  const SARSKILDA = {
-    0x2013: 0x96,   // – kort tankstreck
-    0x2014: 0x97,   // — långt tankstreck
-    0x2018: 0x91, 0x2019: 0x92,
-    0x201c: 0x93, 0x201d: 0x94,
-    0x2022: 0x95,   // punktlista
-    0x2026: 0x85,   // … avbrott — utan den här raden blev kapad text "?"
-  };
   for (const tecken of String(text)) {
     const k = tecken.codePointAt(0);
     if (SARSKILDA[k]) ut.push(SARSKILDA[k]);
@@ -368,24 +422,64 @@ function winAnsi(text) {
 
 function pdfText(text) {
   const ut = [];
-  for (const b of winAnsi(text)) {
+  for (const b of winAnsi(pdfTecken(text))) {
     if (b === 0x28 || b === 0x29 || b === 0x5c) ut.push(0x5c);  // ( ) \
     ut.push(b);
   }
   return ut;
 }
 
-/** Ungefärlig textbredd i punkter — räcker för att kapa text som inte får
- *  plats i sin kolumn. Helvetica är ~0,5 em i snitt för gemener. */
-function bredd(text, storlek) {
-  return String(text).length * storlek * 0.52;
+// Helveticas teckenbredder ur Adobes AFM-fil, tecken 32–126, i tusendels em.
+const HELVETICA = [
+  278, 278, 355, 556, 556, 889, 667, 191, 333, 333, 389, 584, 278, 333, 278, 278,
+  556, 556, 556, 556, 556, 556, 556, 556, 556, 556, 278, 278, 584, 584, 584, 556,
+  1015, 667, 667, 722, 722, 667, 611, 778, 722, 278, 500, 667, 556, 833, 722, 778,
+  667, 778, 722, 667, 611, 722, 667, 944, 667, 667, 611, 278, 278, 278, 469, 556,
+  333, 556, 556, 500, 556, 556, 278, 556, 556, 222, 222, 500, 222, 833, 556, 556,
+  556, 556, 333, 500, 278, 556, 500, 722, 500, 500, 500, 334, 260, 334, 584,
+];
+
+/** Textbredd i punkter. Fet stil räknas med marginal i stället för egen tabell. */
+function bredd(text, storlek, fet = false) {
+  let tusendelar = 0;
+  for (const tecken of pdfTecken(text)) {
+    const bas = tecken.normalize('NFD').codePointAt(0);
+    if (tecken === '…' || tecken === '—') tusendelar += 1000;
+    else tusendelar += HELVETICA[bas - 32] ?? 667;
+  }
+  return (tusendelar / 1000) * storlek * (fet ? 1.08 : 1);
 }
 
-function kapa(text, storlek, maxbredd) {
-  let s = String(text ?? '');
-  if (bredd(s, storlek) <= maxbredd) return s;
-  while (s.length > 1 && bredd(s + '…', storlek) > maxbredd) s = s.slice(0, -1);
+function kapa(text, storlek, maxbredd, fet = false) {
+  let s = pdfTecken(text ?? '');
+  if (bredd(s, storlek, fet) <= maxbredd) return s;
+  while (s.length > 1 && bredd(s + '…', storlek, fet) > maxbredd) s = s.slice(0, -1);
   return s + '…';
+}
+
+/** Bryter text till rader som ryms i bredden. Inget kapas: ett Fmid eller en
+ *  orsak till underkännande ska stå kvar i sin helhet. */
+function radbryt(text, storlek, maxbredd, fet = false) {
+  const rader = [];
+  let nu = '';
+  for (let ord of pdfTecken(text ?? '').split(/\s+/).filter(Boolean)) {
+    const prov = nu ? `${nu} ${ord}` : ord;
+    if (bredd(prov, storlek, fet) <= maxbredd) {
+      nu = prov;
+      continue;
+    }
+    if (nu) rader.push(nu);
+    nu = '';
+    while (bredd(ord, storlek, fet) > maxbredd && ord.length > 1) {
+      let n = ord.length - 1;
+      while (n > 1 && bredd(ord.slice(0, n), storlek, fet) > maxbredd) n--;
+      rader.push(ord.slice(0, n));
+      ord = ord.slice(n);
+    }
+    nu = ord;
+  }
+  if (nu) rader.push(nu);
+  return rader.length ? rader : [''];
 }
 
 export function somPdf(u) {
@@ -397,16 +491,16 @@ export function somPdf(u) {
   // kolumn som ska peka ut en människa, och Fmid/Anstnr skrivs olika långt.
   const kol = [
     { rubrik: 'Nr', bredd: 16 },
-    { rubrik: 'Fmid/Anstnr', bredd: 64 },
-    { rubrik: 'Namn', bredd: 84 },
-    { rubrik: 'Förband', bredd: 46 },
+    { rubrik: 'Fmid/Anstnr', bredd: 64, bryt: true },
+    { rubrik: 'Namn', bredd: 84, bryt: true },
+    { rubrik: 'Förband', bredd: 46, bryt: true },
     { rubrik: 'F', bredd: 12 },
     ...ZONORDNING.map((z) => ({ rubrik: z, bredd: 16 })),
     { rubrik: 'Poäng', bredd: 30 },
     { rubrik: 'Tid', bredd: 30 },
     { rubrik: 'PK', bredd: 28 },
-    { rubrik: 'Utfall', bredd: 46 },
-    { rubrik: 'Anmärkning', bredd: 71 },
+    { rubrik: 'Utfall', bredd: 46, bryt: true },
+    { rubrik: 'Anmärkning', bredd: 71, bryt: true },
   ];
   const summa = kol.reduce((n, k) => n + k.bredd, 0);
   if (summa > SIDBREDD - 2 * MARGINAL) {
@@ -432,39 +526,59 @@ export function somPdf(u) {
   // PDF målar i den ordning operatorerna står, och en ruta efteråt hade lagt
   // sig över siffrorna. q/Q sparar och återställer grafiktillståndet, så
   // fyllfärgen inte följer med in i nästa rad (Tj fyller med samma färg).
-  const band = (storlek) => {
-    strommar.push(`q ${GRON.join(' ')} rg ${MARGINAL} ${y - 3} ${summa} ${storlek + 4} re f Q`);
+  const band = (storlek, hojd) => {
+    strommar.push(`q ${GRON.join(' ')} rg ${MARGINAL} ${y + storlek + 1 - hojd} ${summa} ${hojd} re f Q`);
   };
-  const rad = (celler, storlek, fet, gron = false) => {
-    if (gron) band(storlek);
+  const cellrader = (celler, storlek, fet) => celler.map((v, i) => (kol[i].bryt
+    ? radbryt(v, storlek, kol[i].bredd - 3, fet)
+    : [kapa(v, storlek, kol[i].bredd - 3, fet)]));
+  const radhojd = (delar, storlek) =>
+    storlek + 4 + (Math.max(...delar.map((d) => d.length)) - 1) * (storlek + 1);
+  const rad = (delar, storlek, fet, gron = false) => {
+    const hojd = radhojd(delar, storlek);
+    if (gron) band(storlek, hojd);
+    const start = y;
     let x = MARGINAL;
-    celler.forEach((v, i) => {
-      skriv(kapa(v, storlek, kol[i].bredd - 3), x, storlek, fet);
+    delar.forEach((rader, i) => {
+      y = start;
+      for (const text of rader) {
+        skriv(text, x, storlek, fet);
+        y -= storlek + 1;
+      }
       x += kol[i].bredd;
     });
-    y -= storlek + 4;
+    y = start - hojd;
   };
+  const rubrikrad = () => rad(kol.map((k) => [k.rubrik]), 8, true);
 
   nySida();
   for (const text of huvudrader(u)) {
-    skriv(text, MARGINAL, text === u.rubrik ? 14 : 9, text === u.rubrik);
-    y -= (text === u.rubrik ? 14 : 9) + 6;
+    const storlek = text === u.rubrik ? 14 : 9;
+    for (const del of radbryt(text, storlek, SIDBREDD - 2 * MARGINAL, text === u.rubrik)) {
+      skriv(del, MARGINAL, storlek, text === u.rubrik);
+      y -= storlek + 3;
+    }
+    y -= 3;
   }
   y -= 6;
-  rad(kol.map((k) => k.rubrik), 8, true);
+  rubrikrad();
   y -= 2;
 
+  const forstaZon = u.kolumner.indexOf('Försök') + 1;
   for (const r of u.rader) {
-    if (y < MARGINAL + 40) {
+    // Nollor i zonkolumnerna görs tomma — en tabell full av nollor är svårare
+    // att läsa än en gles. Poäng 0 är däremot ett resultat och står kvar.
+    // Sista kolumnen får den korta anmärkningen, radbruten så att allt syns.
+    const celler = r.celler.map((v, i) =>
+      (v === 0 && i >= forstaZon && i < forstaZon + ZONORDNING.length ? '' : v));
+    celler[celler.length - 1] = kortAnmarkning(r.bedomning);
+    const delar = cellrader(celler, 8, false);
+    if (y - radhojd(delar, 8) < MARGINAL) {
       nySida();
-      rad(kol.map((k) => k.rubrik), 8, true);
+      rubrikrad();
       y -= 2;
     }
-    // Nollor i zonkolumnerna görs tomma — en tabell full av nollor är svårare
-    // att läsa än en gles. Sista kolumnen får den korta anmärkningen.
-    const celler = r.celler.map((v) => (v === 0 ? '' : v));
-    celler[celler.length - 1] = kortAnmarkning(r.bedomning);
-    rad(celler, 8, false, radGodkand(r));
+    rad(delar, 8, false, radGodkand(r));
   }
   y -= 8;
   if (y < MARGINAL) nySida();
@@ -552,7 +666,7 @@ export async function dela(filnamn, innehall, format, text = '') {
   const fil = new File([blob], filnamn, { type: MIME[format] });
   if (navigator.canShare && navigator.canShare({ files: [fil] })) {
     try {
-      await navigator.share({ files: [fil], title: filnamn, text });
+      await navigator.share({ files: [fil], title: filnamn, ...(text ? { text } : {}) });
       return 'delad';
     } catch (fel) {
       if (fel && fel.name === 'AbortError') return 'avbruten';

@@ -2101,8 +2101,8 @@ test('nej i frågan ändrar ingenting', () => {
 test('ett försök går inte att ändra medan skytten har ett öppet omtag', () => {
   blandadOmgang();
   klicka('+ Nytt försök');
-  hem();
-  doc.querySelector('[data-oppna]').click();
+  knappaTid('800');
+  klicka('Spara & tillbaka');
   klicka('Visa försök');
   assert.equal(doc.querySelector('[data-andra-forsok]'), null);
 });
@@ -2401,4 +2401,77 @@ test('startsidan räknar bara dem som står på linjen', async () => {
   await lasInKopia(JSON.stringify(k));
   hem();
   assert.match(doc.querySelector('[data-oppna="ok"]').textContent, /2\/2/);
+});
+
+// ---------------------------------------------- omtag, soptunna, exportvarning
+
+test('ett omtag utan innehåll försvinner när man lämnar det', () => {
+  blandadOmgang();
+  const antal = lagret().resultat.length;
+  klicka('+ Nytt försök');
+  assert.equal(lagret().resultat.length, antal + 1);
+  klicka('Spara & tillbaka');
+  assert.equal(lagret().resultat.length, antal);
+  assert.ok(knapp('+ Nytt försök'), 'skytten kan få ett nytt försök igen');
+});
+
+test('ett påbörjat omtag kan tas bort, efter fråga', () => {
+  blandadOmgang();
+  const antal = lagret().resultat.length;
+  klicka('+ Nytt försök');
+  knappaTid('800');
+  klicka('Spara & tillbaka');
+  win.confirm = () => false;
+  klicka('Ta bort påbörjat försök');
+  assert.equal(lagret().resultat.length, antal + 1, 'nej lämnar det kvar');
+  win.confirm = () => true;
+  klicka('Ta bort påbörjat försök');
+  assert.equal(lagret().resultat.length, antal);
+  assert.equal(lagret().resultat.filter((r) => r.registrerad).length, 2,
+    'registrerade försök rörs inte');
+});
+
+test('nästa omtag får rätt nummer efter en borttagning', () => {
+  blandadOmgang();
+  klicka('+ Nytt försök');
+  knappaTid('800');
+  klicka('Spara & tillbaka');
+  klicka('Ta bort påbörjat försök');
+  klicka('+ Nytt försök');
+  assert.match(doc.querySelector('#underrubrik').textContent, /försök 2/);
+});
+
+test('soptunnan står kvar när släppet ger ett klick, och nästa tryck stänger den', async () => {
+  klicka('+ Ny omgång');
+  rader()[0].click();
+  klicka('Starta omgången');
+  hem();
+  await hall(rader()[0]);
+  rader()[0].click();
+  assert.ok(soptunna(), 'klicket från släppet ska inte ta bort soptunnan');
+  assert.match(doc.querySelector('#underrubrik').textContent, /Pistol och automatkarbin/);
+  rader()[0].dispatchEvent(new win.MouseEvent('pointerdown', { bubbles: true, clientX: 50, clientY: 10 }));
+  rader()[0].dispatchEvent(new win.MouseEvent('pointerup', { bubbles: true, clientX: 50, clientY: 10 }));
+  rader()[0].click();
+  assert.equal(soptunna(), null, 'ett nytt tryck stänger den');
+  assert.match(doc.querySelector('#underrubrik').textContent, /Pistol och automatkarbin/,
+    'utan att öppna omgången');
+  rader()[0].click();
+  assert.match(doc.querySelector('#underrubrik').textContent, /Delmoment 14/);
+});
+
+test('exportvyn varnar för försök som inte är registrerade', () => {
+  omgangMedAlla();
+  nastaIListan();
+  knappaTid('1000');
+  klicka('Spara & tillbaka');
+  klicka('Dela resultat');
+  assert.match(doc.querySelector('.varningsruta').textContent, /1 försök\s+är inte registrerade/);
+});
+
+test('radens knappar för försök är dolda i flyttläget', () => {
+  blandadOmgang();
+  klicka('Ändra ordning');
+  assert.equal(doc.querySelector('[data-nytt-forsok]'), null);
+  assert.equal(doc.querySelector('[data-historik]'), null);
 });

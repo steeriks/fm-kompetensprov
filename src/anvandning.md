@@ -76,7 +76,7 @@ En skytt räknas som **godkänd** om något av försöken var godkänt, även om
 - **Fel träff, före registrering:** håll in zonknappen. Det nollar hela zonen, och sedan knappar du in rätt antal.
 - **Fel tid, före registrering:** i två steg, tryck *Ändra tiden* på poängskärmen. I ett steg, tryck på tidsfältet.
 - **Fel efter registrering:** tryck *Visa försök* på skyttens rad och sedan *Ändra försök*. Rätta tid eller träffar och tryck *Spara ändringen*. Försöket behåller sitt nummer, och protokollet visar bara de nya värdena. Lämnar du skärmen utan att spara gäller det gamla resultatet.
-- **Omtag:** tryck *+ Nytt försök* på skyttens rad. Appen sätter ingen gräns för antalet försök.
+- **Omtag:** tryck *+ Nytt försök* på skyttens rad. Appen sätter ingen gräns för antalet försök. Ett omtag du inte knappat något i försvinner av sig självt, och ett påbörjat tas bort med *Ta bort påbörjat försök*.
 - **Lägga till en skytt:** tryck *+ Lägg till skytt* överst i listan. Skytten får nästa lediga tavla.
 - **Byta ordning:** tryck *Ändra ordning* överst i listan, dra i handtaget (**☰**) och tryck *Klar med ordningen*. Numret följer tavlan, inte personen.
 - **Byta skytt medan du knappar tid:** i två steg stegar pilarna bredvid namnet en tavla fram eller tillbaka. Tiden sparas på vägen.
@@ -94,6 +94,8 @@ Tryck **Dela resultat** i omgången och välj format:
 Telefonen öppnar sin vanliga delningsruta, så att du kan mejla, skicka eller spara filen.
 
 Kolumnerna är tavelnummer, Fmid/Anstnr, namn, förband och försök, följda av **träffar per zon, poäng, tid och kvot (PK)** i samma ordning som i skjutboken. Sist står utfall och anmärkning.
+
+Ett försök som inte är registrerat räknas inte. Skytten står då som *Ej registrerad*, och appen varnar innan du delar.
 
 **Bättringsskotten följer inte med.** Protokollet visar bara de träffar som bedömningen bygger på, så att poängen går att räkna efter. I PDF och Excel är godkända försök markerade med grön rad.
 
